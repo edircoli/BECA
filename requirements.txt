@@ -1,0 +1,4 @@
+#Dependencies used
+numpy
+pandas
+matplotlib
