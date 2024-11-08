@@ -53,7 +53,7 @@ def correctLimma_rBE(data, sample_label = "sample", batch_label = "batch", covar
     for feature in num_data.columns:
         model = sm.OLS(num_data[feature], design_matrix).fit()
 
-        # Calculate the effect of batch (ignore the tissue effect)
+        # Calculate the effect of batch (ignore the biological effect)
         batch_effect = model.predict(design_matrix_batch)
         
         # Subtract only the batch effect from the data
