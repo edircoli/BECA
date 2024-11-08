@@ -192,3 +192,26 @@ def plotRLE(data, sample_label = "sample", batch_label = "batch", experiment_lab
     )
 
     return fig.show()
+
+def plotClusterHeatMap(data, batch_label = "batch", experiment_label = "tissue", sample_label = "sample"):
+    #Extracts numerical and categorical data of interest
+    data_num = data.select_dtypes(include = "number")
+    data_num.index = [str(i) for i in data[sample_label]]
+    data_cat = data[[batch_label, experiment_label]]
+    data_cat.index = [str(i) for i in data[sample_label]]
+
+    #First scaling process - Ensures every observation is scaled according to OTUs
+    scaler = StandardScaler()
+    scaled_data = scaler.fit_transform(data_num)
+    scaled_data = pd.DataFrame(scaled_data, columns=data_num.columns, index=data_num.index)
+
+    #Second scaling process - Ensures every observation is scaled according to sample
+    scaler = StandardScaler()
+    scaled_data = scaler.fit_transform(scaled_data.T)
+    scaled_data = pd.DataFrame(scaled_data, index=[str(i) for i in data_num.columns], columns=[str(i) for i in data_num.index])
+
+    #Create Clustergrammer2 plot
+    n2 = Network(CGM2)
+    n2.load_df(scaled_data, meta_col = data_cat)
+    n2.cluster()
+    return n2.widget()
