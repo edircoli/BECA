@@ -6,6 +6,7 @@ from sklearn.preprocessing import StandardScaler
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.validators.scatter.marker import SymbolValidator
+from clustergrammer2 import net, Network, CGM2
 
 def DataPreprocess(path, preprocess = True, factors = ['sample', 'batch', 'tissue']):
     df = pd.read_csv(path)
@@ -191,31 +192,3 @@ def plotRLE(data, sample_label = "sample", batch_label = "batch", experiment_lab
     )
 
     return fig.show()
-
-path = "data/sponge_dataset.csv"
-data = DataPreprocess(path)
-#plotpca(data)
-#plotOTUBox(data)
-#plotRLE(data)
-
-#Extracts numerical and categorical data
-data_num = data.select_dtypes(include = "number")
-data_cat = data.select_dtypes(include = "category")
-
-#First scaling process - Ensures every observation is scaled according to OTUs
-scaler = StandardScaler()
-scaled_data = scaler.fit_transform(data_num)
-scaled_data = pd.DataFrame(scaled_data, columns=data_num.columns, index=data_num.index)
-
-#Second scaling process - Ensures every observation is scaled according to sample
-scaler = StandardScaler()
-scaled_data = scaler.fit_transform(scaled_data.T)
-scaled_data = pd.DataFrame(scaled_data.T, columns=data_num.columns, index=data_num.index)
-
-#Joins back again the numerical and categorical data
-data_scaled = pd.concat([data_cat, scaled_data], axis=1)
-
-print(data_scaled)
-
-
-
