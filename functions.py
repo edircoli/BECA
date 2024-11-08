@@ -23,7 +23,7 @@ def DataPreprocess(path, preprocess = True, factors = ['sample', 'batch', 'tissu
 
     return df
 
-def PCA_plot(data, sample_label = "sample", batch_label = "batch", experiment_label = "tissue"):
+def plotPCA(data, sample_label = "sample", batch_label = "batch", experiment_label = "tissue"):
     #Realize the PCA
     pca = PCA(n_components=2)
     principal_components = pca.fit_transform(data.select_dtypes(include='number'))
@@ -71,7 +71,7 @@ def PCA_plot(data, sample_label = "sample", batch_label = "batch", experiment_la
     
     return fig.show()
 
-def OTUBoxPlot(data, batch_label = "batch"):
+def plotOTUBox(data, batch_label = "batch"):
     #Extract OTUs columns names
     otu_cols = [col for col in data.columns if col.startswith("OTU")]
 
@@ -114,8 +114,87 @@ def OTUBoxPlot(data, batch_label = "batch"):
 
     return fig.show()
 
+def plotRLE(data, sample_label = "sample", batch_label = "batch", experiment_label = "tissue"):
+
+    # Extract OTUs column names
+    otu_cols = [col for col in data.columns if col.startswith("OTU")]
+
+    # Converting DataFrame from wide to long
+    df_long = pd.melt(data, id_vars = [sample_label, batch_label, experiment_label], value_vars = otu_cols, var_name = "OTU", value_name = "value")
+
+    # Calculating the medians of each OTU within each experiment
+    df_long["medians"] = None
+    for OTU in df_long["OTU"].unique():
+        for exp in df_long[experiment_label].unique():
+            med = np.median(df_long[(df_long["OTU"] == OTU) & (df_long[experiment_label] == exp)]["value"])
+            df_long.loc[(df_long["OTU"] == OTU) & (df_long[experiment_label] == exp), "medians"] = med
+
+    # Incorporating the difference between OTU value in each sample and the median across all samples from the same tissue
+    df_long["RLE"] = df_long["value"] - df_long["medians"]
+
+    #Defining a set of colors to be used for batches
+    raw_colors = ["blue","red","green","orange","purple"]
+
+    #Adding color to corresponding batch
+    df_long["color"] = None
+    for n, batch in enumerate(df_long[batch_label].unique()):
+        df_long.loc[df_long[batch_label] == batch, "color"] = raw_colors[n]
+
+    # Generate RLE plots for each experiment
+    fig = go.Figure()
+
+    # Add traces for each experiment
+    for exp in df_long[experiment_label].unique():
+        # Add traces for each batch
+        for batch in df_long[batch_label].unique():
+
+            fig.add_trace(go.Box(
+                x = df_long[(df_long[experiment_label] == exp) & (df_long[batch_label] == batch)][sample_label], 
+                y = df_long[(df_long[experiment_label] == exp) & (df_long[batch_label] == batch)]['RLE'],
+                marker_color = df_long[(df_long[experiment_label] == exp) & (df_long[batch_label] == batch)]['color'].iloc[0],
+                name="Batch {}".format(batch),  # Label each trace by the batch
+                visible=False  # Set initially to invisible
+            ))
+
+    # First experiment's traces visible by default
+    for i in range(len(df_long[batch_label].unique())):
+        fig.data[i].visible = True
+
+    # Add dropdown to select which experiment to display
+    fig.update_layout(
+        updatemenus=[dict(
+            buttons=[
+                *[
+                    dict(
+                        args=[{"visible": [i // len(df_long[batch_label].unique()) == idx for i in range(len(fig.data))]}],  # Toggle visibility
+                        label=exp,
+                        method="update"
+                    ) for idx, exp in enumerate(df_long[experiment_label].unique())
+                ]
+            ],
+            direction="down",
+            showactive=True,
+            xanchor="left",
+            y=1.15,
+            yanchor="top"
+        )]
+    )
+
+    # Add horizontal dashed red line at y = 0 as a reference point
+    fig.add_shape(
+        type="line",
+        x0=0, x1=1,  # Extend the line across the x-axis
+        y0=0, y1=0,  # Line positioned at y = 0
+        xref="paper", yref="y",  # "paper" allows the line to span the entire plot width
+        line=dict(color="red", width=2, dash="dash")  # Dashed red line
+    )
+
+    return fig.show()
+
 path = "data/sponge_dataset.csv"
 data = DataPreprocess(path)
-#PCA_plot(data)
-OTUBoxPlot(data)
+#plotpca(data)
+#plotOTUBox(data)
+plotRLE(data)
+
 
