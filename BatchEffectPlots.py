@@ -25,7 +25,7 @@ def DataPreprocess(path, preprocess = True, factors = ['sample', 'batch', 'tissu
         
         elif transformation == "Sqrt":
             # Select only OTUs columns
-            df_out = df.select_dtypes(include='number')
+            df_otu = df.select_dtypes(include='number')
 
             #Apply Square-root transformation to numeric columns
             df_sqrt = np.sqrt(df_otu)
