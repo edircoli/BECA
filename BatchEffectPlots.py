@@ -10,10 +10,9 @@ from clustergrammer2 import net, Network, CGM2
 
 def DataPreprocess(path, preprocess = True, factors = ['sample', 'batch', 'tissue']):
     df = pd.read_csv(path)
-    if (preprocess):
-        #Selecting numeric variables and applying the Center Log Ratio Transformation
-        df[factors] = df[factors].astype('category')
+    df[factors] = df[factors].astype('category')
 
+    if (preprocess):
         # Select only OTUs columns and adding a small offset
         df_otu = df.select_dtypes(include='number') + 0.01
 
@@ -21,7 +20,7 @@ def DataPreprocess(path, preprocess = True, factors = ['sample', 'batch', 'tissu
         df_clr = np.log(df_otu.div(gmean(df_otu, axis=1), axis=0))
 
         # Combine CLR-transformed data with non-numeric columns
-        df = pd.concat([df[['sample', 'batch', 'tissue']], df_clr], axis=1)
+        df = pd.concat([df[factors], df_clr], axis=1)
 
     return df
 
