@@ -8,3 +8,4 @@ plotly
 clustergrammer2
 rpy2
 pycombat
+scikit-bio
