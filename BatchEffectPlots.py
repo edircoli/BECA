@@ -38,7 +38,7 @@ def DataPreprocess(path, preprocess = True, factors = ['sample', 'batch', 'tissu
             df_stsqrt = pd.DataFrame(df_stsqrt, columns=df_sqrt.columns)
 
             #Combine data with non-numeric columns
-            df = pd.concat([df[factors], df_stsqrt])
+            df = pd.concat([df[factors], df_stsqrt], axis = 1)
 
     return df
 
