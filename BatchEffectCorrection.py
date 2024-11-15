@@ -3,6 +3,7 @@ import numpy as np
 from combat.pycombat import pycombat 
 import statsmodels.api as sm
 from BatchEffectPlots import DataPreprocess, plotPCA, plotOTUBox, plotRLE, plotClusterHeatMap
+from sklearn.preprocessing import StandardScaler
 
 path = "data/sponge_dataset.csv"
 data = DataPreprocess(path)
@@ -63,3 +64,41 @@ def correctLimma_rBE(data, sample_label = "sample", batch_label = "batch", covar
     data_limma = pd.concat([data_limma, corrected_data], axis=1)
 
     return data_limma
+
+def correctSVD(data):
+
+    #Extract OTUs variables and batch labels
+    df_otu = data.select_dtypes(include = "number")
+
+    #Calculate standard deviation and mean for each OTU
+    otu_sd = df_otu.std(axis=0)
+    otu_mu = df_otu.mean(axis=0)
+
+    #Standardize the data
+    scaler = StandardScaler(with_mean = True, with_std = True)
+    df_scaled = scaler.fit_transform(df_otu)
+
+    #Compute square matrix and perform SVD
+    sq_matrix = np.dot(df_scaled.T, df_scaled)
+    U, S, Vt = np.linalg.svd(sq_matrix)
+
+    a = U[:, 0]
+
+    t = np.dot(df_scaled, a) / np.sqrt(np.dot(a.T, a))
+    c = np.dot(df_scaled.T, t) / np.dot(t.T, t)
+
+    #Deflate the component from data
+    svd_deflated_matrix = df_scaled - np.outer(t,c)
+
+    #Add mean and std to return to original state
+    corrected_data = np.empty_like(svd_deflated_matrix)
+    for i in range(svd_deflated_matrix.shape[1]):
+        corrected_data[:, i] = svd_deflated_matrix[:, i] * otu_sd[i] + otu_mu[i]
+
+    #Convert back to DataFrame
+    df_corrected = pd.DataFrame(corrected_data, columns = df_otu.columns, index=df_otu.index)
+
+    #Join factor columns
+    df_svd = pd.concat([data[["sample","tissue","batch"]], df_corrected], axis = 1)
+
+    return df_svd
