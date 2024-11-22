@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import chi2
 from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics import silhouette_score
 
 def kBET(data, batch_label = "batch"):
 
@@ -97,3 +98,9 @@ def cLISI(data, cell_label = "tissue"):
     cLISI = 1/len(indx) * sum(ISI_j)
     
     return cLISI
+
+def ASW(data, interest_label = "tissue"):
+
+    average_silhouette = silhouette_score(data.select_dtypes(include = "number"), data[interest_label])
+
+    return (average_silhouette + 1) / 2
