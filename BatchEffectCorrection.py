@@ -86,8 +86,8 @@ def correctSVD(data, sample_label = "sample", batch_label = "batch", experiment_
 
     a = U[:, 0]
 
-    t = np.dot(df_scaled, a) / np.sqrt(np.dot(a.T, a))
-    c = np.dot(df_scaled.T, t) / np.dot(t.T, t)
+    t = np.dot(df_scaled, a) / np.sqrt(np.dot(a.T, a)) #Scores
+    c = np.dot(df_scaled.T, t) / np.dot(t.T, t) #Loadings
 
     #Deflate the component from data
     svd_deflated_matrix = df_scaled - np.outer(t,c)
