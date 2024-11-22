@@ -106,12 +106,16 @@ def ASW(data, interest_label = "tissue"):
 
     return (average_silhouette + 1) / 2
 
-def ARI(data, bio_label = "tissue"):
+def ARI(data, bio_label = "tissue", n_clusters = None):
 
     data_otus = data.select_dtypes(include = "number") #OTUs
     data_bio = data[bio_label] #Labels
 
-    kmeans = KMeans(n_clusters = len(set(data_bio)), random_state = 42) #KMeans clustering
+    if n_clusters == None:
+        kmeans = KMeans(n_clusters = len(set(data_bio)), random_state = 42) #KMeans clustering
+    else:
+        kmeans = KMeans(n_clusters = n_clusters, random_state = 42) #KMeans clustering w/ n clusters
+
     predicted_clusters = kmeans.fit_predict(data_otus) #Predicting label of cluster
 
     ari = adjusted_rand_score(data_bio, predicted_clusters) #ARI
