@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 from scipy.stats import chi2
 from sklearn.neighbors import NearestNeighbors
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, adjusted_rand_score
+from sklearn.cluster import KMeans
 
 def kBET(data, batch_label = "batch"):
 
@@ -104,3 +105,14 @@ def ASW(data, interest_label = "tissue"):
     average_silhouette = silhouette_score(data.select_dtypes(include = "number"), data[interest_label])
 
     return (average_silhouette + 1) / 2
+
+def ARI(data, bio_label = "tissue"):
+
+    data_otus = data.select_dtypes(include = "number") #OTUs
+    data_bio = data[bio_label] #Labels
+
+    kmeans = KMeans(n_clusters = len(set(data_bio)), random_state = 42) #KMeans clustering
+    predicted_clusters = kmeans.fit_predict(data_otus) #Predicting label of cluster
+
+    ari = adjusted_rand_score(data_bio, predicted_clusters) #ARI
+    return ari
