@@ -93,31 +93,45 @@ def plotPCA(data, sample_label = "sample", batch_label = "batch", experiment_lab
 def plotOTUBox(data, batch_label = "batch"):
     #Extract OTUs columns names
     otu_cols = [col for col in data.columns if col.startswith("OTU")]
+    batch_labels = data[batch_label].unique()
+    batch_len = len(batch_labels)
 
     #Converting DataFrame from wide to long
     df_long = pd.melt(data, id_vars = [batch_label], value_vars = otu_cols, var_name = "OTU", value_name = "value")
 
+    #Defining a set of colors to be used for batches
+    raw_colors = ["blue","red","green","orange","purple"]
+
+    #Adding color to corresponding batch
+    batch_colors = []
+    for i in range(batch_len):
+        batch_colors.append(raw_colors[i])
+    
     fig = go.Figure()
 
     # Add traces for each OTU
     for otu in otu_cols:
-        fig.add_trace(go.Box(
-            x=df_long[df_long['OTU'] == otu][batch_label], 
-            y=df_long[df_long['OTU'] == otu]['value'],
-            name=otu,  # Label each trace by the OTU
-            visible=False  # Set initially to invisible
-        ))
+        for i, batch in enumerate(batch_labels):
+            fig.add_trace(go.Box(
+                x=df_long[(df_long['OTU'] == otu) & (df_long[batch_label] == batch)][batch_label], 
+                y=df_long[(df_long['OTU'] == otu) & (df_long[batch_label] == batch)]['value'],
+                marker=dict(color=batch_colors[i]), # Apply color to the batch boxplot
+                name=f"Batch {batch}, {otu}",  # Label each trace by the OTU
+                visible=False  # Set initially to invisible
+            ))
 
     # First OTU visible by default
-    fig.data[0].visible = True
+    for i in range(batch_len):
+        fig.data[i].visible = True
 
     # Add dropdown to select which OTU to display
     fig.update_layout(
+        xaxis_title = "Batch",
         updatemenus=[dict(
             buttons=[
                 *[
                     dict(
-                        args=[{"visible": [i == idx for i in range(len(fig.data))]}],  # Toggle visibility
+                        args=[{"visible": [(i >= batch_len*idx) & (i <= batch_len*idx + (batch_len-1)) for i in range(len(fig.data))]}],  # Toggle visibility
                         label=otu,
                         method="update"
                     ) for idx, otu in enumerate(otu_cols)
