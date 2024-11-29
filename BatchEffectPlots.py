@@ -88,6 +88,9 @@ def plotPCA(data, sample_label = "sample", batch_label = "batch", experiment_lab
                                      mode = "markers"
                                      ))
     
+    fig.update_layout(xaxis_range = [-5, 5],
+                      yaxis_range = [-5, 5])
+
     return fig.show()
 
 def plotOTUBox(data, batch_label = "batch"):
