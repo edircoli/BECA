@@ -5,6 +5,8 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 from sklearn.cluster import KMeans
 
+
+
 def kBET(data, batch_label = "batch"):
 
     data_otus = data.select_dtypes(include = "number")
