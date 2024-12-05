@@ -45,5 +45,20 @@ def DataTransform(data, factors = ['sample', 'batch', 'tissue'], transformation 
     elif transformation == "ALR":
         print("To be developed")
     
+    else:
+        raise(ValueError(f"Not a valid transformation: {transformation}"))
+    
     return df
 
+def DataReverseTransform(data, original_data, factors = ["sample", "batch", "tissue"], transformation = "CLR"):
+    
+    if transformation == "CLR":
+        df_otu = data.select_dtypes(include = "number")
+        df_otu_original = original_data.select_dtypes(include='number') + 1e-9
+
+        df_inv = round(np.exp(df_otu) * gmean(df_otu_original, axis=1)[:, None], 3)
+
+        df = pd.concat([data[factors], df_inv], axis = 1)
+
+
+    return df
