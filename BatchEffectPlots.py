@@ -4,24 +4,80 @@ from scipy.stats import gmean
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from skbio.stats.ordination import pcoa
-from skbio.diversity import beta_diversity
+from scipy.spatial.distance import pdist, squareform
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.validators.scatter.marker import SymbolValidator
 from clustergrammer2 import net, Network, CGM2
+from BatchEffectDataLoader import DataTransform
 
 def plotPCoA(data, method = "aitchison", sample_label = "sample", batch_label = "batch", experiment_label = "tissue"):
-    #Extracting numerical data
-    df_otu = data.select_dtypes(include = "number")
 
     if method == "aitchison":
-        #Adding small offset to avoid issues with log transformations:
-        df_otu = df_otu + 1e-9
+        #CLR transform
+        df = DataTransform(data, 
+                           factors = [sample_label, batch_label, experiment_label],
+                           transformation = "CLR")
+        
+        
+        # log_transformed = np.log(data.select_dtypes(include = "number") + 1e-9)
+        # clr_data = log_transformed - log_transformed.mean(axis=1)[:, None]
+        # print(clr_data)
 
-        #Perform CLR transformation
-        df_clr = np.log(df_otu.div(gmean(df_otu, axis=1), axis=0)) 
+        #Extracting numerical data
+        df_otu = df.select_dtypes(include = "number")
+        #Compute Aitchison distances
+        distances = pdist(df_otu, "euclidean")
+        distances = squareform(distances)
+    
+    #PCoA
+    pcoa_res = pcoa(distances)
+    #Construct DataFrame with principal components and metadata
+    df_pcoa = pd.DataFrame(pcoa_res.samples[["PC1", "PC2"]], columns = ["PC1", "PC2"])
+    df_pcoa.index = data.index #This assures index are the same and both DataFrames are perfectly aligned
+    df_pcoa[[sample_label, batch_label, experiment_label]] = data[[sample_label, batch_label, experiment_label]]
+    # df_pcoa = pd.concat([data[[sample_label, batch_label, experiment_label]], df_pcoa], axis=1)
+    #Extracting available symbols to be used per experiment
+    raw_symbols = []
+    for i in range(2, len(SymbolValidator().values), 12):
+        raw_symbols.append(SymbolValidator().values[i])
 
-    return 0
+    #Defining a set of colors to be used for batches
+    raw_colors = ["blue","red","green","orange","purple"]
+
+    #Adding symbol to corresponding experiment
+    df_pcoa["marker"] = None
+    for n, exp in enumerate(df_pcoa[experiment_label].unique()):
+        df_pcoa.loc[df_pcoa[experiment_label] == exp, "marker"] = raw_symbols[n]
+
+    #Adding color to corresponding batch
+    df_pcoa["color"] = None
+    for n, batch in enumerate(df_pcoa[batch_label].unique()):
+        df_pcoa.loc[df_pcoa[batch_label] == batch, "color"] = raw_colors[n]
+
+    #Creating the plotly figure
+    fig = go.Figure()
+
+    #Creating a for loop to alocate PCA data points per batch
+    for batch in df_pcoa[batch_label].unique():
+        #Creating a for loop to alocate data points per experiment in the current batch
+        for exp in df_pcoa[experiment_label].unique():
+            #Ploting the points corresponding to the current batch and tissue
+            fig.add_trace(go.Scatter(x = df_pcoa[(df_pcoa[batch_label] == batch) & (df_pcoa[experiment_label] == exp)]["PC1"],
+                                     y = df_pcoa[(df_pcoa[batch_label] == batch) & (df_pcoa[experiment_label] == exp)]["PC2"],
+                                     marker = dict(color = df_pcoa[(df_pcoa[batch_label] == batch) & (df_pcoa[experiment_label] == exp)]["color"],
+                                                   size = 8),
+                                     marker_symbol = df_pcoa[(df_pcoa[batch_label] == batch) & (df_pcoa[experiment_label] == exp)]["marker"],
+                                     legendgroup = batch,
+                                     legendgrouptitle_text = "Batch {}".format(batch),
+                                     name = exp,
+                                     mode = "markers"
+                                     ))
+    
+    #fig.update_layout(xaxis_range = [-5, 5],
+    #                  yaxis_range = [-5, 5])
+
+    return fig.show()
 
 def plotPCA(data, sample_label = "sample", batch_label = "batch", experiment_label = "tissue"):
     #Realize the PCA
