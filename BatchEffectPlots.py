@@ -88,6 +88,8 @@ def plotPCA(data, sample_label = "sample", batch_label = "batch", experiment_lab
     principal_components = pca.fit_transform(data.select_dtypes(include='number'))
     df_pca = pd.DataFrame(data=principal_components, columns = ["PC1", "PC2"])
 
+    df_pca.index = data.index #This assures index are the same and both DataFrames are perfectly aligned
+
     #Add the labels from batch and other important information
     df_pca[[sample_label, batch_label, experiment_label]] = data[[sample_label, batch_label, experiment_label]]
     
@@ -128,8 +130,8 @@ def plotPCA(data, sample_label = "sample", batch_label = "batch", experiment_lab
                                      mode = "markers"
                                      ))
     
-    fig.update_layout(xaxis_range = [-5, 5],
-                      yaxis_range = [-5, 5])
+    #fig.update_layout(xaxis_range = [-5, 5],
+    #                  yaxis_range = [-5, 5])
 
     return fig.show()
 
