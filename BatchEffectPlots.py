@@ -30,6 +30,9 @@ def plotPCoA(data, method = "aitchison", sample_label = "sample", batch_label = 
         distances = pdist(df_otu, "euclidean")
         distances = squareform(distances)
     
+    else:
+        raise(ValueError(f"Method provided not valid: {method}"))
+    
     #PCoA
     pcoa_res = pcoa(distances)
     #Construct DataFrame with principal components and metadata
