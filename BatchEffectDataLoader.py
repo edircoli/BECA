@@ -14,7 +14,7 @@ def DataTransform(data, factors = ['sample', 'batch', 'tissue'], transformation 
 
     if transformation == "CLR":
             # Select only OTUs columns and adding a small offset
-            df_otu = data.select_dtypes(include='number') + 0.01
+            df_otu = data.select_dtypes(include='number') + 1e-9
 
             # Apply CLR transformation to numeric columns
             df_clr = np.log(df_otu.div(gmean(df_otu, axis=1), axis=0))

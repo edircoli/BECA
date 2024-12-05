@@ -3,11 +3,25 @@ import numpy as np
 from scipy.stats import gmean
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from skbio.stats.ordination import pcoa
+from skbio.diversity import beta_diversity
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.validators.scatter.marker import SymbolValidator
 from clustergrammer2 import net, Network, CGM2
 
+def plotPCoA(data, method = "aitchison", sample_label = "sample", batch_label = "batch", experiment_label = "tissue"):
+    #Extracting numerical data
+    df_otu = data.select_dtypes(include = "number")
+
+    if method == "aitchison":
+        #Adding small offset to avoid issues with log transformations:
+        df_otu = df_otu + 1e-9
+
+        #Perform CLR transformation
+        df_clr = np.log(df_otu.div(gmean(df_otu, axis=1), axis=0)) 
+
+    return 0
 
 def plotPCA(data, sample_label = "sample", batch_label = "batch", experiment_label = "tissue"):
     #Realize the PCA
