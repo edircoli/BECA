@@ -6,3 +6,4 @@ beca-3/
 #Other
 .DS_Store
 __pycache__
+data/MNIST/
