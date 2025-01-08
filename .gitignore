@@ -7,3 +7,5 @@ beca-3/
 .DS_Store
 __pycache__
 data/MNIST/
+AI-design/model_weights/
+AI-design/plots/
