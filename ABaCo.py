@@ -148,24 +148,24 @@ class ABaCo(nn.Module):
         return self.decoder(z)
     
     # Define the classifier and discriminator models
-    def train(self,
-              batch_model: BatchDiscriminator,
-              out_class_model: TissueClassifier,
-              latent_class_model: TissueClassifier,
-              train_loader,
-              tissue_ohe,
-              num_epochs,
-              device,
-              w_recon = 1.0,
-              w_adver = 1.0,
-              w_latent = 1.0,
-              w_output = 1.0,
-              w_disc = 1.0,
-              val_loader = None,
-              test_loader = None,
-              model_name = "model",
-              save_model = False
-              ):
+    def train_model(self,
+                    batch_model: BatchDiscriminator,
+                    out_class_model: TissueClassifier,
+                    latent_class_model: TissueClassifier,
+                    train_loader,
+                    tissue_ohe,
+                    num_epochs,
+                    device,
+                    w_recon = 1.0,
+                    w_adver = 1.0,
+                    w_latent = 1.0,
+                    w_output = 1.0,
+                    w_disc = 1.0,
+                    val_loader = None,
+                    test_loader = None,
+                    model_name = "model",
+                    save_model = False
+                    ):
         
         train_dis_losses = []
         train_adv_losses = []
