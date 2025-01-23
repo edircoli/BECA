@@ -275,4 +275,3 @@ class ABaCo(nn.Module):
             print(f"Epoch {epoch + 1}/{num_epochs} | Dis. Train Loss: {train_dis_loss:.4f} | Adv. Train Loss: {train_adv_loss:.4f} | Tri. Train Loss: {train_tri_loss:.4f}")
 
         return train_dis_losses, train_adv_losses, train_tri_losses
-

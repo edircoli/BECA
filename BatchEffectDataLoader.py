@@ -94,7 +94,7 @@ def class_to_int(labels):
     
     return torch.tensor(classes)
 
-def ABaCoDataLoader(data, batch_label = "batch", exp_label = "tissue", batch_size = 32):
+def ABaCoDataLoader(data, device = torch.device("cpu"), batch_label = "batch", exp_label = "tissue", batch_size = 32):
     
     #Convert data to tensor (structure: tensor([otus], [batch]))
     otu_data = data.select_dtypes(include = "number")
@@ -105,6 +105,11 @@ def ABaCoDataLoader(data, batch_label = "batch", exp_label = "tissue", batch_siz
     data_tissue = data[exp_label]
     ohe_batch, _ = one_hot_encoding(data_batch)
     ohe_tissue, _ = one_hot_encoding(data_tissue)
+
+    # Send to device
+    otu_tensor = otu_tensor.to(device)
+    ohe_batch = ohe_batch.to(device)
+    ohe_tissue = ohe_tissue.to(device)
 
     # otu_dataloader = DataLoader(otu_tensor, batch_size = batch_size)
     # batch_dataloader = DataLoader(ohe_batch, batch_size = batch_size)
@@ -122,6 +127,6 @@ def ABaCoDataLoader(data, batch_label = "batch", exp_label = "tissue", batch_siz
     # otu_tissue_class_dataloader = DataLoader(TensorDataset(otu_tensor, class_to_int(data_tissue)), batch_size = batch_size)
 
     #Defining DataLoader for otus including + batch information, also including tissue as label for classificator training
-    abaco_dataloader = DataLoader(TensorDataset(otu_batch_tensor, class_to_int(data_tissue)), batch_size = batch_size)
+    abaco_dataloader = DataLoader(TensorDataset(otu_batch_tensor, class_to_int(data_tissue).to(device)), batch_size = batch_size)
 
     return abaco_dataloader, ohe_batch, ohe_tissue, otu_data, data_batch, data_tissue
