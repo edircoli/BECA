@@ -166,7 +166,9 @@ class ABaCo(nn.Module):
                     model_name = "model",
                     save_model = False
                     ):
-        
+        """
+        Placeholder
+        """
         train_dis_losses = []
         train_adv_losses = []
         train_tri_losses = []
@@ -270,7 +272,7 @@ class ABaCo(nn.Module):
             train_adv_losses.append(train_adv_loss)
             train_tri_losses.append(train_tri_loss)
 
-            print(f"Epoch {epoch + 1}/{num_epochs} | Dis. Train Loss: {train_dis_loss:.4f} | Adv. Train Loss: {train_dis_loss:.4f} | Tri. Train Loss: {train_dis_loss:.4f}")
+            print(f"Epoch {epoch + 1}/{num_epochs} | Dis. Train Loss: {train_dis_loss:.4f} | Adv. Train Loss: {train_adv_loss:.4f} | Tri. Train Loss: {train_tri_loss:.4f}")
 
         return train_dis_losses, train_adv_losses, train_tri_losses
 
