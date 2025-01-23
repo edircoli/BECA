@@ -124,4 +124,4 @@ def ABaCoDataLoader(data, batch_label = "batch", exp_label = "tissue", batch_siz
     #Defining DataLoader for otus including + batch information, also including tissue as label for classificator training
     abaco_dataloader = DataLoader(TensorDataset(otu_batch_tensor, class_to_int(data_tissue)), batch_size = batch_size)
 
-    return abaco_dataloader, ohe_batch, ohe_tissue
+    return abaco_dataloader, ohe_batch, ohe_tissue, otu_data, data_batch, data_tissue
