@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from scipy.stats import gmean
 from sklearn.preprocessing import StandardScaler
+import torch
+from torch.utils.data import DataLoader, TensorDataset
 
 
 def DataPreprocess(path, factors = ['sample', 'batch', 'tissue']):
@@ -62,3 +64,64 @@ def DataReverseTransform(data, original_data, factors = ["sample", "batch", "tis
 
 
     return df
+
+def one_hot_encoding(labels):
+    # Dictionary of batch labels
+    alphabet = labels.unique()
+    label_to_int = {label: i for i, label in enumerate(alphabet)}
+
+    # Initialize the one-hot encoded matrix
+    one_hot = np.zeros((len(labels), len(alphabet)), dtype=int)
+
+    # Fill the matrix
+    for i, label in enumerate(labels):
+        if label in label_to_int:
+            one_hot[i, label_to_int[label]] = 1
+
+    return torch.tensor(one_hot), alphabet.tolist()
+
+def class_to_int(labels):
+    # Dictionary of batch labels
+    alphabet = labels.unique()
+    label_to_int = {label: i for i, label in enumerate(alphabet)}
+
+    # Initialize the empty array
+    classes = np.zeros(len(labels), dtype=int)
+
+    # Fill the matrix
+    for i, label in enumerate(labels):
+        classes[i] = label_to_int[label]
+    
+    return torch.tensor(classes)
+
+def ABaCoDataLoader(data, batch_label = "batch", exp_label = "tissue", batch_size = 32):
+    
+    #Convert data to tensor (structure: tensor([otus], [batch]))
+    otu_data = data.select_dtypes(include = "number")
+    otu_tensor = torch.tensor(otu_data.values, dtype = torch.float32)
+
+    #Extract labels and convert to one hot encoding matrix
+    data_batch = data[batch_label]
+    data_tissue = data[exp_label]
+    ohe_batch, _ = one_hot_encoding(data_batch)
+    ohe_tissue, _ = one_hot_encoding(data_tissue)
+
+    # otu_dataloader = DataLoader(otu_tensor, batch_size = batch_size)
+    # batch_dataloader = DataLoader(ohe_batch, batch_size = batch_size)
+    # tissue_dataloader = DataLoader(ohe_tissue, batch_size = batch_size)
+
+    #Defining DataLoader for otus + batch information
+    otu_batch_tensor = torch.concat((otu_tensor, ohe_batch), 1)
+    # otu_batch_dataloader = DataLoader(otu_batch_tensor, batch_size = batch_size)
+
+    #Defining DataLoader for otus + tissue information, also including batch as label for discriminator training
+    # otu_tissue_tensor = torch.concat((otu_tensor, ohe_tissue), 1)
+    # otu_tissue_dataloader = DataLoader(TensorDataset(otu_tissue_tensor, class_to_int(data_batch)), batch_size = batch_size)
+
+    #Defining DataLoader for otus including tissue as label for classifier training
+    # otu_tissue_class_dataloader = DataLoader(TensorDataset(otu_tensor, class_to_int(data_tissue)), batch_size = batch_size)
+
+    #Defining DataLoader for otus including + batch information, also including tissue as label for classificator training
+    abaco_dataloader = DataLoader(TensorDataset(otu_batch_tensor, class_to_int(data_tissue)), batch_size = batch_size)
+
+    return abaco_dataloader, ohe_batch, ohe_tissue
