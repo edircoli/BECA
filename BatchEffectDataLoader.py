@@ -12,11 +12,15 @@ def DataPreprocess(path, factors = ['sample', 'batch', 'tissue']):
 
     return df
 
-def DataTransform(data, factors = ['sample', 'batch', 'tissue'], transformation = "CLR"):
+def DataTransform(data, factors = ['sample', 'batch', 'tissue'], transformation = "CLR", count = False):
 
     if transformation == "CLR":
-            # Select only OTUs columns and adding a small offset
-            df_otu = data.select_dtypes(include='number') + 1e-9
+            if count == False:
+                # Select only OTUs columns and adding a small offset
+                df_otu = data.select_dtypes(include='number') + 1e-9
+            
+            else:
+                df_otu = data.select_dtypes(include='number') + 1
 
             # Apply CLR transformation to numeric columns
             df_clr = np.log(df_otu.div(gmean(df_otu, axis=1), axis=0))
@@ -52,11 +56,15 @@ def DataTransform(data, factors = ['sample', 'batch', 'tissue'], transformation 
     
     return df
 
-def DataReverseTransform(data, original_data, factors = ["sample", "batch", "tissue"], transformation = "CLR"):
+def DataReverseTransform(data, original_data, factors = ["sample", "batch", "tissue"], transformation = "CLR", count = False):
     
     if transformation == "CLR":
         df_otu = data.select_dtypes(include = "number")
-        df_otu_original = original_data.select_dtypes(include='number') + 1e-9
+        if count == False:
+            df_otu_original = original_data.select_dtypes(include='number') + 1e-9
+        
+        else:
+            df_otu_original = original_data.select_dtypes(include='number') + 1
 
         df_inv = round(np.exp(df_otu) * gmean(df_otu_original, axis=1)[:, None], 3)
 
