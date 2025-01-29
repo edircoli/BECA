@@ -123,15 +123,17 @@ class ABaCo(nn.Module):
         self.input_size = input_size
         self.batch_size = batch_size
         self.encoder = nn.Sequential(
-            nn.Linear(input_size + batch_size, 128),
-            nn.Linear(128, 64),
-            nn.Linear(64, d_z)
+            nn.Linear(input_size + batch_size, 512),
+            nn.Linear(512, 256),
+            nn.Linear(256, 128),
+            nn.Linear(128, d_z)
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(d_z, 64),
-            nn.Linear(64, 128),
-            nn.Linear(128, input_size)
+            nn.Linear(d_z, 128),
+            nn.Linear(128, 256),
+            nn.Linear(256, 512),
+            nn.Linear(512, input_size)
         )
 
     def forward(self, x):
@@ -277,7 +279,8 @@ class ABaCo(nn.Module):
             train_dis_losses.append(train_dis_loss)
             train_adv_losses.append(train_adv_loss)
             train_tri_losses.append(train_tri_loss)
-
-            print(f"Epoch {epoch + 1}/{num_epochs} | Dis. Train Loss: {train_dis_loss:.4f} | Adv. Train Loss: {train_adv_loss:.4f} | Tri. Train Loss: {train_tri_loss:.4f}")
+            
+            if (epoch + 1) % 10 == 0:
+                print(f"Epoch {epoch + 1}/{num_epochs} | Dis. Train Loss: {train_dis_loss:.4f} | Adv. Train Loss: {train_adv_loss:.4f} | Tri. Train Loss: {train_tri_loss:.4f}")
 
         return train_dis_losses, train_adv_losses, train_tri_losses
