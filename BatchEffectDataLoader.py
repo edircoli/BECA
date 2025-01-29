@@ -102,7 +102,7 @@ def class_to_int(labels):
     
     return torch.tensor(classes)
 
-def ABaCoDataLoader(data, device = torch.device("cpu"), batch_label = "batch", exp_label = "tissue", batch_size = 32):
+def ABaCoDataLoader(data, device = torch.device("cuda" if torch.cuda.is_available() else "cpu"), batch_label = "batch", exp_label = "tissue", batch_size = 32):
     
     #Convert data to tensor (structure: tensor([otus], [batch]))
     otu_data = data.select_dtypes(include = "number")
