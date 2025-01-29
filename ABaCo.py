@@ -217,7 +217,7 @@ class ABaCo(nn.Module):
                 out_batch_class = batch_model(input_disc)
 
                 #1st Backpropagation: Discriminator
-                step_1_loss = w_disc * step_1_criterion(out_batch_class, x[:, -2:])
+                step_1_loss = w_disc * step_1_criterion(out_batch_class, x[:, -self.batch_size:])
                 step_1_optimizer.zero_grad()
                 step_1_loss.backward(retain_graph=True)
                 step_1_optimizer.step()
@@ -229,7 +229,7 @@ class ABaCo(nn.Module):
                 out_ae = self.decode(z)
 
                 #2nd Backpropagation: Adversarial AE
-                target_dist = torch.full_like(out_batch_class, 0.5)
+                target_dist = torch.full_like(out_batch_class, 1/self.batch_size)
                 out_batch_prob = torch.log_softmax(out_batch_class, dim=1)
                 step_2_loss = w_adver * step_2_criterion(out_batch_prob, target_dist)
                 step_2_optimizer.zero_grad()
@@ -247,7 +247,7 @@ class ABaCo(nn.Module):
                 out_latent_class = latent_class_model(z)    #this classifies using AE latent space
 
                 #3rd Backpropagation: Triple loss function
-                step_3_1_loss = step_3_1_criterion(out_ae, x[:,:-2])
+                step_3_1_loss = step_3_1_criterion(out_ae, x[:,:-self.batch_size])
                 step_3_2_loss = step_3_2_criterion(out_latent_class, y)
                 step_3_3_loss = step_3_3_criterion(out_out_class, y)
                 step_3_loss = w_recon * step_3_1_loss + w_latent * step_3_2_loss + w_output * step_3_3_loss
