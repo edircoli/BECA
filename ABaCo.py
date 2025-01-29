@@ -153,7 +153,7 @@ class ABaCo(nn.Module):
                     out_class_model: TissueClassifier,
                     latent_class_model: TissueClassifier,
                     train_loader,
-                    tissue_ohe,
+                    ohe_exp_loader,
                     num_epochs,
                     device,
                     w_recon = 1.0,
@@ -206,14 +206,14 @@ class ABaCo(nn.Module):
             train_adv_loss = 0.0
             train_tri_loss = 0.0
 
-            for x, y in train_loader:
+            for (x, y, k), (ohe_exp) in zip(train_loader, ohe_exp_loader):
                 #Forward pass to Autoencoder
                 x = x.to(device)
                 z = self.encode(x)
                 out_ae = self.decode(z)
 
                 #Forward pass to discriminator
-                input_disc = torch.concat((out_ae, tissue_ohe), 1) # reconstructed otus + tissue ohe
+                input_disc = torch.concat((out_ae, ohe_exp), 1) # reconstructed otus + tissue ohe
                 out_batch_class = batch_model(input_disc)
 
                 #1st Backpropagation: Discriminator
@@ -247,7 +247,13 @@ class ABaCo(nn.Module):
                 out_latent_class = latent_class_model(z)    #this classifies using AE latent space
 
                 #3rd Backpropagation: Triple loss function
-                step_3_1_loss = step_3_1_criterion(out_ae, x[:,:-self.batch_size])
+                # step_3_1_loss = step_3_1_criterion(out_ae, x[:,:-self.batch_size])
+                step_3_1_loss = 0
+                for i in range(x.shape[0]):
+                    k_i = k[i].item()
+                    step_3_1_loss += step_3_1_criterion(out_ae[i, :k_i], x[i, :k_i]) # Only compute loss on features values (not zero padding values)
+
+                step_3_1_loss /= x.shape[0] # Normalize for the batch size
                 step_3_2_loss = step_3_2_criterion(out_latent_class, y)
                 step_3_3_loss = step_3_3_criterion(out_out_class, y)
                 step_3_loss = w_recon * step_3_1_loss + w_latent * step_3_2_loss + w_output * step_3_3_loss

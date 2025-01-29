@@ -138,7 +138,7 @@ def ABaCoDataLoader(data, device = torch.device("cuda" if torch.cuda.is_availabl
     #Defining DataLoader for otus + batch information
     otu_tensor_padded = torch.concat((otu_tensor, zero_padding), 1)
     ohe_batch_padded = torch.concat((ohe_batch, batch_padding), 1)
-    
+
     otu_batch_tensor = torch.concat((otu_tensor_padded, ohe_batch_padded), 1)
     # otu_batch_dataloader = DataLoader(otu_batch_tensor, batch_size = batch_size)
 
@@ -150,6 +150,8 @@ def ABaCoDataLoader(data, device = torch.device("cuda" if torch.cuda.is_availabl
     # otu_tissue_class_dataloader = DataLoader(TensorDataset(otu_tensor, class_to_int(data_tissue)), batch_size = batch_size)
 
     #Defining DataLoader for otus including + batch information, also including tissue as label for classificator training
-    abaco_dataloader = DataLoader(TensorDataset(otu_batch_tensor, class_to_int(data_tissue).to(device)), batch_size = batch_size)
+    k_features = torch.full((n,), m, device=device)
+    abaco_dataloader = DataLoader(TensorDataset(otu_batch_tensor, class_to_int(data_tissue).to(device), k_features), batch_size = batch_size)
+    ohe_dataloader = DataLoader(ohe_tissue, batch_size = batch_size)
 
-    return abaco_dataloader, ohe_batch, ohe_tissue, otu_data, data_batch, data_tissue
+    return abaco_dataloader, ohe_batch, ohe_dataloader, otu_data, data_batch, data_tissue
