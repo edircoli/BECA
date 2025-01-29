@@ -16,8 +16,8 @@ from umap import UMAP
 class BatchAutoencoder(nn.Module):
     def __init__(self, 
                  d_z = 10, 
-                 input_size = 24, 
-                 batch_size = 2):
+                 input_size = 1024, 
+                 batch_size = 10):
         super().__init__()
         self.d_z = d_z
         self.input_size = input_size
@@ -55,10 +55,10 @@ class BatchAutoencoder(nn.Module):
 # Defining Batch Discriminator class
 class BatchDiscriminator(nn.Module):
     def __init__(self,
-                 input_size = 24,
+                 input_size = 1024,
                  hl1_size = 128,
                  hl2_size = 64,
-                 batch_size = 2,
+                 batch_size = 10,
                  tissue_size = 2):
         super().__init__()
         self.input_size = input_size
@@ -116,8 +116,8 @@ class ABaCo(nn.Module):
     #ABaCo core part is a regular autoencoder
     def __init__(self, 
                  d_z = 10, 
-                 input_size = 24, 
-                 batch_size = 2):
+                 input_size = 1024, 
+                 batch_size = 10):
         super().__init__()
         self.d_z = d_z
         self.input_size = input_size

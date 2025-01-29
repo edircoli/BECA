@@ -102,11 +102,17 @@ def class_to_int(labels):
     
     return torch.tensor(classes)
 
-def ABaCoDataLoader(data, device = torch.device("cuda" if torch.cuda.is_available() else "cpu"), batch_label = "batch", exp_label = "tissue", batch_size = 32):
+def ABaCoDataLoader(data, device = torch.device("cuda" if torch.cuda.is_available() else "cpu"), batch_label = "batch", exp_label = "tissue", 
+                    batch_size = 32, total_size = 1024, total_batch = 10):
     
     #Convert data to tensor (structure: tensor([otus], [batch]))
     otu_data = data.select_dtypes(include = "number")
     otu_tensor = torch.tensor(otu_data.values, dtype = torch.float32)
+
+    #Add zero padding for input
+    n, m = otu_tensor.shape
+    zero_padding = torch.zeros((n, total_size - m))
+    
 
     #Extract labels and convert to one hot encoding matrix
     data_batch = data[batch_label]
@@ -114,17 +120,26 @@ def ABaCoDataLoader(data, device = torch.device("cuda" if torch.cuda.is_availabl
     ohe_batch, _ = one_hot_encoding(data_batch)
     ohe_tissue, _ = one_hot_encoding(data_tissue)
 
+    #Add zero padding for batch input
+    k, j = ohe_batch.shape
+    batch_padding = torch.zeros((k, total_batch - j))
+
     # Send to device
     otu_tensor = otu_tensor.to(device)
     ohe_batch = ohe_batch.to(device)
     ohe_tissue = ohe_tissue.to(device)
+    zero_padding = zero_padding.to(device)
+    batch_padding = batch_padding.to(device)
 
     # otu_dataloader = DataLoader(otu_tensor, batch_size = batch_size)
     # batch_dataloader = DataLoader(ohe_batch, batch_size = batch_size)
     # tissue_dataloader = DataLoader(ohe_tissue, batch_size = batch_size)
 
     #Defining DataLoader for otus + batch information
-    otu_batch_tensor = torch.concat((otu_tensor, ohe_batch), 1)
+    otu_tensor_padded = torch.concat((otu_tensor, zero_padding), 1)
+    ohe_batch_padded = torch.concat((ohe_batch, batch_padding), 1)
+    
+    otu_batch_tensor = torch.concat((otu_tensor_padded, ohe_batch_padded), 1)
     # otu_batch_dataloader = DataLoader(otu_batch_tensor, batch_size = batch_size)
 
     #Defining DataLoader for otus + tissue information, also including batch as label for discriminator training
