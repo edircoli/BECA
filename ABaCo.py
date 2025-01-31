@@ -183,11 +183,11 @@ class ABaCo(nn.Module):
         #Optimizer for discriminator only
         step_1_optimizer = torch.optim.Adam(batch_model.parameters(), lr = 1e-5, weight_decay=1e-5)
         #Optimizer for adversarial training (autoencoder only)
-        step_2_optimizer = torch.optim.Adam(self.parameters(), lr = 1e-5, weight_decay=1e-5)
+        step_2_optimizer = torch.optim.Adam(self.parameters(), lr = 1e-4, weight_decay=1e-5)
         #Optimizer for biological conservation (autoencoder and classifiers)
-        step_3_1_optimizer = torch.optim.Adam(self.parameters(), lr = 1e-5, weight_decay=1e-5)
-        step_3_2_optimizer = torch.optim.Adam(latent_class_model.parameters(), lr = 1e-5, weight_decay=1e-5)
-        step_3_3_optimizer = torch.optim.Adam(out_class_model.parameters(), lr = 1e-5, weight_decay=1e-5)
+        step_3_1_optimizer = torch.optim.Adam(self.parameters(), lr = 5e-5, weight_decay=5e-5)
+        step_3_2_optimizer = torch.optim.Adam(latent_class_model.parameters(), lr = 5e-5, weight_decay=1e-5)
+        step_3_3_optimizer = torch.optim.Adam(out_class_model.parameters(), lr = 5e-5, weight_decay=1e-5)
 
         #Loss function for discriminator only
         step_1_criterion = nn.CrossEntropyLoss()
