@@ -25,7 +25,7 @@ def kBET(data, batch_label = "batch"):
     for j, neighbor in enumerate(indx):
         gamma_j = []
         for i in data_batch.unique():
-            mu_ij = round(sum(data_batch == i) / n * k + 0.001) #Expected number of samples from batch i in neighbor j
+            mu_ij = round(sum(data_batch == i) / n * k + 1e-6) + 1e-6 #Expected number of samples from batch i in neighbor j
             n_ij = 0 #Actual number of samples from batch i in neighbor j
             
             for s in neighbor:
