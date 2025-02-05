@@ -163,6 +163,11 @@ class ABaCo(nn.Module):
                     w_latent = 1.0,
                     w_output = 1.0,
                     w_disc = 1.0,
+                    lr_recon = 1e-5,
+                    lr_adver = 1e-5,
+                    lr_latent = 1e-5,
+                    lr_output = 1e-5,
+                    lr_disc = 1e-5,
                     val_loader = None,
                     test_loader = None,
                     model_name = "model",
@@ -173,7 +178,9 @@ class ABaCo(nn.Module):
         """
         train_dis_losses = []
         train_adv_losses = []
-        train_tri_losses = []
+        train_recon_losses = []
+        train_latent_losses = []
+        train_output_losses = []
         test_losses = []
         val_losses = []
         lowest_val_loss = float('inf')
@@ -181,13 +188,13 @@ class ABaCo(nn.Module):
         best_model_state = None
 
         #Optimizer for discriminator only
-        step_1_optimizer = torch.optim.Adam(batch_model.parameters(), lr = 1e-5, weight_decay=1e-5)
+        step_1_optimizer = torch.optim.Adam(batch_model.parameters(), lr = lr_disc, weight_decay=1e-5)
         #Optimizer for adversarial training (autoencoder only)
-        step_2_optimizer = torch.optim.Adam(self.parameters(), lr = 1e-4, weight_decay=1e-5)
+        step_2_optimizer = torch.optim.Adam(self.parameters(), lr = lr_adver, weight_decay=1e-5)
         #Optimizer for biological conservation (autoencoder and classifiers)
-        step_3_1_optimizer = torch.optim.Adam(self.parameters(), lr = 5e-5, weight_decay=5e-5)
-        step_3_2_optimizer = torch.optim.Adam(latent_class_model.parameters(), lr = 5e-5, weight_decay=1e-5)
-        step_3_3_optimizer = torch.optim.Adam(out_class_model.parameters(), lr = 5e-5, weight_decay=1e-5)
+        step_3_1_optimizer = torch.optim.Adam(self.parameters(), lr = lr_recon, weight_decay=1e-5)
+        step_3_2_optimizer = torch.optim.Adam(latent_class_model.parameters(), lr = lr_latent, weight_decay=1e-5)
+        step_3_3_optimizer = torch.optim.Adam(out_class_model.parameters(), lr = lr_output, weight_decay=1e-5)
 
         #Loss function for discriminator only
         step_1_criterion = nn.CrossEntropyLoss()
@@ -206,7 +213,9 @@ class ABaCo(nn.Module):
             latent_class_model.train()
             train_dis_loss = 0.0
             train_adv_loss = 0.0
-            train_tri_loss = 0.0
+            train_recon_loss = 0.0
+            train_output_loss = 0.0
+            train_latent_loss = 0.0
 
             for (x, y, k), (ohe_exp) in zip(train_loader, ohe_exp_loader):
                 #Forward pass to Autoencoder
@@ -270,17 +279,23 @@ class ABaCo(nn.Module):
                 #Save loss values
                 train_dis_loss += step_1_loss.item()
                 train_adv_loss += step_2_loss.item()
-                train_tri_loss += step_3_loss.item()
+                train_recon_loss += step_3_1_loss.item()
+                train_latent_loss += step_3_2_loss.item()
+                train_output_loss += step_3_3_loss.item()
 
             train_dis_loss /= len(train_loader)
             train_adv_loss /= len(train_loader)
-            train_tri_loss /= len(train_loader)
+            train_recon_loss /= len(train_loader)
+            train_latent_loss /= len(train_loader)
+            train_output_loss /= len(train_loader)
             
             train_dis_losses.append(train_dis_loss)
             train_adv_losses.append(train_adv_loss)
-            train_tri_losses.append(train_tri_loss)
+            train_recon_losses.append(train_recon_loss)
+            train_latent_losses.append(train_latent_loss)
+            train_output_losses.append(train_output_loss)
             
-            if (epoch + 1) % 10 == 0:
-                print(f"Epoch {epoch + 1}/{num_epochs} | Dis. Train Loss: {train_dis_loss:.4f} | Adv. Train Loss: {train_adv_loss:.4f} | Tri. Train Loss: {train_tri_loss:.4f}")
+            if (epoch + 1) % 1 == 0:
+                print(f"Epoch {epoch + 1}/{num_epochs} | Dis. Train Loss: {train_dis_loss:.4f} | Adv. Train Loss: {train_adv_loss:.4f} | Recon. Train Loss: {train_recon_loss:.4f} | Lat. Train Loss: {train_latent_loss:.4f} | Out. Train Loss: {train_recon_loss:.4f}")
 
-        return train_dis_losses, train_adv_losses, train_tri_losses
+        return train_dis_losses, train_adv_losses, train_recon_losses
