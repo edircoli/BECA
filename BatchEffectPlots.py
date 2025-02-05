@@ -99,7 +99,7 @@ def plotPCA(data, sample_label = "sample", batch_label = "batch", experiment_lab
         raw_symbols.append(SymbolValidator().values[i])
 
     #Defining a set of colors to be used for batches
-    raw_colors = ["blue","red","green","orange","purple"]
+    raw_colors = ["blue", "red", "green", "orange", "purple", "yellow", "skyblue", "brown", "gray", "black", "pink"]
 
     #Adding symbol to corresponding experiment
     df_pca["marker"] = None
@@ -132,6 +132,15 @@ def plotPCA(data, sample_label = "sample", batch_label = "batch", experiment_lab
     
     #fig.update_layout(xaxis_range = [-5, 5],
     #                  yaxis_range = [-5, 5])
+
+    fig.update_layout(
+        legend=dict(
+            font=dict(
+                size=8
+            ),
+            itemwidth=30
+               )
+    )
 
     return fig.show()
 
