@@ -110,6 +110,37 @@ class TissueClassifier(nn.Module):
     def loss(self, out, y):
         return nn.CrossEntropyLoss()(out, y)
 
+# Define discriminator that differentiates between original data from recreated data
+# This assures that the original data distribution is conserved
+class DataDiscriminator(nn.Module):
+    def __init__(self,
+                 input_size,
+                 exp_size,
+                 hl1_size = 128,
+                 hl2_size = 64,
+                 output_size = 2):
+        super().__init__()
+        self.input_size = input_size + exp_size
+        self.hl1_size = hl1_size
+        self.hl2_size = hl2_size
+        self.output_size = output_size
+        self.ffnn = nn.Sequential(
+            nn.Linear(input_size + exp_size, hl1_size),
+            nn.ReLU(),
+            nn.Linear(hl1_size, hl2_size),
+            nn.ReLU(),
+            nn.Linear(hl2_size, output_size)
+        )
+
+    def forward(self, x):
+        x = x.view(-1, self.input_size)
+        y = self.ffnn(x)
+        return y
+    
+    def loss(self, out, y):
+        return nn.CrossEntropyLoss()(out, y)
+
+
 # Defining ABaCo algorithm
 class ABaCo(nn.Module):
 
@@ -154,6 +185,7 @@ class ABaCo(nn.Module):
                     batch_model: BatchDiscriminator,
                     out_class_model: TissueClassifier,
                     latent_class_model: TissueClassifier,
+                    data_disc_model: DataDiscriminator,
                     train_loader,
                     ohe_exp_loader,
                     num_epochs,
@@ -163,11 +195,13 @@ class ABaCo(nn.Module):
                     w_latent = 1.0,
                     w_output = 1.0,
                     w_disc = 1.0,
+                    w_data = 1.0,
                     lr_recon = 1e-5,
                     lr_adver = 1e-5,
                     lr_latent = 1e-5,
                     lr_output = 1e-5,
                     lr_disc = 1e-5,
+                    lr_data = 1e-5,
                     val_loader = None,
                     test_loader = None,
                     model_name = "model",
@@ -181,6 +215,7 @@ class ABaCo(nn.Module):
         train_recon_losses = []
         train_latent_losses = []
         train_output_losses = []
+        train_data_losses = []
         test_losses = []
         val_losses = []
         lowest_val_loss = float('inf')
@@ -195,6 +230,9 @@ class ABaCo(nn.Module):
         step_3_1_optimizer = torch.optim.Adam(self.parameters(), lr = lr_recon, weight_decay=1e-5)
         step_3_2_optimizer = torch.optim.Adam(latent_class_model.parameters(), lr = lr_latent, weight_decay=1e-5)
         step_3_3_optimizer = torch.optim.Adam(out_class_model.parameters(), lr = lr_output, weight_decay=1e-5)
+        #v2 - Optimizer for discriminator of original distribution data and adversarial training AE
+        step_4_optimizer = torch.optim.Adam(data_disc_model.parameters(), lr = lr_data, weight_decay=1e-5)
+        step_5_optimizer = torch.optim.Adam(self.parameters(), lr = lr_adver, weight_decay=1e-5)
 
         #Loss function for discriminator only
         step_1_criterion = nn.CrossEntropyLoss()
@@ -204,6 +242,9 @@ class ABaCo(nn.Module):
         step_3_1_criterion = nn.MSELoss()
         step_3_2_criterion = nn.CrossEntropyLoss()
         step_3_3_criterion = nn.CrossEntropyLoss()
+        #Original data distribution conservation loss functions
+        step_4_criterion = nn.CrossEntropyLoss()
+        step_5_criterion = nn.CrossEntropyLoss()
 
         for epoch in range(num_epochs):
             #Training
@@ -216,6 +257,7 @@ class ABaCo(nn.Module):
             train_recon_loss = 0.0
             train_output_loss = 0.0
             train_latent_loss = 0.0
+            train_data_loss = 0.0
 
             for (x, y, k), (ohe_exp) in zip(train_loader, ohe_exp_loader):
                 #Forward pass to Autoencoder
@@ -275,27 +317,73 @@ class ABaCo(nn.Module):
                 step_3_1_optimizer.step()
                 step_3_2_optimizer.step()
                 step_3_3_optimizer.step()
+                out_ae = out_ae.detach()
+                z = z.detach()
+                z = self.encode(x)
+                out_ae = self.decode(z)
 
+                #4th Backpropagation: Training data discriminator
+                original_data = torch.concat((x[:, :-self.batch_size], ohe_exp), 1)
+                recon_data = torch.concat((out_ae, ohe_exp), 1)
+                out_real_data_class = data_disc_model(original_data)
+                out_recon_data_class = data_disc_model(recon_data)
+
+                #Original data class
+                original_class = torch.zeros(x.shape[0], 2, device=device)
+                original_class[:x.shape[0]] = torch.tensor([1, 0], device=device)
+
+                #Reconstructed data class
+                recon_class = torch.zeros(x.shape[0], 2, device=device)
+                recon_class[:x.shape[0]] = torch.tensor([0, 1], device=device)
+                
+                #Compute loss for data discriminator
+                step_4_loss = w_data * step_4_criterion(out_real_data_class, original_class)
+                step_4_loss += w_data * step_4_criterion(out_recon_data_class, recon_class)
+
+                #Backpropagation
+                step_4_optimizer.zero_grad()
+                step_4_loss.backward()
+                step_4_optimizer.step()
+
+                #Detach everything for next pass
+                out_ae = out_ae.detach()
+                z = z.detach()
+                z = self.encode(x)
+                out_ae = self.decode(z)
+
+                #Recompute for following backpropagation
+                recon_data = torch.concat((out_ae, ohe_exp), 1)
+                out_recon_data_class = data_disc_model(recon_data)
+
+                #5th Backpropagation: Adversarial training of AE from data discriminator (only computed with reconstructed data output)
+                step_5_loss = w_adver * step_5_criterion(out_recon_data_class, original_class)
+                step_5_optimizer.zero_grad()
+                step_5_loss.backward()
+                step_5_optimizer.step()
+                
                 #Save loss values
                 train_dis_loss += step_1_loss.item()
                 train_adv_loss += step_2_loss.item()
                 train_recon_loss += step_3_1_loss.item()
                 train_latent_loss += step_3_2_loss.item()
                 train_output_loss += step_3_3_loss.item()
+                train_data_loss += step_4_loss.item()
 
             train_dis_loss /= len(train_loader)
             train_adv_loss /= len(train_loader)
             train_recon_loss /= len(train_loader)
             train_latent_loss /= len(train_loader)
             train_output_loss /= len(train_loader)
+            train_data_loss /= len(train_loader)
             
             train_dis_losses.append(train_dis_loss)
             train_adv_losses.append(train_adv_loss)
             train_recon_losses.append(train_recon_loss)
             train_latent_losses.append(train_latent_loss)
             train_output_losses.append(train_output_loss)
+            train_data_losses.append(train_data_loss)
             
             if (epoch + 1) % 1 == 0:
-                print(f"Epoch {epoch + 1}/{num_epochs} | Dis. Train Loss: {train_dis_loss:.4f} | Adv. Train Loss: {train_adv_loss:.4f} | Recon. Train Loss: {train_recon_loss:.4f} | Lat. Train Loss: {train_latent_loss:.4f} | Out. Train Loss: {train_recon_loss:.4f}")
+                print(f"Epoch {epoch + 1}/{num_epochs} | Dis. Train Loss: {train_dis_loss:.4f} | Adv. Train Loss: {train_adv_loss:.4f} | Recon. Train Loss: {train_recon_loss:.4f} | Lat. Train Loss: {train_latent_loss:.4f} | Out. Train Loss: {train_output_loss:.4f} | Data Train Loss: {train_data_loss:.4f}")
 
         return train_dis_losses, train_adv_losses, train_recon_losses
