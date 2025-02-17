@@ -141,11 +141,15 @@ class ZINBDecoder(nn.Module):
         mu, theta, pi_logits = torch.chunk(self.decoder_net(z), 3, dim = -1)
         # Ensure mean and dispersion are positive numbers and pi is in range [0,1]
         mu = F.softplus(mu)
-        theta = F.softplus(theta)
+        theta = F.softplus(theta) + 1e-4
+        theta = theta.clamp(min = 1, max = 1e5)
+
         pi = torch.sigmoid(pi_logits)
         # Parameterization into NB parameters
         p = theta / (theta + mu)
-        r = theta
+        p = p.clamp(min = 0 + 1e-4, max = 1 - 1e-4)
+
+        r = theta 
         # Create Negative Binomial component
         nb = td.Independent(td.NegativeBinomial(total_count = r, probs = p), 1)
 
