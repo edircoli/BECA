@@ -254,11 +254,19 @@ class VAE(nn.Module):
 
         return self.decoder(z).sample()
     
-    def forward(self, x):
+    def loss(self, x):
         """
         Compute negative ELBO for the given data (loss)
         """
         return -self.elbo(x)
+    
+    def forward(self, x):
+        """
+        Computes a simple forward pass for the given data
+        """
+        q = self.encoder(x)
+        z = q.rsample()
+        return self.decoder(z)
 
 # ---------- TRAINING LOOP ---------- #
 
@@ -288,7 +296,7 @@ def train(model, optimizer, data_loader, epochs, device):
         for x in data_iter:
             x = x[0].to(device)
             optimizer.zero_grad()
-            loss = model(x)
+            loss = model.loss(x)
             loss.backward()
             optimizer.step()
 
