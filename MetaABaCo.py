@@ -283,6 +283,21 @@ class VAE(nn.Module):
         z = q.rsample()
         return self.decoder(z)
 
+# ---------- DISCRIMINATOR AND CLASSIFIERS ---------- #
+
+class BatchDiscriminator(nn.Module):
+    """
+    Define the Batch Discriminator for adversarial training
+    """
+    def __init__(self, net):
+        super().__init__()
+        self.net = net
+    
+    def forward(self, x):
+        batch_class = self.net(x)
+        return batch_class
+
+
 # ---------- TRAINING LOOP ---------- #
 
 def train(model, optimizer, data_loader, epochs, device):
