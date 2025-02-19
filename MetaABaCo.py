@@ -28,7 +28,7 @@ class NormalPrior(nn.Module):
         Returns:
             prior: [torch.distributions.Distribution]
         """
-        return td.Independent(td.Normal(loc=self.mean, scale=self.std), 1)
+        return td.Independent(td.Normal(loc=self.mu, scale=self.var), 1)
     
 class MoGPrior(nn.Module):
     def __init__(self, d_z, multiplier = 1.0):
@@ -77,7 +77,10 @@ class NormalEncoder(nn.Module):
             x: [torch.Tensor]
         """
         mu, var = torch.chunk(self.encoder_net(x), 2, dim=-1) #chunk is used for separating the encoder output (batch, 2*d_z) into two separate vectors (batch, d_z)
-        return td.Independent(td.Normal(loc = mu, scale = torch.exp(var * 0.5)), 1)
+        
+        std = torch.clamp(torch.exp(var * 0.5), min = 1e-8, max = 1e8)
+
+        return td.Independent(td.Normal(loc = mu, scale = std), 1)
     
 # ---------- DECODER CLASSES DEFINITIONS ---------- #
 
@@ -140,18 +143,23 @@ class ZINBDecoder(nn.Module):
         """
         mu, theta, pi_logits = torch.chunk(self.decoder_net(z), 3, dim = -1)
         # Ensure mean and dispersion are positive numbers and pi is in range [0,1]
+
         mu = F.softplus(mu)
         theta = F.softplus(theta) + 1e-4
-        theta = theta.clamp(min = 1, max = 1e5)
 
         pi = torch.sigmoid(pi_logits)
+
         # Parameterization into NB parameters
         p = theta / (theta + mu)
-        p = p.clamp(min = 0 + 1e-4, max = 1 - 1e-4)
 
         r = theta 
+
+        # Clamp values to avoid huge / small probabilities
+        p = torch.clamp(p, min=1e-5, max = 1 - 1e-5)
+
         # Create Negative Binomial component
-        nb = td.Independent(td.NegativeBinomial(total_count = r, probs = p), 1)
+        nb = td.NegativeBinomial(total_count = r, probs = p)
+        # nb = td.Independent(nb, 1)
 
         return ZINB(nb, pi)
 
@@ -191,10 +199,9 @@ class ZINB(td.Distribution):
             x: [torch.Tensor]
         """
         nb_log_prob = self.nb.log_prob(x) #log probability of NB where x > 0
-        nb_prob_zero = self.nb.prob(0) #probability of NB where x = 0
-
+        nb_prob_zero = torch.exp(self.nb.log_prob(torch.zeros_like(x))) #probability of NB where x = 0
         log_prob_zero = torch.log(self.pi + (1 - self.pi) * nb_prob_zero + 1e-8)
-        log_prob_nonzero = torch.log(1 - self.pi + 1e-8) * nb_log_prob
+        log_prob_nonzero = torch.log(1 - self.pi + 1e-8) + nb_log_prob
 
         return torch.where(x == 0, log_prob_zero, log_prob_nonzero)
     
@@ -243,7 +250,11 @@ class VAE(nn.Module):
         """
         q = self.encoder(x)
         z = q.rsample()
-        elbo = torch.mean(self.decoder(z).log_prob(x) - td.kl_divergence(q, self.prior()), dim=0)
+
+        recon_log_prob = self.decoder(z).log_prob(x)
+        recon_loss = recon_log_prob.sum(dim=1)
+
+        elbo = torch.mean(recon_loss - td.kl_divergence(q, self.prior()), dim=0)
 
         return elbo
     
