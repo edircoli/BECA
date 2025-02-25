@@ -31,27 +31,45 @@ class NormalPrior(nn.Module):
         return td.Independent(td.Normal(loc=self.mu, scale=self.var), 1)
     
 class MoGPrior(nn.Module):
-    def __init__(self, d_z, multiplier = 1.0):
+    def __init__(self, d_z, n_comp, multiplier = 1.0):
         """
         Define a Mixture of Gaussian Normal prior distribution.
 
         Parameters:
             d_z: [int]
                 Dimension of the latent space
+            n_comp: [int]
+                Number of components for the MoG distribution
             multiplier: [float]
                 Parameter that controls sparsity of each Gaussian component
         """
         super().__init__()
         self.d_z = d_z
+        self.n_comp = n_comp
+
+        self.mu = nn.Parameter(torch.randn(n_comp, self.d_z)*multiplier)
+        self.var = nn.Parameter(torch.randn(n_comp, self.d_z))
+        self.pi = nn.Parameters(torch.zeros(n_comp, 1, 1))
     
     def forward(self):
         """
-        Return prior distribution. Allows computation of KL-divergence by calling self.prior() in the VAE class.
+        Return prior distribution, allowing for the computation of the KL-divergence by calling self.prior().
 
-        Return:
+        Returns:
             prior: [torch.distributions.Distribution]
         """
-        return None
+        # Get parameters for each MoG component
+        means = self.mu
+        stds = torch.exp(0.5 * self.var)
+
+        # Create individual Gaussian distribution per component
+        gaussians = td.Independent(td.Normal(loc = means, scale = stds), 1)
+
+        # Mixture of Gaussians
+        mix_dist = td.Categorical(logits = self.pi)
+        prior = td.MixtureSameFamily(mix_dist, gaussians)
+
+        return prior
 
 # ---------- ENCODER CLASSES DEFINITIONS ---------- #
 
@@ -81,6 +99,63 @@ class NormalEncoder(nn.Module):
         std = torch.clamp(torch.exp(var * 0.5), min = 1e-8, max = 1e8)
 
         return td.Independent(td.Normal(loc = mu, scale = std), 1)
+
+class MoGEncoder(nn.Module):
+    def __init__(self, encoder_net, n_comp):
+        """
+        Define a Mixture of Gaussians encoder to obtain the parameters of the MoG distribution.
+
+        Parameters:
+            encoder_net: [torch.nn.Module]
+                The encoder network, takes a tensor of dimension (batch, features) and
+                outputs a tensor of dimension (batch, n_comp*(2*d_z + 1)), where d_z is the dimension
+                of the latent space, and n_comp the number of components of the MoG distribution.
+            n_comp: [int]
+                Number of components for the MoG distribution.
+        """
+        super().__init__()
+        self.n_comp = n_comp
+        self.encoder_net = encoder_net
+    
+    def forward(self, x):
+        """
+        Computes the MoG distribution over the latent space.
+
+        Parameters:
+            x: [torch.Tensor]
+        """
+        comps = torch.chunk(self.encoder_net(x), self.n_comp, dim=-1) #chunk used for separating the encoder output (batch, n_comp*(2*d_z + 1)) into n_comp separate vectors (batch, n_comp)
+        
+        # Parameters list (for extracting in loop)
+        mu_list = []
+        var_list = []
+        pi_list = []
+        
+        for comp in comps:
+            params = comp[:, :-1] # parameters mu and var are on the 2*d_z first values of the component
+            pi_comp = comp[:, -1] # mixing probabilities is the last value of the component
+
+            mu, var = torch.chunk(params, 2, dim=-1) #separating mu from var using chunk
+
+            mu_list.append(mu)
+            var_list.append(var)
+            pi_list.append(pi_comp)
+        
+        # Convert parameters list into tensor
+        means = torch.stack(mu_list, dim=1)
+        stds = torch.exp(0.5 * torch.stack(var_list, dim=1))
+        pis = torch.stack(pi_list, dim=1)
+
+        # Create individual Gaussian distribution per component
+        gaussians = td.Independent(td.Normal(loc = means, scale = stds), 1)
+
+        # Mixture of Gaussians
+        mix_dist = td.Categorical(logits = pis)
+        mog_dist = td.MixtureSameFamily(mix_dist, gaussians)
+
+        return mog_dist
+
+
     
 # ---------- DECODER CLASSES DEFINITIONS ---------- #
 
@@ -296,6 +371,8 @@ class BatchDiscriminator(nn.Module):
     def forward(self, x):
         batch_class = self.net(x)
         return batch_class
+    
+
 
 
 # ---------- TRAINING LOOP ---------- #
@@ -332,3 +409,55 @@ def train(model, optimizer, data_loader, epochs, device):
 
             progress_bar.set_postfix(loss = f"{loss.item():12.4f}", epoch=f"{epoch+1}/{epochs}")
             progress_bar.update()
+
+def train_abaco(vae, discriminator, data_loader, batch_ohe, epochs, device):
+
+    vae.train()
+    discriminator.train()
+
+    adv_optim = torch.optim.Adam(vae.encoder.parameters(), lr = 1e-5)
+    vae_optim = torch.optim.Adam(vae.parameters(), lr = 1e-5)
+    disc_optim = torch.optim.Adam(discriminator.parameters(), lr = 1e-5)
+
+    total_steps = len(data_loader)*epochs
+    progress_bar = tqdm(range(total_steps), desc="Training")
+
+    for epoch in range(epochs):
+        data_iter = iter(data_loader)
+        for (x, y, z), (ohe_batch) in zip(data_iter, batch_ohe):
+            x = x[0].to(device)
+
+            #First step: Forward pass through encoder and to discriminator
+            q = vae.encoder(x)
+            z = q.rsample()
+            b = discriminator(z)
+
+            # Discriminator Loss
+            disc_optim.zero_grad()
+            disc_loss = discriminator.loss(b, ohe_batch)
+            disc_loss.backward()
+            disc_optim.step()
+
+            # Detach relevant variables
+
+            # Second step: Compute adversarial loss to encoder
+
+            # Adversarial loss
+            adv_optim.zero_grad()
+            adv_loss = adversarial_loss(b, ohe_batch)
+            adv_loss.backward()
+            adv_optim.step()
+
+            # Detach relevant variables
+
+            # Third step: VAE ELBO computation
+            vae_loss = vae.loss(x)
+            vae_optim.zero_grad()
+            vae_loss.backward()
+            vae_optim.step()
+
+            progress_bar.set_postfix(loss = f"{vae_loss.item():12.4f}", epoch=f"{epoch+1}/{epochs}")
+            progress_bar.update()
+            
+
+
