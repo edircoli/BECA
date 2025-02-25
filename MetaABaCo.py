@@ -49,7 +49,7 @@ class MoGPrior(nn.Module):
 
         self.mu = nn.Parameter(torch.randn(n_comp, self.d_z)*multiplier)
         self.var = nn.Parameter(torch.randn(n_comp, self.d_z))
-        self.pi = nn.Parameters(torch.zeros(n_comp, 1, 1))
+        self.pi = nn.Parameter(torch.zeros(n_comp))
     
     def forward(self):
         """
@@ -60,14 +60,11 @@ class MoGPrior(nn.Module):
         """
         # Get parameters for each MoG component
         means = self.mu
-        stds = torch.exp(0.5 * self.var)
+        stds = torch.sqrt(torch.nn.functional.softplus(self.var) + 1e-8)
+        logits = self.pi
 
-        # Create individual Gaussian distribution per component
-        gaussians = td.Independent(td.Normal(loc = means, scale = stds), 1)
-
-        # Mixture of Gaussians
-        mix_dist = td.Categorical(logits = self.pi)
-        prior = td.MixtureSameFamily(mix_dist, gaussians)
+        # Call MoG distribution
+        prior = MixtureOfGaussians(logits, means, stds)
 
         return prior
 
@@ -143,15 +140,13 @@ class MoGEncoder(nn.Module):
         
         # Convert parameters list into tensor
         means = torch.stack(mu_list, dim=1)
-        stds = torch.exp(0.5 * torch.stack(var_list, dim=1))
+        stds = torch.sqrt(torch.nn.functional.softplus(torch.stack(var_list, dim=1)) + 1e-8)
         pis = torch.stack(pi_list, dim=1)
 
+        # Clamp to avoid error values (too low or too high)
+        stds = torch.clamp(stds, min = 1e-5, max = 1e5)
         # Create individual Gaussian distribution per component
-        gaussians = td.Independent(td.Normal(loc = means, scale = stds), 1)
-
-        # Mixture of Gaussians
-        mix_dist = td.Categorical(logits = pis)
-        mog_dist = td.MixtureSameFamily(mix_dist, gaussians)
+        mog_dist = MixtureOfGaussians(pis, means, stds)
 
         return mog_dist
 
@@ -295,13 +290,121 @@ class ZINB(td.Distribution):
 
         return torch.where(zero_inflated.bool(), torch.zeros_like(nb_sample), nb_sample)
     
+class MixtureOfGaussians(td.Distribution):
+    """
+    A Mixture of Gaussians distribution with reparameterized sampling. Computation of gradients is possible.
+    """
+    arg_constraints = {}
+    support = td.constraints.real
+    has_rsample = True # Implemented the rsample() through the Gumbel-softmax reparameterization trick.
+
+    def __init__(self, mixture_logits, means, stds, temperature = 0.1, validate_args=None):
+        self.mixture_logits = mixture_logits
+        self.means = means
+        self.stds = stds
+        self.temperature = temperature
+
+        batch_shape = self.mixture_logits.shape[:-1]
+        event_shape = self.means.shape[-1:]
+        super().__init__(batch_shape = batch_shape, event_shape = event_shape, validate_args = validate_args)
+
+    def rsample(self, sample_shape = torch.Size()):
+        """
+        Reparameterized sampling using the Gubel-softmax trick.
+        """
+
+        # Step 1 - Sample for every component
+
+        logits = self.mixture_logits.expand(sample_shape + self.mixture_logits.shape)
+        means = self.means.expand(sample_shape + self.means.shape)
+        stds = self.stds.expand(sample_shape + self.stds.shape)
+
+        eps = torch.rand_like(means)
+        comp_samples = means + eps * stds
+
+        # Step 2 - Generate Gumbel noise for each component
+        u = torch.rand_like(logits)
+        gumbel_noise = -torch.log(-torch.log(u + 1e-5) + 1e-5)
+
+        # Step 3 - Compute y_i (gumbel-softmax trick)
+        weights = F.softmax((logits + gumbel_noise) / self.temperature, dim=-1)
+        weights = weights.unsqueeze(-1)
+
+        # Step 4 - Sum every component for final sampling
+        sample = torch.sum(weights * comp_samples, dim=-2)
+        return sample
+    
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Sample from the MoG distribution.
+        """
+        return self.rsample(sample_shape)
+    
+    def log_prob(self, value):
+        """
+        Compute the log probability of a given value. The log prob of a MoG is defined as:
+
+            log_prob(x) = log [sum_k (pi_k * N(x; mu_k, sigma_k^2)]
+
+        Where pi_k are the mixture probabilities.
+        """
+        value = value.unsqueeze(-2)
+
+        normal = td.Normal(self.means, self.stds)
+        log_prob_comp = normal.log_prob(value)
+        log_prob_comps = log_prob_comp.sum(dim = -1)
+
+        log_weights = F.log_softmax(self.mixture_logits, dim=-1)
+        log_weights = log_weights.expand(log_prob_comps.shape)
+
+        log_prob = torch.logsumexp(log_weights + log_prob_comps, dim = -1)
+
+        return log_prob
+    
+    @property
+    def mean(self):
+        """
+        Mixture mean: weighted sum of component means
+        """
+        weights = F.softmax(self.mixture_logits, dim = -1)
+
+        return torch.sum(weights.unsqueeze(-1) * self.means, dim = -2)
+    
+    def variance(self):
+        """
+        Mixture variance: weighted sum of (variance + squared mean) minus squared mixture mean
+        """
+        weights = F.softmax(self.mixture_logits, dim=-1)
+        mixture_mean = self.mean
+
+        comp_var = self.stds ** 2
+        second_moment = torch.sum(weights.unsqueeze(-1) * (comp_var + self.means ** 2), dim = -2)
+
+        return second_moment - mixture_mean ** 2
+    
+    def entropy(self):
+
+        raise NotImplementedError("Entropy is not implemented in Mixture of Gaussians distribution.")
+
+# In order to register the kd.kl_divergence() function for the MixtureOfGaussians class
+@td.kl.register_kl(MixtureOfGaussians, MixtureOfGaussians)
+def kl_mog_mog(p, q):
+    # Monte Carlo sampling from p
+    num_samples = 5000
+    samples = p.rsample((num_samples,))
+    log_p = p.log_prob(samples)
+    log_q = q.log_prob(samples)
+
+    kl = (log_p - log_q).mean(dim=0)
+    return kl
+
 # ---------- VAE CLASSES DEFINITIONS ---------- #
 
 class VAE(nn.Module):
     """
     Define a Variational Autoencoder (VAE) model
     """
-    def __init__(self, prior, encoder, decoder):
+    def __init__(self, prior, encoder, decoder, beta = 1.0):
         """
         Parameters:
             prior: [torch.nn.Module]
@@ -310,11 +413,14 @@ class VAE(nn.Module):
                 Encoder distribution over the latent space.
             decoder: [torch.nn.Module]
                 Decoder distribution over the data space.
+            beta: [float]
+                Parameter controling force of kl_divergence
         """
         super().__init__()
         self.prior = prior
         self.encoder = encoder
         self.decoder = decoder
+        self.beta = beta
 
     def elbo(self, x):
         """
@@ -329,9 +435,11 @@ class VAE(nn.Module):
         recon_log_prob = self.decoder(z).log_prob(x)
         recon_loss = recon_log_prob.sum(dim=1)
 
-        elbo = torch.mean(recon_loss - td.kl_divergence(q, self.prior()), dim=0)
+        kl_loss = self.beta * td.kl_divergence(q, self.prior())
 
-        return elbo
+        elbo = torch.mean(recon_loss - kl_loss, dim=0)
+
+        return elbo, torch.mean(recon_loss), torch.mean(kl_loss)
     
     def sample(self, n_samples = 1):
         """
@@ -348,7 +456,8 @@ class VAE(nn.Module):
         """
         Compute negative ELBO for the given data (loss)
         """
-        return -self.elbo(x)
+        loss_elbo, loss_recon, loss_kl = self.elbo(x)
+        return -loss_elbo, -loss_recon, -loss_kl
     
     def forward(self, x):
         """
@@ -403,11 +512,15 @@ def train(model, optimizer, data_loader, epochs, device):
         for x in data_iter:
             x = x[0].to(device)
             optimizer.zero_grad()
-            loss = model.loss(x)
-            loss.backward()
+            total_loss, recon_loss, kl_loss = model.loss(x)
+            total_loss.backward()
             optimizer.step()
 
-            progress_bar.set_postfix(loss = f"{loss.item():12.4f}", epoch=f"{epoch+1}/{epochs}")
+            progress_bar.set_postfix(
+                loss = f"{total_loss.item():12.4f}", 
+                recon_loss = f"{recon_loss.item():12.4f}", 
+                kl_loss = f"{kl_loss.item():12.4f}", 
+                epoch = f"{epoch+1}/{epochs}")
             progress_bar.update()
 
 def train_abaco(vae, discriminator, data_loader, batch_ohe, epochs, device):
