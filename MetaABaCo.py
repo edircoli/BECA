@@ -481,6 +481,12 @@ class BatchDiscriminator(nn.Module):
         batch_class = self.net(x)
         return batch_class
     
+    def loss(self, pred, true):
+        
+        loss = nn.CrossEntropyLoss()
+
+        return loss(pred, true)
+    
 
 
 
@@ -523,54 +529,72 @@ def train(model, optimizer, data_loader, epochs, device):
                 epoch = f"{epoch+1}/{epochs}")
             progress_bar.update()
 
-def train_abaco(vae, discriminator, data_loader, batch_ohe, epochs, device):
+def adversarial_loss(pred_batch, real_batch):
+    
+    loss = nn.CrossEntropyLoss()
+
+    return -loss(pred_batch, real_batch)
+
+def train_abaco(vae, discriminator, data_loader, ohe_batch, epochs, device, w_disc = 1.0, w_adv = 1.0):
 
     vae.train()
     discriminator.train()
 
-    adv_optim = torch.optim.Adam(vae.encoder.parameters(), lr = 1e-5)
-    vae_optim = torch.optim.Adam(vae.parameters(), lr = 1e-5)
-    disc_optim = torch.optim.Adam(discriminator.parameters(), lr = 1e-5)
+    adv_optim = torch.optim.Adam(vae.encoder.parameters(), lr = 1e-4)
+    vae_optim = torch.optim.Adam(vae.parameters(), lr = 1e-4)
+    disc_optim = torch.optim.Adam(discriminator.parameters(), lr = 1e-4)
 
     total_steps = len(data_loader)*epochs
     progress_bar = tqdm(range(total_steps), desc="Training")
 
     for epoch in range(epochs):
         data_iter = iter(data_loader)
-        for (x, y, z), (ohe_batch) in zip(data_iter, batch_ohe):
+        for x in data_iter:
             x = x[0].to(device)
+            ohe_batch = ohe_batch.to(device).float()
 
             #First step: Forward pass through encoder and to discriminator
-            q = vae.encoder(x)
-            z = q.rsample()
-            b = discriminator(z)
+            with torch.no_grad():
+                q = vae.encoder(x)
+                z = q.rsample()
+            
+            # Detach z
+            z = z.detach()
 
             # Discriminator Loss
             disc_optim.zero_grad()
-            disc_loss = discriminator.loss(b, ohe_batch)
+            b_pred = discriminator(z)
+            disc_loss = w_disc * discriminator.loss(b_pred, ohe_batch)
             disc_loss.backward()
             disc_optim.step()
-
-            # Detach relevant variables
 
             # Second step: Compute adversarial loss to encoder
 
             # Adversarial loss
             adv_optim.zero_grad()
-            adv_loss = adversarial_loss(b, ohe_batch)
+            q = vae.encoder(x)
+            z = q.rsample()
+            b_pred = discriminator(z)
+            adv_loss = w_adv * adversarial_loss(b_pred, ohe_batch)
             adv_loss.backward()
             adv_optim.step()
 
-            # Detach relevant variables
-
             # Third step: VAE ELBO computation
-            vae_loss = vae.loss(x)
             vae_optim.zero_grad()
+            vae_loss, _, _ = vae.loss(x)
             vae_loss.backward()
             vae_optim.step()
 
-            progress_bar.set_postfix(loss = f"{vae_loss.item():12.4f}", epoch=f"{epoch+1}/{epochs}")
+            # Update progress bar
+            progress_bar.set_postfix(
+                vae_loss = f"{vae_loss.item():12.4f}",
+                disc_loss = f"{disc_loss.item():12.4f}",
+                adv_loss = f"{adv_loss.item():12.4f}",
+                epoch=f"{epoch+1}/{epochs}"
+                )
             progress_bar.update()
+
+
             
 
 
