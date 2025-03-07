@@ -326,7 +326,7 @@ class MixtureOfGaussians(td.Distribution):
     has_rsample = True  # Implemented the rsample() through the Gumbel-softmax reparameterization trick.
 
     def __init__(
-        self, mixture_logits, means, stds, temperature=0.1, validate_args=None
+        self, mixture_logits, means, stds, temperature=1e-5, validate_args=None
     ):
         self.mixture_logits = mixture_logits
         self.means = means
@@ -607,9 +607,11 @@ def adversarial_loss(pred_batch, real_batch):
 
 def train_abaco(
     vae,
+    vae_optim,
     discriminator,
+    disc_optim,
+    adv_optim,
     data_loader,
-    ohe_batch,
     epochs,
     device,
     w_disc=1.0,
@@ -619,18 +621,14 @@ def train_abaco(
     vae.train()
     discriminator.train()
 
-    adv_optim = torch.optim.Adam(vae.encoder.parameters(), lr=1e-4)
-    vae_optim = torch.optim.Adam(vae.parameters(), lr=1e-4)
-    disc_optim = torch.optim.Adam(discriminator.parameters(), lr=1e-4)
-
     total_steps = len(data_loader) * epochs
     progress_bar = tqdm(range(total_steps), desc="Training")
 
     for epoch in range(epochs):
         data_iter = iter(data_loader)
-        for x in data_iter:
-            x = x[0].to(device)
-            ohe_batch = ohe_batch.to(device).float()
+        for loader_data in data_iter:
+            x = loader_data[0].to(device)
+            y = loader_data[1].to(device).float()
 
             # First step: Forward pass through encoder and to discriminator
             with torch.no_grad():
@@ -643,24 +641,26 @@ def train_abaco(
             # Discriminator Loss
             disc_optim.zero_grad()
             b_pred = discriminator(z)
-            disc_loss = w_disc * discriminator.loss(b_pred, ohe_batch)
+            disc_loss = w_disc * discriminator.loss(b_pred, y)
             disc_loss.backward()
             disc_optim.step()
 
-            # Second step: Compute adversarial loss to encoder
+            # Second step: Compute adversarial loss to encoder - second pass with gradient
 
             # Adversarial loss
             adv_optim.zero_grad()
             q = vae.encoder(x)
             z = q.rsample()
+
             b_pred = discriminator(z)
-            adv_loss = w_adv * adversarial_loss(b_pred, ohe_batch)
+
+            adv_loss = w_adv * adversarial_loss(b_pred, y)
             adv_loss.backward()
             adv_optim.step()
 
             # Third step: VAE ELBO computation
             vae_optim.zero_grad()
-            vae_loss, _, _ = vae.loss(x)
+            vae_loss = vae(x)
             vae_loss.backward()
             vae_optim.step()
 
