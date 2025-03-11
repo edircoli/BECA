@@ -8,6 +8,7 @@ from sklearn.decomposition import PCA
 import numpy as np
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
+import math
 
 # ---------- PRIOR CLASSES DEFINITIONS ---------- #
 
@@ -92,6 +93,14 @@ class NormalEncoder(nn.Module):
         super().__init__()
         self.encoder_net = encoder_net
 
+    def encode(self, x):
+
+        mu, var = torch.chunk(
+            self.encoder_net(x), 2, dim=-1
+        )  # chunk is used for separating the encoder output (batch, 2*d_z) into two separate vectors (batch, d_z)
+
+        return mu, var
+
     def forward(self, x):
         """
         Computes the Gaussian Normal distribution over the latent space.
@@ -99,11 +108,8 @@ class NormalEncoder(nn.Module):
         Parameters:
             x: [torch.Tensor]
         """
-        mu, var = torch.chunk(
-            self.encoder_net(x), 2, dim=-1
-        )  # chunk is used for separating the encoder output (batch, 2*d_z) into two separate vectors (batch, d_z)
-
-        std = torch.clamp(torch.exp(var * 0.5), min=1e-8, max=1e8)
+        mu, var = self.encode(x)
+        std = torch.sqrt(torch.nn.functional.softplus(var) + 1e-8)
 
         return td.Independent(td.Normal(loc=mu, scale=std), 1)
 
@@ -124,6 +130,45 @@ class MoGEncoder(nn.Module):
         super().__init__()
         self.n_comp = n_comp
         self.encoder_net = encoder_net
+
+    def encode(self, x):
+
+        comps = torch.chunk(
+            self.encoder_net(x), self.n_comp, dim=-1
+        )  # chunk used for separating the encoder output (batch, n_comp*(2*d_z + 1)) into n_comp separate vectors (batch, n_comp)
+
+        # Parameters list (for extracting in loop)
+        mu_list = []
+        var_list = []
+        pi_list = []
+
+        for comp in comps:
+            params = comp[
+                :, :-1
+            ]  # parameters mu and var are on the 2*d_z first values of the component
+            pi_comp = comp[
+                :, -1
+            ]  # mixing probabilities is the last value of the component
+
+            mu, var = torch.chunk(
+                params, 2, dim=-1
+            )  # separating mu from var using chunk
+
+            mu_list.append(mu)
+            var_list.append(var)
+            pi_list.append(pi_comp)
+
+        # Convert parameters list into tensor
+        means = torch.stack(mu_list, dim=1)
+        stds = torch.sqrt(
+            torch.nn.functional.softplus(torch.stack(var_list, dim=1)) + 1e-8
+        )
+        pis = torch.stack(pi_list, dim=1)
+
+        # Clamp to avoid error values (too low or too high)
+        stds = torch.clamp(stds, min=1e-5, max=1e5)
+
+        return pis, means, stds
 
     def forward(self, x):
         """
@@ -166,6 +211,82 @@ class MoGEncoder(nn.Module):
 
         # Clamp to avoid error values (too low or too high)
         stds = torch.clamp(stds, min=1e-5, max=1e5)
+        # Create individual Gaussian distribution per component
+        mog_dist = MixtureOfGaussians(pis, means, stds)
+
+        return mog_dist
+
+
+class AttentionMoGEncoder(nn.Module):
+    def __init__(self, pre_encoder_net, attention, post_encoder_net, n_comp):
+        """
+        Define a Mixture of Gaussians encoder to obtain the parameters of the MoG distribution.
+        Parameters:
+            encoder_net: [torch.nn.Module]
+                The encoder network, takes a tensor of dimension (batch, features) and
+                outputs a tensor of dimension (batch, n_comp*(2*d_z + 1)), where d_z is the dimension
+                of the latent space, and n_comp the number of components of the MoG distribution.
+            n_comp: [int]
+                Number of components for the MoG distribution.
+        """
+        super().__init__()
+        self.n_comp = n_comp
+        self.pre_encoder_net = pre_encoder_net
+        self.attention = attention
+        self.post_encoder_net = post_encoder_net
+
+    def encode(self, x):
+
+        encoder_output = self.post_encoder_net(
+            self.attention(self.pre_encoder_net(x).unsqueeze(1)).squeeze(1)
+        )
+
+        comps = torch.chunk(
+            encoder_output, self.n_comp, dim=-1
+        )  # chunk used for separating the encoder output (batch, n_comp*(2*d_z + 1)) into n_comp separate vectors (batch, n_comp)
+
+        # Parameters list (for extracting in loop)
+        mu_list = []
+        var_list = []
+        pi_list = []
+
+        for comp in comps:
+            params = comp[
+                :, :-1
+            ]  # parameters mu and var are on the 2*d_z first values of the component
+            pi_comp = comp[
+                :, -1
+            ]  # mixing probabilities is the last value of the component
+
+            mu, var = torch.chunk(
+                params, 2, dim=-1
+            )  # separating mu from var using chunk
+
+            mu_list.append(mu)
+            var_list.append(var)
+            pi_list.append(pi_comp)
+
+        # Convert parameters list into tensor
+        means = torch.stack(mu_list, dim=1)
+        stds = torch.sqrt(
+            torch.nn.functional.softplus(torch.stack(var_list, dim=1)) + 1e-8
+        )
+        pis = torch.stack(pi_list, dim=1)
+
+        # Clamp to avoid error values (too low or too high)
+        stds = torch.clamp(stds, min=1e-5, max=1e5)
+
+        return pis, means, stds
+
+    def forward(self, x):
+        """
+        Computes the MoG distribution over the latent space.
+
+        Parameters:
+            x: [torch.Tensor]
+        """
+        # Encode
+        pis, means, stds = self.encode(x)
         # Create individual Gaussian distribution per component
         mog_dist = MixtureOfGaussians(pis, means, stds)
 
@@ -234,6 +355,60 @@ class ZINBDecoder(nn.Module):
             z: [torch.Tensor]
         """
         mu, theta, pi_logits = torch.chunk(self.decoder_net(z), 3, dim=-1)
+        # Ensure mean and dispersion are positive numbers and pi is in range [0,1]
+
+        mu = F.softplus(mu)
+        theta = F.softplus(theta) + 1e-4
+
+        pi = torch.sigmoid(pi_logits)
+
+        # Parameterization into NB parameters
+        p = theta / (theta + mu)
+
+        r = theta
+
+        # Clamp values to avoid huge / small probabilities
+        p = torch.clamp(p, min=1e-5, max=1 - 1e-5)
+
+        # Create Negative Binomial component
+        nb = td.NegativeBinomial(total_count=r, probs=p)
+        # nb = td.Independent(nb, 1)
+
+        return td.Independent(ZINB(nb, pi), 1)
+
+
+class AttentionZINBDecoder(nn.Module):
+    def __init__(self, pre_decoder_net, attention, post_decoder_net):
+        """
+        Define a Zero-inflated Negative Binomial decoder to obtain the parameters of the ZINB distribution.
+
+        Parameters:
+            decoder_net: [torch.nn.Module]
+                The decoder network, takes a tensor of dimension (batch, d_z) and outputs
+                a tensor of dimension (batch, 3*features), where d_z is the dimension of the
+                latent space.
+        """
+        super().__init__()
+        self.pre_decoder_net = pre_decoder_net
+        self.attention = attention
+        self.post_decoder_net = post_decoder_net
+
+    def forward(self, z):
+        """
+        Computes the Zero-inflated Negative Binomial distribution over the data space. What we are getting is the mean
+        and the dispersion parameters, so it is needed a parameterization in order to get the NB
+        distribution parameters: total_count (dispersion) and probs (dispersion/(dispersion + mean)). We are also
+        getting the pi_logits parameters, which accounts for the zero inflation probability.
+
+        Parameters:
+            z: [torch.Tensor]
+        """
+
+        decoder_output = self.post_decoder_net(
+            self.attention(self.pre_decoder_net(z).unsqueeze(1)).squeeze(1)
+        )
+
+        mu, theta, pi_logits = torch.chunk(decoder_output, 3, dim=-1)
         # Ensure mean and dispersion are positive numbers and pi is in range [0,1]
 
         mu = F.softplus(mu)
@@ -481,6 +656,15 @@ class VAE(nn.Module):
 
         return elbo
 
+    def kl_div_loss(self, x):
+        q = self.encoder(x)
+        z = q.rsample()
+        kl_loss = torch.mean(
+            self.beta * td.kl_divergence(q, self.prior()),
+            dim=0,
+        )
+        return kl_loss
+
     def sample(self, n_samples=1):
         """
         Sample from the model.
@@ -535,6 +719,210 @@ class VAE(nn.Module):
         return pca.fit_transform(samples.detach().cpu())
 
 
+class VampPriorVAE(nn.Module):
+    """
+    Define a VampPrior Variational Autoencoder model.
+    """
+
+    def __init__(
+        self, encoder, decoder, input_dim, K_pseudo_inputs, d_z, data_loader=None
+    ):
+        super().__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+        self.input_dim = input_dim
+        self.K = K_pseudo_inputs
+        self.d_z = d_z
+
+        # Pseudo-inputs
+        if data_loader is not None:
+            self.u = self.sample_from_dataloader(data_loader)
+        else:
+            self.u = nn.Parameter(torch.rand(K_pseudo_inputs, input_dim))
+
+        # Mixing weights
+        self.w = nn.Parameter(torch.zeros(K_pseudo_inputs, 1, 1))
+
+    def sample_from_dataloader(self, data_loader):
+        all_data = []
+        for batch in data_loader:
+            x = batch[0]
+            all_data.append(x)
+            if len(all_data) * x.shape[0] >= self.K:
+                break
+
+        all_data = torch.cat(all_data, dim=0)[: self.K]
+        return nn.Parameter(all_data.clone().detach().requires_grad_(True))
+
+    def sample(self, batch_size):
+        # encode pseudo inputs
+        mu_vp, logvar_vp = self.encoder.encode(self.u)
+
+        # mixing probabilities
+        w = F.softmax(self.w, dim=0)
+        w = w.squeeze()
+
+        # pick components
+        indexes = torch.multinomial(w, batch_size, replacement=True)
+
+        # means and vars
+        eps = torch.randn(batch_size, self.d_z, device="cuda:0")
+
+        # for each point to be sampled
+        for i in range(batch_size):
+            indx = indexes[i]
+            if i == 0:
+                z = mu_vp[[indx]] + eps[[i]] * torch.exp(0.5 * logvar_vp[[indx]])
+            else:
+                z = torch.cat(
+                    (z, mu_vp[[indx]] + eps[[i]] * torch.exp(0.5 * logvar_vp[[indx]])),
+                    0,
+                )
+
+        return z
+
+    def pca_prior(self, n_samples):
+        """
+        Given a number of samples, get the PCA from the sampling of the prior distribution.
+        """
+        samples = self.sample(n_samples)
+        pca = PCA(n_components=2)
+        return pca.fit_transform(samples.detach().cpu())
+
+    def get_posterior(self, x):
+        """
+        Given a set of points, compute the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        q = self.encoder(x)
+        z = q.rsample()
+        return z
+
+    def pca_posterior(self, x):
+        """
+        Given a set of points, compute the PCA of the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        z = self.get_posterior(x)
+        pca = PCA(n_components=2)
+        return pca.fit_transform(z.detach().cpu())
+
+    def log_prob(self, z):
+        mu_vp, logvar_vp = self.encoder.encode(self.u)
+
+        # mixing probabilities
+        w = F.softmax(self.w, dim=0)
+
+        # log-mog
+        z = z.unsqueeze(0)
+        mu_vp = mu_vp.unsqueeze(1)
+        logvar_vp = logvar_vp.unsqueeze(1)
+
+        # log prob
+        log_p = log_normal_diag(z, mu_vp, logvar_vp, dim=-1) + torch.log(w)
+        log_prob = torch.logsumexp(log_p, dim=0)
+
+        return log_prob
+
+    def forward(self, x):
+        # Obtain posterior and sample
+        q_zx = self.encoder(x)
+        z = q_zx.rsample()
+
+        # Forward pass to the decoder
+        p_xz = self.decoder(z)
+
+        # Loss function
+        log_q_zx = q_zx.log_prob(z)
+        log_p_z = self.log_prob(z)
+
+        recon_term = p_xz.log_prob(x).mean()
+        kl_term = (log_q_zx - log_p_z).mean()
+
+        return -recon_term + kl_term
+
+
+# ---------- SELF ATTENTION CLASSES ---------- #
+
+
+class GeneAttention(nn.Module):
+
+    def __init__(self, feature_dim, heads=8):
+        super().__init__()
+        self.feature_dim = feature_dim
+
+        # heads: Number of attention heads (8 by default)
+        self.heads = heads
+
+        # Dimension per head
+        self.head_dim = feature_dim // heads
+
+        # Projection Layers:
+        # self.q: Projects input to "query" space (what features am I looking for?)
+        # self.k: Projects input to "key" space (what features do I contain?)
+        # self.v: Projects input to "value" space (what information should be passed?)
+        # self.out: Final projection that combines attended information
+        # Query, Key, Value projections
+        self.q = nn.Linear(feature_dim, feature_dim)
+        self.k = nn.Linear(feature_dim, feature_dim)
+        self.v = nn.Linear(feature_dim, feature_dim)
+        self.out = nn.Linear(feature_dim, feature_dim)
+
+        self.scale = self.head_dim**-0.5
+
+    def forward(self, x):
+        batch_size = x.size(0)
+        # Step-by-Step Process:
+
+        # 1.Projections:
+        # Each feature vector is projected into query, key, and value spaces.
+        # In a gene expression context, this transforms each gene's expression value into representations that capture different aspects of its significance.
+
+        # 2.Multi-head Reshaping:
+        # Input is split into multiple "heads" (8 in our implementation)
+        # Each head can learn different types of relationships between genes
+        # For example, one head might focus on immune-related genes, another on cell cycle genes
+
+        # 3.Attention Score Calculation:
+        # Computes dot product between all queries and keys
+        # For genes, this means calculating how relevant each gene is to every other gene
+        # The scale factor (1/√head_dim) prevents gradients from becoming too small
+
+        # Project to queries, keys, values
+        q = self.q(x)
+        k = self.k(x)
+        v = self.v(x)
+
+        # Reshape for multi-head attention
+        q = q.view(batch_size, -1, self.heads, self.head_dim).transpose(1, 2)
+        k = k.view(batch_size, -1, self.heads, self.head_dim).transpose(1, 2)
+        v = v.view(batch_size, -1, self.heads, self.head_dim).transpose(1, 2)
+
+        # Compute attention scores
+        scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
+
+        # Softmax Converts scores to attention weights that sum to 1
+        # Each gene now has a probability distribution showing which other genes it should "pay attention to"
+        attn = F.softmax(scores, dim=-1)
+
+        # Apply attention
+        # Each gene's new representation is a weighted sum of all genes' values
+        # Weights come from the attention scores
+        out = torch.matmul(attn, v)
+        out = out.transpose(1, 2).contiguous().view(batch_size, -1, self.feature_dim)
+
+        # Reshapes and projects the attended information back to the original feature space
+        out = self.out(out)
+
+        return out
+
+
 # ---------- DISCRIMINATOR AND CLASSIFIERS ---------- #
 
 
@@ -556,6 +944,10 @@ class BatchDiscriminator(nn.Module):
         loss = nn.CrossEntropyLoss()
 
         return loss(pred, true)
+
+
+# class BiologicalConservationClassifier(nn.Module):
+# return None
 
 
 # ---------- TRAINING LOOP ---------- #
@@ -598,11 +990,16 @@ def train(model, optimizer, data_loader, epochs, device):
             progress_bar.update()
 
 
-def adversarial_loss(pred_batch, real_batch):
+def adversarial_loss(pred_batch, real_batch, batch_size, loss_type="CrossEntropy"):
 
-    loss = nn.CrossEntropyLoss()  # Uniform distribution could work
+    if loss_type == "CrossEntropy":
+        loss = nn.CrossEntropyLoss()  # Uniform distribution could work
+        return -loss(pred_batch, real_batch)
 
-    return -loss(pred_batch, real_batch)
+    elif loss_type == "Uniform":
+        loss = nn.KLDivLoss(reduction="batchmean")
+        target_batch = torch.full_like(pred_batch, 1.0 / batch_size)
+        return loss(torch.log_softmax(pred_batch, dim=1), target_batch)
 
 
 def train_abaco(
@@ -616,6 +1013,87 @@ def train_abaco(
     device,
     w_disc=1.0,
     w_adv=1.0,
+    w_elbo=1.0,
+    disc_loss_type="CrossEntropy",
+):
+
+    vae.train()
+    discriminator.train()
+
+    total_steps = len(data_loader) * epochs
+    progress_bar = tqdm(range(total_steps), desc="Training")
+
+    for epoch in range(epochs):
+        data_iter = iter(data_loader)
+        for loader_data in data_iter:
+            x = loader_data[0].to(device)
+            y = loader_data[1].to(device).float()
+
+            # First step: Forward pass through encoder and to discriminator
+            with torch.no_grad():
+                q_disc = vae.encoder(x)
+                z_disc = q_disc.rsample()
+
+            # Detach z
+            z_disc = z_disc.detach()
+
+            # Discriminator Loss
+            disc_optim.zero_grad()
+            b_pred_disc = discriminator(z_disc)
+            disc_loss = w_disc * discriminator.loss(b_pred_disc, y)
+            disc_loss.backward()
+            disc_optim.step()
+
+            # Second step: Compute adversarial loss to encoder - second pass with gradient
+
+            # Adversarial loss
+            adv_optim.zero_grad()
+            q_adv = vae.encoder(x)
+            z_adv = q_adv.rsample()
+
+            b_pred_adv = discriminator(z_adv)
+
+            adv_loss = w_adv * adversarial_loss(
+                pred_batch=b_pred_adv,
+                real_batch=y,
+                batch_size=y.shape[1],
+                loss_type=disc_loss_type,
+            )
+
+            adv_loss.backward()
+            adv_optim.step()
+
+            # Detach elements
+            z_adv = z_adv.detach()
+
+            # Third step: VAE ELBO computation
+            vae_optim.zero_grad()
+            vae_loss = w_elbo * vae(x)
+            vae_loss.backward()
+            vae_optim.step()
+
+            # Update progress bar
+            progress_bar.set_postfix(
+                vae_loss=f"{vae_loss.item():12.4f}",
+                disc_loss=f"{disc_loss.item():12.4f}",
+                adv_loss=f"{adv_loss.item():12.4f}",
+                epoch=f"{epoch+1}/{epochs}",
+            )
+            progress_bar.update()
+
+
+def train_abaco_dual_batch(
+    vae,
+    vae_optim,
+    discriminator,
+    disc_optim,
+    adv_optim,
+    data_loader,
+    epochs,
+    device,
+    w_disc=1.0,
+    w_adv=1.0,
+    disc_loss_type="CrossEntropy",
 ):
 
     vae.train()
@@ -654,7 +1132,12 @@ def train_abaco(
 
             b_pred = discriminator(z)
 
-            adv_loss = w_adv * adversarial_loss(b_pred, y)
+            adv_loss = w_adv * adversarial_loss(
+                pred_batch=b_pred,
+                real_batch=y,
+                batch_size=y.shape[1],
+                loss_type=disc_loss_type,
+            )
             adv_loss.backward()
             adv_optim.step()
 
