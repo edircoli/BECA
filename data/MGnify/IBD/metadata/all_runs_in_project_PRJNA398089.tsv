@@ -1,0 +1,1339 @@
+project ID	run ID	experiment type	instrument model	nr. reads sequenced	host age	sex	BMI	country	longitude	lattitude	associated phenotype	QC status
+PRJNA398089	SRR5935740	Metagenomics	Illumina HiSeq 2000	10532910		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935741	Metagenomics	Illumina HiSeq 2000	16518263	23	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935742	Metagenomics	Illumina HiSeq 2000	12325847	58	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935743	Metagenomics	Illumina HiSeq 2000	201473	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935744	Metagenomics	Illumina HiSeq 2000	15328347	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935745	Metagenomics	Illumina HiSeq 2000	10492437		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935746	Metagenomics	Illumina HiSeq 2000	11012615	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935747	Metagenomics	Illumina HiSeq 2000	3036382		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935748	Metagenomics	Illumina HiSeq 2000	11859598	25	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935749	Metagenomics	Illumina HiSeq 2000	18879904		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935750	Metagenomics	Illumina HiSeq 2000	6552107	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935751	Metagenomics	Illumina HiSeq 2000	18645445	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935752	Metagenomics	Illumina HiSeq 2000	14298074	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935753	Metagenomics	Illumina HiSeq 2000	14164085	30	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935754	Metagenomics	Illumina HiSeq 2000	10479816	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935755	Metagenomics	Illumina HiSeq 2000	6071697	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935756	Metagenomics	Illumina HiSeq 2000	16053448	26	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935757	Metagenomics	Illumina HiSeq 2000	16286650	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935758	Metagenomics	Illumina HiSeq 2000	8206591	7	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935759	Metagenomics	Illumina HiSeq 2000	15312868	41	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935760	Metagenomics	Illumina HiSeq 2000	10834778	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935761	Metagenomics	Illumina HiSeq 2000	14191749	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935762	Metagenomics	Illumina HiSeq 2000	18129553	30	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935763	Metagenomics	Illumina HiSeq 2000	5174437	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935764	Metagenomics	Illumina HiSeq 2000	11689489		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935765	Metagenomics	Illumina HiSeq 2000	10590116	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935766	Metagenomics	Illumina HiSeq 2000	14120624	26	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935767	Metagenomics	Illumina HiSeq 2000	5166420	13	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935768	Metagenomics	Illumina HiSeq 2000	15746753		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935769	Metagenomics	Illumina HiSeq 2000	11374148		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935770	Metagenomics	Illumina HiSeq 2000	16180463		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935771	Metagenomics	Illumina HiSeq 2000	9230220		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935772	Metagenomics	Illumina HiSeq 2000	15271512		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935773	Metagenomics	Illumina HiSeq 2000	20671571		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935774	Metagenomics	Illumina HiSeq 2000	12252617		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935775	Metagenomics	Illumina HiSeq 2000	13010149	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935776	Metagenomics	Illumina HiSeq 2000	3168882	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935777	Metagenomics	Illumina HiSeq 2000	8173049	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935778	Metagenomics	Illumina HiSeq 2000	10554303		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935779	Metagenomics	Illumina HiSeq 2000	5948317	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935780	Metagenomics	Illumina HiSeq 2000	10716528	28	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935781	Metagenomics	Illumina HiSeq 2000	8486948		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935782	Metagenomics	Illumina HiSeq 2000	10128070	23	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935783	Metagenomics	Illumina HiSeq 2000	2565282	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935784	Metagenomics	Illumina HiSeq 2000	14800056		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935785	Metagenomics	Illumina HiSeq 2000	13817496	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935786	Metagenomics	Illumina HiSeq 2000	10054299	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935787	Metagenomics	Illumina HiSeq 2000	16351397	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935788	Metagenomics	Illumina HiSeq 2000	11073410		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935789	Metagenomics	Illumina HiSeq 2000	1513694	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935790	Metagenomics	Illumina HiSeq 2000	9202475	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935791	Metagenomics	Illumina HiSeq 2000	10140194	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935792	Metagenomics	Illumina HiSeq 2000	11437813	37	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935793	Metagenomics	Illumina HiSeq 2000	1771479		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935794	Metagenomics	Illumina HiSeq 2000	13404063	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935795	Metagenomics	Illumina HiSeq 2000	11924297		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935796	Metagenomics	Illumina HiSeq 2000	14959235	25	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935797	Metagenomics	Illumina HiSeq 2000	8439357		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935798	Metagenomics	Illumina HiSeq 2000	20086542		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935799	Metagenomics	Illumina HiSeq 2000	9090205	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935800	Metagenomics	Illumina HiSeq 2000	15080696	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935801	Metagenomics	Illumina HiSeq 2000	13162386		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935802	Metagenomics	Illumina HiSeq 2000	16720060	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935803	Metagenomics	Illumina HiSeq 2000	18392491	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935804	Metagenomics	Illumina HiSeq 2000	13253368	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935805	Metagenomics	Illumina HiSeq 2000	2823474	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935806	Metagenomics	Illumina HiSeq 2000	14472574	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935807	Metagenomics	Illumina HiSeq 2000	16708997	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935808	Metagenomics	Illumina HiSeq 2000	15500933	28	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935809	Metagenomics	Illumina HiSeq 2000	1539039	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935810	Metagenomics	Illumina HiSeq 2000	15280552		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935811	Metagenomics	Illumina HiSeq 2000	10067025	47	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935812	Metagenomics	Illumina HiSeq 2000	9108174		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935813	Metagenomics	Illumina HiSeq 2000	16980616		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935814	Metagenomics	Illumina HiSeq 2000	5072545	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935815	Metagenomics	Illumina HiSeq 2000	7153468	13	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935816	Metagenomics	Illumina HiSeq 2000	12244248		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935817	Metagenomics	Illumina HiSeq 2000	14261195		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935818	Metagenomics	Illumina HiSeq 2000	8877621		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935819	Metagenomics	Illumina HiSeq 2000	10896278	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935820	Metagenomics	Illumina HiSeq 2000	12062510		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935821	Metagenomics	Illumina HiSeq 2000	297656	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935822	Metagenomics	Illumina HiSeq 2000	13365245	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935823	Metagenomics	Illumina HiSeq 2000	20770968	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935824	Metagenomics	Illumina HiSeq 2000	8745078	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935825	Metagenomics	Illumina HiSeq 2000	11458367		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935826	Metagenomics	Illumina HiSeq 2000	8766123	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935827	Metagenomics	Illumina HiSeq 2000	16260968		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935828	Metagenomics	Illumina HiSeq 2000	8326050	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935829	Metagenomics	Illumina HiSeq 2000	11220767	43	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935830	Metagenomics	Illumina HiSeq 2000	14303962	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935831	Metagenomics	Illumina HiSeq 2000	12793053	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935832	Metagenomics	Illumina HiSeq 2000	6882441	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935833	Metagenomics	Illumina HiSeq 2000	12711109		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935834	Metagenomics	Illumina HiSeq 2000	12610038	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935835	Metagenomics	Illumina HiSeq 2000	1341509	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935836	Metagenomics	Illumina HiSeq 2000	7326365		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935837	Metagenomics	Illumina HiSeq 2000	9337913	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935838	Metagenomics	Illumina HiSeq 2000	14615323	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935839	Metagenomics	Illumina HiSeq 2000	1085628	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935840	Metagenomics	Illumina HiSeq 2000	14537634		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935841	Metagenomics	Illumina HiSeq 2000	11276896	47	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935842	Metagenomics	Illumina HiSeq 2000	13974731	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935843	Metagenomics	Illumina HiSeq 2000	16390479		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935844	Metagenomics	Illumina HiSeq 2000	3943995	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935845	Metagenomics	Illumina HiSeq 2000	12773582	24	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935846	Metagenomics	Illumina HiSeq 2000	12230104	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935847	Metagenomics	Illumina HiSeq 2000	5030163	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935848	Metagenomics	Illumina HiSeq 2000	18120282		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935849	Metagenomics	Illumina HiSeq 2000	18029855		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935850	Metagenomics	Illumina HiSeq 2000	11028882		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935851	Metagenomics	Illumina HiSeq 2000	13770961		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935852	Metagenomics	Illumina HiSeq 2000	7226875	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935853	Metagenomics	Illumina HiSeq 2000	11015024	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935854	Metagenomics	Illumina HiSeq 2000	9964902	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935855	Metagenomics	Illumina HiSeq 2000	15957834	26	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935856	Metagenomics	Illumina HiSeq 2000	1496	21	Female		United States of America			D003093	0	
+PRJNA398089	SRR5935857	Metagenomics	Illumina HiSeq 2000	12248380	7	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935858	Metagenomics	Illumina HiSeq 2000	11226124	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935859	Metagenomics	Illumina HiSeq 2000	15777070	24	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935860	Metagenomics	Illumina HiSeq 2000	11141907	28	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935861	Metagenomics	Illumina HiSeq 2000	12454760	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935862	Metagenomics	Illumina HiSeq 2000	15465268	30	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935863	Metagenomics	Illumina HiSeq 2000	12264252	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935864	Metagenomics	Illumina HiSeq 2000	7068348	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935865	Metagenomics	Illumina HiSeq 2000	8045067	13	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935866	Metagenomics	Illumina HiSeq 2000	13126777		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935867	Metagenomics	Illumina HiSeq 2000	10603689	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935868	Metagenomics	Illumina HiSeq 2000	6411559		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935869	Metagenomics	Illumina HiSeq 2000	14642896	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935870	Metagenomics	Illumina HiSeq 2000	13573412	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935871	Metagenomics	Illumina HiSeq 2000	13179018	13	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935872	Metagenomics	Illumina HiSeq 2000	17794673		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935873	Metagenomics	Illumina HiSeq 2000	12876651	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935874	Metagenomics	Illumina HiSeq 2000	13175773	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935875	Metagenomics	Illumina HiSeq 2000	19098571	13	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935876	Metagenomics	Illumina HiSeq 2000	15788250		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935877	Metagenomics	Illumina HiSeq 2000	19164572	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935878	Metagenomics	Illumina HiSeq 2000	12313213	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935879	Metagenomics	Illumina HiSeq 2000	9894528	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935880	Metagenomics	Illumina HiSeq 2000	11848897	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935881	Metagenomics	Illumina HiSeq 2000	13113764	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935882	Metagenomics	Illumina HiSeq 2000	13274850	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935883	Metagenomics	Illumina HiSeq 2000	15315352	13	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935884	Metagenomics	Illumina HiSeq 2000	11721196	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935885	Metagenomics	Illumina HiSeq 2000	11770216	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935886	Metagenomics	Illumina HiSeq 2000	16942043	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935887	Metagenomics	Illumina HiSeq 2000	8976262	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935888	Metagenomics	Illumina HiSeq 2000	14120614	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935889	Metagenomics	Illumina HiSeq 2000	10923148		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935890	Metagenomics	Illumina HiSeq 2000	8504050	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935891	Metagenomics	Illumina HiSeq 2000	14665803	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935892	Metagenomics	Illumina HiSeq 2000	2121840		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935893	Metagenomics	Illumina HiSeq 2000	11439754		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935894	Metagenomics	Illumina HiSeq 2000	11814692	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935895	Metagenomics	Illumina HiSeq 2000	10579110	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935896	Metagenomics	Illumina HiSeq 2000	12409438	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935897	Metagenomics	Illumina HiSeq 2000	18268052	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935898	Metagenomics	Illumina HiSeq 2000	5116705	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935899	Metagenomics	Illumina HiSeq 2000	11602517	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935900	Metagenomics	Illumina HiSeq 2000	14394690	47	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935901	Metagenomics	Illumina HiSeq 2000	13284477		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935902	Metagenomics	Illumina HiSeq 2000	13106655	8	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935903	Metagenomics	Illumina HiSeq 2000	7701926	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935904	Metagenomics	Illumina HiSeq 2000	15549345	37	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935905	Metagenomics	Illumina HiSeq 2000	2469229	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935906	Metagenomics	Illumina HiSeq 2000	9734019	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935907	Metagenomics	Illumina HiSeq 2000	9760953	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935908	Metagenomics	Illumina HiSeq 2000	9296992	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935909	Metagenomics	Illumina HiSeq 2000	11865989	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935910	Metagenomics	Illumina HiSeq 2000	14020043	13	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935911	Metagenomics	Illumina HiSeq 2000	16526383	8	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935912	Metagenomics	Illumina HiSeq 2000	7997656		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935913	Metagenomics	Illumina HiSeq 2000	10969146	41	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935914	Metagenomics	Illumina HiSeq 2000	12402432		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935915	Metagenomics	Illumina HiSeq 2000	9839779		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935916	Metagenomics	Illumina HiSeq 2000	16507783		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935917	Metagenomics	Illumina HiSeq 2000	6776291	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935918	Metagenomics	Illumina HiSeq 2000	14930684	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935919	Metagenomics	Illumina HiSeq 2000	16789877	58	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935920	Metagenomics	Illumina HiSeq 2000	10015742	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935921	Metagenomics	Illumina HiSeq 2000	7193246	9	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935922	Metagenomics	Illumina HiSeq 2000	10540118	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935923	Metagenomics	Illumina HiSeq 2000	13187214	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935924	Metagenomics	Illumina HiSeq 2000	10471015		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935925	Metagenomics	Illumina HiSeq 2000	14408878	13	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935926	Metagenomics	Illumina HiSeq 2000	13757152	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935927	Metagenomics	Illumina HiSeq 2000	7646396	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935928	Metagenomics	Illumina HiSeq 2000	14565506	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935929	Metagenomics	Illumina HiSeq 2000	14472004		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935930	Metagenomics	Illumina HiSeq 2000	9139438	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935931	Metagenomics	Illumina HiSeq 2000	8942132	37	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935932	Metagenomics	Illumina HiSeq 2000	12765392	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935933	Metagenomics	Illumina HiSeq 2000	9809611	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935934	Metagenomics	Illumina HiSeq 2000	9836935		Female		United States of America			D003424	1	
+PRJNA398089	SRR5935935	Metagenomics	Illumina HiSeq 2000	7135459	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935936	Metagenomics	Illumina HiSeq 2000	8232810	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935937	Metagenomics	Illumina HiSeq 2000	12939748	30	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935938	Metagenomics	Illumina HiSeq 2000	17642464		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935939	Metagenomics	Illumina HiSeq 2000	7765802	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935940	Metagenomics	Illumina HiSeq 2000	3072946	13	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935941	Metagenomics	Illumina HiSeq 2000	285604	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935942	Metagenomics	Illumina HiSeq 2000	13416005	24	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935943	Metagenomics	Illumina HiSeq 2000	4167631	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935944	Metagenomics	Illumina HiSeq 2000	12927064	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935945	Metagenomics	Illumina HiSeq 2000	13903356	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935946	Metagenomics	Illumina HiSeq 2000	13361372	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935947	Metagenomics	Illumina HiSeq 2000	13633218	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935948	Metagenomics	Illumina HiSeq 2000	10785495	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935949	Metagenomics	Illumina HiSeq 2000	11035157	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935950	Metagenomics	Illumina HiSeq 2000	13123528	23	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935951	Metagenomics	Illumina HiSeq 2000	11785571		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935952	Metagenomics	Illumina HiSeq 2000	14042611	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935953	Metagenomics	Illumina HiSeq 2000	12979660	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935954	Metagenomics	Illumina HiSeq 2000	9090397	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935955	Metagenomics	Illumina HiSeq 2000	5429621	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935956	Metagenomics	Illumina HiSeq 2000	2377807	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935957	Metagenomics	Illumina HiSeq 2000	15447979	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935958	Metagenomics	Illumina HiSeq 2000	6257802		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935959	Metagenomics	Illumina HiSeq 2000	3266358	13	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935960	Metagenomics	Illumina HiSeq 2000	10640452	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935961	Metagenomics	Illumina HiSeq 2000	3222005	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935962	Metagenomics	Illumina HiSeq 2000	4406238	25	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935963	Metagenomics	Illumina HiSeq 2000	14739287		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935964	Metagenomics	Illumina HiSeq 2000	14288859	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935965	Metagenomics	Illumina HiSeq 2000	9856171		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935966	Metagenomics	Illumina HiSeq 2000	10734147		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935967	Metagenomics	Illumina HiSeq 2000	6429839	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935968	Metagenomics	Illumina HiSeq 2000	14159907		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935969	Metagenomics	Illumina HiSeq 2000	12500339	13	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935970	Metagenomics	Illumina HiSeq 2000	13062161		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935971	Metagenomics	Illumina HiSeq 2000	11815266		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935972	Metagenomics	Illumina HiSeq 2000	9125999	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935973	Metagenomics	Illumina HiSeq 2000	2522		Female		United States of America			D035061	0	
+PRJNA398089	SRR5935974	Metagenomics	Illumina HiSeq 2000	11363091	37	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935975	Metagenomics	Illumina HiSeq 2000	11627877		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935976	Metagenomics	Illumina HiSeq 2000	10628890		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935977	Metagenomics	Illumina HiSeq 2000	12666811	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935978	Metagenomics	Illumina HiSeq 2000	6975336	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935979	Metagenomics	Illumina HiSeq 2000	10113292	58	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935980	Metagenomics	Illumina HiSeq 2000	12236779	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935981	Metagenomics	Illumina HiSeq 2000	11535980		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935982	Metagenomics	Illumina HiSeq 2000	6000179	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935983	Metagenomics	Illumina HiSeq 2000	16286562	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935984	Metagenomics	Illumina HiSeq 2000	12883571		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935985	Metagenomics	Illumina HiSeq 2000	14604220		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935986	Metagenomics	Illumina HiSeq 2000	16250824	41	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935987	Metagenomics	Illumina HiSeq 2000	9308820	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935988	Metagenomics	Illumina HiSeq 2000	13368981	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935989	Metagenomics	Illumina HiSeq 2000	15933292		Male		United States of America			D035061	1	
+PRJNA398089	SRR5935990	Metagenomics	Illumina HiSeq 2000	17805034	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935991	Metagenomics	Illumina HiSeq 2000	14440563		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935992	Metagenomics	Illumina HiSeq 2000	7495741	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935993	Metagenomics	Illumina HiSeq 2000	13462204	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5935994	Metagenomics	Illumina HiSeq 2000	13050311	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935995	Metagenomics	Illumina HiSeq 2000	13923394		Female		United States of America			D035061	1	
+PRJNA398089	SRR5935996	Metagenomics	Illumina HiSeq 2000	13480452	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5935997	Metagenomics	Illumina HiSeq 2000	11995445	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5935998	Metagenomics	Illumina HiSeq 2000	14240713	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5935999	Metagenomics	Illumina HiSeq 2000	9821420	58	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936000	Metagenomics	Illumina HiSeq 2000	16145159		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936001	Metagenomics	Illumina HiSeq 2000	18518891	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936002	Metagenomics	Illumina HiSeq 2000	7909356	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936003	Metagenomics	Illumina HiSeq 2000	6697698	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936004	Metagenomics	Illumina HiSeq 2000	8397513	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936005	Metagenomics	Illumina HiSeq 2000	10654784	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936006	Metagenomics	Illumina HiSeq 2000	18998581	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936007	Metagenomics	Illumina HiSeq 2000	13722360	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936008	Metagenomics	Illumina HiSeq 2000	10993389		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936009	Metagenomics	Illumina HiSeq 2000	12061425	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936010	Metagenomics	Illumina HiSeq 2000	11984638		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936011	Metagenomics	Illumina HiSeq 2000	7372543	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936012	Metagenomics	Illumina HiSeq 2000	12903674	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936013	Metagenomics	Illumina HiSeq 2000	16589679		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936014	Metagenomics	Illumina HiSeq 2000	13062966		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936015	Metagenomics	Illumina HiSeq 2000	15560478	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936016	Metagenomics	Illumina HiSeq 2000	12038049	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936017	Metagenomics	Illumina HiSeq 2000	9448350	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936018	Metagenomics	Illumina HiSeq 2000	6278407	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936019	Metagenomics	Illumina HiSeq 2000	11843920		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936020	Metagenomics	Illumina HiSeq 2000	13350045		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936021	Metagenomics	Illumina HiSeq 2000	6268829		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936022	Metagenomics	Illumina HiSeq 2000	10932442	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936023	Metagenomics	Illumina HiSeq 2000	15132778	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936024	Metagenomics	Illumina HiSeq 2000	16198901	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936025	Metagenomics	Illumina HiSeq 2000	14390363		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936026	Metagenomics	Illumina HiSeq 2000	5514569	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936027	Metagenomics	Illumina HiSeq 2000	12841564	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936028	Metagenomics	Illumina HiSeq 2000	10139737	13	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936029	Metagenomics	Illumina HiSeq 2000	12062800	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936030	Metagenomics	Illumina HiSeq 2000	14845742	37	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936031	Metagenomics	Illumina HiSeq 2000	14927120		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936032	Metagenomics	Illumina HiSeq 2000	2410555	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936033	Metagenomics	Illumina HiSeq 2000	15410030		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936034	Metagenomics	Illumina HiSeq 2000	12296200	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936035	Metagenomics	Illumina HiSeq 2000	13141016		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936036	Metagenomics	Illumina HiSeq 2000	13777678	43	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936037	Metagenomics	Illumina HiSeq 2000	14646598		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936038	Metagenomics	Illumina HiSeq 2000	13283964	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936039	Metagenomics	Illumina HiSeq 2000	14185202	13	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936040	Metagenomics	Illumina HiSeq 2000	11631981	43	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936041	Metagenomics	Illumina HiSeq 2000	16904184		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936042	Metagenomics	Illumina HiSeq 2000	3415123	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936043	Metagenomics	Illumina HiSeq 2000	17247583		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936044	Metagenomics	Illumina HiSeq 2000	12216205	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936045	Metagenomics	Illumina HiSeq 2000	16826445	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936046	Metagenomics	Illumina HiSeq 2000	5400698	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936047	Metagenomics	Illumina HiSeq 2000	11267663	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936048	Metagenomics	Illumina HiSeq 2000	7354549	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936049	Metagenomics	Illumina HiSeq 2000	17899549	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936050	Metagenomics	Illumina HiSeq 2000	13248808		Female		United States of America			D003424	1	
+PRJNA398089	SRR5936051	Metagenomics	Illumina HiSeq 2000	12500069	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936052	Metagenomics	Illumina HiSeq 2000	14057101		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936053	Metagenomics	Illumina HiSeq 2000	16176497	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936054	Metagenomics	Illumina HiSeq 2000	9167148	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936055	Metagenomics	Illumina HiSeq 2000	1307671	9	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936056	Metagenomics	Illumina HiSeq 2000	14093371		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936057	Metagenomics	Illumina HiSeq 2000	4554697	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936058	Metagenomics	Illumina HiSeq 2000	10685778		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936059	Metagenomics	Illumina HiSeq 2000	10515870	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936060	Metagenomics	Illumina HiSeq 2000	13835902	13	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936061	Metagenomics	Illumina HiSeq 2000	256241	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936062	Metagenomics	Illumina HiSeq 2000	11840387	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936063	Metagenomics	Illumina HiSeq 2000	9126136	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936064	Metagenomics	Illumina HiSeq 2000	5421589	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936065	Metagenomics	Illumina HiSeq 2000	17189835		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936066	Metagenomics	Illumina HiSeq 2000	14094392	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936067	Metagenomics	Illumina HiSeq 2000	12968057	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936068	Metagenomics	Illumina HiSeq 2000	7544614	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936069	Metagenomics	Illumina HiSeq 2000	2154281	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936070	Metagenomics	Illumina HiSeq 2000	17864574	8	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936071	Metagenomics	Illumina HiSeq 2000	15684634	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936072	Metagenomics	Illumina HiSeq 2000	14413648	41	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936073	Metagenomics	Illumina HiSeq 2000	11253758	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936074	Metagenomics	Illumina HiSeq 2000	10714382	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936075	Metagenomics	Illumina HiSeq 2000	5035188	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936076	Metagenomics	Illumina HiSeq 2000	11343395	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936077	Metagenomics	Illumina HiSeq 2000	14787576	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936078	Metagenomics	Illumina HiSeq 2000	355331	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936079	Metagenomics	Illumina HiSeq 2000	6302577	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936080	Metagenomics	Illumina HiSeq 2000	11132309	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936081	Metagenomics	Illumina HiSeq 2000	11752091		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936082	Metagenomics	Illumina HiSeq 2000	7711559	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936083	Metagenomics	Illumina HiSeq 2000	11249816	7	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936084	Metagenomics	Illumina HiSeq 2000	9743554		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936085	Metagenomics	Illumina HiSeq 2000	14887490	41	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936086	Metagenomics	Illumina HiSeq 2000	11880449	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936087	Metagenomics	Illumina HiSeq 2000	10487401	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936088	Metagenomics	Illumina HiSeq 2000	9067651	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936089	Metagenomics	Illumina HiSeq 2000	4790850	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936090	Metagenomics	Illumina HiSeq 2000	10574016	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936091	Metagenomics	Illumina HiSeq 2000	13354552	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936092	Metagenomics	Illumina HiSeq 2000	11097376	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936093	Metagenomics	Illumina HiSeq 2000	12478944	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936094	Metagenomics	Illumina HiSeq 2000	11661990	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936095	Metagenomics	Illumina HiSeq 2000	14672681		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936096	Metagenomics	Illumina HiSeq 2000	941628	9	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936097	Metagenomics	Illumina HiSeq 2000	13394088		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936098	Metagenomics	Illumina HiSeq 2000	21041980		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936099	Metagenomics	Illumina HiSeq 2000	11811124		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936100	Metagenomics	Illumina HiSeq 2000	8394330	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936101	Metagenomics	Illumina HiSeq 2000	13924104	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936102	Metagenomics	Illumina HiSeq 2000	5823377	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936103	Metagenomics	Illumina HiSeq 2000	9091822		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936104	Metagenomics	Illumina HiSeq 2000	18484738		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936105	Metagenomics	Illumina HiSeq 2000	11530074		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936106	Metagenomics	Illumina HiSeq 2000	12447185	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936107	Metagenomics	Illumina HiSeq 2000	13286998	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936108	Metagenomics	Illumina HiSeq 2000	14786151	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936109	Metagenomics	Illumina HiSeq 2000	15402011	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936110	Metagenomics	Illumina HiSeq 2000	20224741	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936111	Metagenomics	Illumina HiSeq 2000	8053464	13	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936112	Metagenomics	Illumina HiSeq 2000	13949858		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936113	Metagenomics	Illumina HiSeq 2000	13755732	7	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936114	Metagenomics	Illumina HiSeq 2000	19733608	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936115	Metagenomics	Illumina HiSeq 2000	12894021		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936116	Metagenomics	Illumina HiSeq 2000	2319962	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936117	Metagenomics	Illumina HiSeq 2000	15081197	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936118	Metagenomics	Illumina HiSeq 2000	14363979		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936119	Metagenomics	Illumina HiSeq 2000	10590156	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936120	Metagenomics	Illumina HiSeq 2000	14112431	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936121	Metagenomics	Illumina HiSeq 2000	9767047	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936122	Metagenomics	Illumina HiSeq 2000	5686856	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936123	Metagenomics	Illumina HiSeq 2000	12864877	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936124	Metagenomics	Illumina HiSeq 2000	12423940	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936125	Metagenomics	Illumina HiSeq 2000	17020489	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936126	Metagenomics	Illumina HiSeq 2000	16051229		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936127	Metagenomics	Illumina HiSeq 2000	15068248		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936128	Metagenomics	Illumina HiSeq 2000	7175417	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936129	Metagenomics	Illumina HiSeq 2000	12465092	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936130	Metagenomics	Illumina HiSeq 2000	9088487		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936131	Metagenomics	Illumina HiSeq 2000	27283256	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936132	Metagenomics	Illumina HiSeq 2000	13776331		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936133	Metagenomics	Illumina HiSeq 2000	10429908	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936134	Metagenomics	Illumina HiSeq 2000	11713712	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936135	Metagenomics	Illumina HiSeq 2000	8179085	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936136	Metagenomics	Illumina HiSeq 2000	1926071	9	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936137	Metagenomics	Illumina HiSeq 2000	5520736		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936138	Metagenomics	Illumina HiSeq 2000	6602453	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936139	Metagenomics	Illumina HiSeq 2000	2552952	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936140	Metagenomics	Illumina HiSeq 2000	9928504	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936141	Metagenomics	Illumina HiSeq 2000	2413772		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936142	Metagenomics	Illumina HiSeq 2000	10581336	13	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936143	Metagenomics	Illumina HiSeq 2000	14351787		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936144	Metagenomics	Illumina HiSeq 2000	2778562	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936145	Metagenomics	Illumina HiSeq 2000	14898780	13	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936146	Metagenomics	Illumina HiSeq 2000	13348460	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936147	Metagenomics	Illumina HiSeq 2000	9290933	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936148	Metagenomics	Illumina HiSeq 2000	7508980	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936149	Metagenomics	Illumina HiSeq 2000	13106595	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936150	Metagenomics	Illumina HiSeq 2000	12249582	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936151	Metagenomics	Illumina HiSeq 2000	13818413	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936152	Metagenomics	Illumina HiSeq 2000	13852137	23	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936153	Metagenomics	Illumina HiSeq 2000	9754730	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936154	Metagenomics	Illumina HiSeq 2000	7567545	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936155	Metagenomics	Illumina HiSeq 2000	10562595	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936156	Metagenomics	Illumina HiSeq 2000	12563284		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936157	Metagenomics	Illumina HiSeq 2000	10425777	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936158	Metagenomics	Illumina HiSeq 2000	11547483	24	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936159	Metagenomics	Illumina HiSeq 2000	13121510		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936160	Metagenomics	Illumina HiSeq 2000	12331243	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936161	Metagenomics	Illumina HiSeq 2000	15688721	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936162	Metagenomics	Illumina HiSeq 2000	9747155	58	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936163	Metagenomics	Illumina HiSeq 2000	7874708	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936164	Metagenomics	Illumina HiSeq 2000	12222246	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936165	Metagenomics	Illumina HiSeq 2000	15183946		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936166	Metagenomics	Illumina HiSeq 2000	9159203	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936167	Metagenomics	Illumina HiSeq 2000	11924179	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936168	Metagenomics	Illumina HiSeq 2000	11083420		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936169	Metagenomics	Illumina HiSeq 2000	12654338		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936170	Metagenomics	Illumina HiSeq 2000	13399756	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936171	Metagenomics	Illumina HiSeq 2000	13440856	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936172	Metagenomics	Illumina HiSeq 2000	12761748	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936173	Metagenomics	Illumina HiSeq 2000	14400295		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936174	Metagenomics	Illumina HiSeq 2000	7657068	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936175	Metagenomics	Illumina HiSeq 2000	8522	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936176	Metagenomics	Illumina HiSeq 2000	13425583	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936177	Metagenomics	Illumina HiSeq 2000	8958425	43	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936178	Metagenomics	Illumina HiSeq 2000	9853009	58	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936179	Metagenomics	Illumina HiSeq 2000	4338539	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936180	Metagenomics	Illumina HiSeq 2000	3071274	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936181	Metagenomics	Illumina HiSeq 2000	14184394	41	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936182	Metagenomics	Illumina HiSeq 2000	6535432	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936183	Metagenomics	Illumina HiSeq 2000	15404282	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936184	Metagenomics	Illumina HiSeq 2000	4953099		Female		United States of America			D003424	1	
+PRJNA398089	SRR5936185	Metagenomics	Illumina HiSeq 2000	10478116	24	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936186	Metagenomics	Illumina HiSeq 2000	11929917	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936187	Metagenomics	Illumina HiSeq 2000	136101	9	Male		United States of America			D003424	0	
+PRJNA398089	SRR5936188	Metagenomics	Illumina HiSeq 2000	14508182	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936189	Metagenomics	Illumina HiSeq 2000	6347325	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936190	Metagenomics	Illumina HiSeq 2000	915711	13	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936191	Metagenomics	Illumina HiSeq 2000	12071491		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936192	Metagenomics	Illumina HiSeq 2000	18779233		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936193	Metagenomics	Illumina HiSeq 2000	13913108	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936194	Metagenomics	Illumina HiSeq 2000	10625085	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936195	Metagenomics	Illumina HiSeq 2000	15001775		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936196	Metagenomics	Illumina HiSeq 2000	17278020	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936197	Metagenomics	Illumina HiSeq 2000	21739818		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936198	Metagenomics	Illumina HiSeq 2000	10869833		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936199	Metagenomics	Illumina HiSeq 2000	16213174	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936200	Metagenomics	Illumina HiSeq 2000	8722895	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936201	Metagenomics	Illumina HiSeq 2000	20363071		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936202	Metagenomics	Illumina HiSeq 2000	1484805	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936203	Metagenomics	Illumina HiSeq 2000	13201535		Female		United States of America			D003424	1	
+PRJNA398089	SRR5936204	Metagenomics	Illumina HiSeq 2000	12328850		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936205	Metagenomics	Illumina HiSeq 2000	2651940	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936206	Metagenomics	Illumina HiSeq 2000	11701361	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936207	Metagenomics	Illumina HiSeq 2000	15409320	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936208	Metagenomics	Illumina HiSeq 2000	8954607	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936209	Metagenomics	Illumina HiSeq 2000	10983705	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936210	Metagenomics	Illumina HiSeq 2000	9780447	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936211	Metagenomics	Illumina HiSeq 2000	2493574	13	Male		United States of America			D003093	1	
+PRJNA398089	SRR5936212	Metagenomics	Illumina HiSeq 2000	20288716		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936213	Metagenomics	Illumina HiSeq 2000	10772334		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936214	Metagenomics	Illumina HiSeq 2000	12760838	41	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936215	Metagenomics	Illumina HiSeq 2000	11447649	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936216	Metagenomics	Illumina HiSeq 2000	7304427	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936217	Metagenomics	Illumina HiSeq 2000	15995203	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936218	Metagenomics	Illumina HiSeq 2000	16779787	47	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936219	Metagenomics	Illumina HiSeq 2000	8328916	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936220	Metagenomics	Illumina HiSeq 2000	11153263	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936221	Metagenomics	Illumina HiSeq 2000	27148505	30	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936222	Metagenomics	Illumina HiSeq 2000	15910554	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936223	Metagenomics	Illumina HiSeq 2000	6243873	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936224	Metagenomics	Illumina HiSeq 2000	13287987	33	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936225	Metagenomics	Illumina HiSeq 2000	6159496	43	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936226	Metagenomics	Illumina HiSeq 2000	5494408	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936227	Metagenomics	Illumina HiSeq 2000	13303802	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936228	Metagenomics	Illumina HiSeq 2000	11703584		Female		United States of America			D035061	1	
+PRJNA398089	SRR5936229	Metagenomics	Illumina HiSeq 2000	15117923		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936230	Metagenomics	Illumina HiSeq 2000	12998701	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936231	Metagenomics	Illumina HiSeq 2000	12806926		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936232	Metagenomics	Illumina HiSeq 2000	8723490	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936233	Metagenomics	Illumina HiSeq 2000	16724286	43	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936234	Metagenomics	Illumina HiSeq 2000	5286039	25	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936235	Metagenomics	Illumina HiSeq 2000	14423958	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5936236	Metagenomics	Illumina HiSeq 2000	10863707	41	Male		United States of America			D003424	1	
+PRJNA398089	SRR5936237	Metagenomics	Illumina HiSeq 2000	2856587	21	Female		United States of America			D003093	1	
+PRJNA398089	SRR5936238	Metagenomics	Illumina HiSeq 2000	16682143		Male		United States of America			D035061	1	
+PRJNA398089	SRR5936239	Metagenomics	Illumina HiSeq 2000	11737943	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946605	Metagenomics	Illumina HiSeq 2000	6810925	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946606	Metagenomics	Illumina HiSeq 2000	8539908	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946607	Metagenomics	Illumina HiSeq 2000	10316523	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946608	Metagenomics	Illumina HiSeq 2000	11352711	15	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946609	Metagenomics	Illumina HiSeq 2000	13150098	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946610	Metagenomics	Illumina HiSeq 2000	15172594	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946611	Metagenomics	Illumina HiSeq 2000	11992706	13	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946612	Metagenomics	Illumina HiSeq 2000	12758768	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946613	Metagenomics	Illumina HiSeq 2000	17488424	13	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946614	Metagenomics	Illumina HiSeq 2000	3611136	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946615	Metagenomics	Illumina HiSeq 2000	8471088	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946616	Metagenomics	Illumina HiSeq 2000	10642276	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946617	Metagenomics	Illumina HiSeq 2000	13580036	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946618	Metagenomics	Illumina HiSeq 2000	3105580	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946619	Metagenomics	Illumina HiSeq 2000	6567027	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946620	Metagenomics	Illumina HiSeq 2000	15474470	43	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946621	Metagenomics	Illumina HiSeq 2000	14845079	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946622	Metagenomics	Illumina HiSeq 2000	8655985	13	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946623	Metagenomics	Illumina HiSeq 2000	16386573	15	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946624	Metagenomics	Illumina HiSeq 2000	4788378	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946625	Metagenomics	Illumina HiSeq 2000	8976108	9	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946626	Metagenomics	Illumina HiSeq 2000	19719868	28	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946627	Metagenomics	Illumina HiSeq 2000	11999861	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946628	Metagenomics	Illumina HiSeq 2000	18444992	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946629	Metagenomics	Illumina HiSeq 2000	11672390	45	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946630	Metagenomics	Illumina HiSeq 2000	11218266	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946631	Metagenomics	Illumina HiSeq 2000	11699138	32	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946632	Metagenomics	Illumina HiSeq 2000	6685638	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946633	Metagenomics	Illumina HiSeq 2000	5297078	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946634	Metagenomics	Illumina HiSeq 2000	11589691	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946635	Metagenomics	Illumina HiSeq 2000	8624488	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946636	Metagenomics	Illumina HiSeq 2000	12661004	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946637	Metagenomics	Illumina HiSeq 2000	9146272	35	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946638	Metagenomics	Illumina HiSeq 2000	10514584	26	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946639	Metagenomics	Illumina HiSeq 2000	17089704	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946640	Metagenomics	Illumina HiSeq 2000	6476322	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946641	Metagenomics	Illumina HiSeq 2000	12526379	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946642	Metagenomics	Illumina HiSeq 2000	13792521	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946643	Metagenomics	Illumina HiSeq 2000	11459575	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946644	Metagenomics	Illumina HiSeq 2000	11486206	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946645	Metagenomics	Illumina HiSeq 2000	7912057	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946646	Metagenomics	Illumina HiSeq 2000	10696320	37	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946647	Metagenomics	Illumina HiSeq 2000	3343262	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946648	Metagenomics	Illumina HiSeq 2000	11828001	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946649	Metagenomics	Illumina HiSeq 2000	12147871	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946650	Metagenomics	Illumina HiSeq 2000	11697479	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946651	Metagenomics	Illumina HiSeq 2000	11650051	62	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946652	Metagenomics	Illumina HiSeq 2000	12549561	55	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946653	Metagenomics	Illumina HiSeq 2000	10991305	38	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946654	Metagenomics	Illumina HiSeq 2000	12761013	43	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946655	Metagenomics	Illumina HiSeq 2000	397590	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946656	Metagenomics	Illumina HiSeq 2000	15277664	7	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946657	Metagenomics	Illumina HiSeq 2000	11284554	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946658	Metagenomics	Illumina HiSeq 2000	18977691	17	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946659	Metagenomics	Illumina HiSeq 2000	10986101	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946660	Metagenomics	Illumina HiSeq 2000	9366380	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946661	Metagenomics	Illumina HiSeq 2000	1780518	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946662	Metagenomics	Illumina HiSeq 2000	11534988	56	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946663	Metagenomics	Illumina HiSeq 2000	7727677	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946664	Metagenomics	Illumina HiSeq 2000	7862384	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946665	Metagenomics	Illumina HiSeq 2000	6804740	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946666	Metagenomics	Illumina HiSeq 2000	9745682	43	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946667	Metagenomics	Illumina HiSeq 2000	15102261	17	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946668	Metagenomics	Illumina HiSeq 2000	14188261	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946669	Metagenomics	Illumina HiSeq 2000	14152926	17	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946670	Metagenomics	Illumina HiSeq 2000	16419699	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946671	Metagenomics	Illumina HiSeq 2000	8662942	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946672	Metagenomics	Illumina HiSeq 2000	14400785	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946673	Metagenomics	Illumina HiSeq 2000	8255503	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946674	Metagenomics	Illumina HiSeq 2000	8935028	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946675	Metagenomics	Illumina HiSeq 2000	15904671	17	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946676	Metagenomics	Illumina HiSeq 2000	12600313	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946677	Metagenomics	Illumina HiSeq 2000	12162783	9	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946678	Metagenomics	Illumina HiSeq 2000	12791186	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946679	Metagenomics	Illumina HiSeq 2000	8549155	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946680	Metagenomics	Illumina HiSeq 2000	8606365	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946681	Metagenomics	Illumina HiSeq 2000	10469770	15	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946682	Metagenomics	Illumina HiSeq 2000	13023904	62	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946683	Metagenomics	Illumina HiSeq 2000	14916423	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946684	Metagenomics	Illumina HiSeq 2000	6023077	15	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946685	Metagenomics	Illumina HiSeq 2000	10938449	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946686	Metagenomics	Illumina HiSeq 2000	6801905	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946687	Metagenomics	Illumina HiSeq 2000	11168215	17	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946688	Metagenomics	Illumina HiSeq 2000	18650238	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946689	Metagenomics	Illumina HiSeq 2000	9618970	9	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946690	Metagenomics	Illumina HiSeq 2000	12531588	17	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946691	Metagenomics	Illumina HiSeq 2000	23305196	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946692	Metagenomics	Illumina HiSeq 2000	19350742	38	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946693	Metagenomics	Illumina HiSeq 2000	13889900	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946694	Metagenomics	Illumina HiSeq 2000	10930389	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946695	Metagenomics	Illumina HiSeq 2000	18033265	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946696	Metagenomics	Illumina HiSeq 2000	6392753	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946697	Metagenomics	Illumina HiSeq 2000	10166020	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946698	Metagenomics	Illumina HiSeq 2000	12022404	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946699	Metagenomics	Illumina HiSeq 2000	17117945	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946700	Metagenomics	Illumina HiSeq 2000	1525314	18	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946701	Metagenomics	Illumina HiSeq 2000	18371772	18	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946702	Metagenomics	Illumina HiSeq 2000	7140743	18	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946703	Metagenomics	Illumina HiSeq 2000	16684770	37	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946704	Metagenomics	Illumina HiSeq 2000	11203944	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946705	Metagenomics	Illumina HiSeq 2000	18775537	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946706	Metagenomics	Illumina HiSeq 2000	11707518	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946707	Metagenomics	Illumina HiSeq 2000	11137969	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946708	Metagenomics	Illumina HiSeq 2000	13138887	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946709	Metagenomics	Illumina HiSeq 2000	9890664	35	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946710	Metagenomics	Illumina HiSeq 2000	6913186	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946711	Metagenomics	Illumina HiSeq 2000	7922073	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946712	Metagenomics	Illumina HiSeq 2000	11849335	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946713	Metagenomics	Illumina HiSeq 2000	7753130	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946714	Metagenomics	Illumina HiSeq 2000	12422434	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946715	Metagenomics	Illumina HiSeq 2000	4184631	47	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946716	Metagenomics	Illumina HiSeq 2000	15236470	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946717	Metagenomics	Illumina HiSeq 2000	11202500	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946718	Metagenomics	Illumina HiSeq 2000	904471	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946719	Metagenomics	Illumina HiSeq 2000	2859713	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946720	Metagenomics	Illumina HiSeq 2000	307328	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946721	Metagenomics	Illumina HiSeq 2000	10346668	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946722	Metagenomics	Illumina HiSeq 2000	8362681	26	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946723	Metagenomics	Illumina HiSeq 2000	7756364	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946724	Metagenomics	Illumina HiSeq 2000	7780126	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946725	Metagenomics	Illumina HiSeq 2000	14992107	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946726	Metagenomics	Illumina HiSeq 2000	3781292	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946727	Metagenomics	Illumina HiSeq 2000	8517566	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946728	Metagenomics	Illumina HiSeq 2000	1901	6	Male		United States of America			D003093	0	
+PRJNA398089	SRR5946729	Metagenomics	Illumina HiSeq 2000	13821817	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946730	Metagenomics	Illumina HiSeq 2000	13992645	9	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946731	Metagenomics	Illumina HiSeq 2000	8937765	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946732	Metagenomics	Illumina HiSeq 2000	10189117	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946733	Metagenomics	Illumina HiSeq 2000	16170277	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946734	Metagenomics	Illumina HiSeq 2000	1223322	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946735	Metagenomics	Illumina HiSeq 2000	4702534	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946736	Metagenomics	Illumina HiSeq 2000	12621492	17	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946737	Metagenomics	Illumina HiSeq 2000	20950066	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946738	Metagenomics	Illumina HiSeq 2000	17280575	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946739	Metagenomics	Illumina HiSeq 2000	13298078	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946740	Metagenomics	Illumina HiSeq 2000	6757290	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946741	Metagenomics	Illumina HiSeq 2000	3078254	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946742	Metagenomics	Illumina HiSeq 2000	12072577	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946743	Metagenomics	Illumina HiSeq 2000	10886523	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946744	Metagenomics	Illumina HiSeq 2000	11987418	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946745	Metagenomics	Illumina HiSeq 2000	11808806	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946746	Metagenomics	Illumina HiSeq 2000	7267654	9	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946747	Metagenomics	Illumina HiSeq 2000	20893032	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946748	Metagenomics	Illumina HiSeq 2000	11385656	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946749	Metagenomics	Illumina HiSeq 2000	13447822	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946750	Metagenomics	Illumina HiSeq 2000	15262020	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946751	Metagenomics	Illumina HiSeq 2000	10390701	40	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946752	Metagenomics	Illumina HiSeq 2000	2837207	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946753	Metagenomics	Illumina HiSeq 2000	8571966	17	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946754	Metagenomics	Illumina HiSeq 2000	7983893	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946755	Metagenomics	Illumina HiSeq 2000	2153223	43	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946756	Metagenomics	Illumina HiSeq 2000	14152760	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946757	Metagenomics	Illumina HiSeq 2000	16075032	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946758	Metagenomics	Illumina HiSeq 2000	4603682	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946759	Metagenomics	Illumina HiSeq 2000	11896460	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946760	Metagenomics	Illumina HiSeq 2000	20347591	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946761	Metagenomics	Illumina HiSeq 2000	187078	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946762	Metagenomics	Illumina HiSeq 2000	12316821	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946763	Metagenomics	Illumina HiSeq 2000	21010249	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946764	Metagenomics	Illumina HiSeq 2000	16776609	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946765	Metagenomics	Illumina HiSeq 2000	14806430	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946766	Metagenomics	Illumina HiSeq 2000	11573986	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946767	Metagenomics	Illumina HiSeq 2000	6581993	14	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946768	Metagenomics	Illumina HiSeq 2000	11476165	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946769	Metagenomics	Illumina HiSeq 2000	45690	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946770	Metagenomics	Illumina HiSeq 2000	9001653	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946771	Metagenomics	Illumina HiSeq 2000	5639367	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946772	Metagenomics	Illumina HiSeq 2000	5558753	55	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946773	Metagenomics	Illumina HiSeq 2000	718594	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946774	Metagenomics	Illumina HiSeq 2000	6867901	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946775	Metagenomics	Illumina HiSeq 2000	7051282	30	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946776	Metagenomics	Illumina HiSeq 2000	19711057	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946777	Metagenomics	Illumina HiSeq 2000	14940538	28	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946778	Metagenomics	Illumina HiSeq 2000	13863695	18	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946779	Metagenomics	Illumina HiSeq 2000	8028962	18	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946780	Metagenomics	Illumina HiSeq 2000	9065716	18	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946781	Metagenomics	Illumina HiSeq 2000	2450164	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946782	Metagenomics	Illumina HiSeq 2000	10424953	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946783	Metagenomics	Illumina HiSeq 2000	9272320	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946784	Metagenomics	Illumina HiSeq 2000	10334058	18	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946785	Metagenomics	Illumina HiSeq 2000	6640013	18	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946786	Metagenomics	Illumina HiSeq 2000	20575054	18	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946787	Metagenomics	Illumina HiSeq 2000	14822042	28	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946788	Metagenomics	Illumina HiSeq 2000	9972393	40	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946789	Metagenomics	Illumina HiSeq 2000	10791065	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946790	Metagenomics	Illumina HiSeq 2000	20861738	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946791	Metagenomics	Illumina HiSeq 2000	16280061	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946792	Metagenomics	Illumina HiSeq 2000	16559287	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946793	Metagenomics	Illumina HiSeq 2000	12537483	13	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946794	Metagenomics	Illumina HiSeq 2000	7920291	51	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946795	Metagenomics	Illumina HiSeq 2000	17696087	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946796	Metagenomics	Illumina HiSeq 2000	13145398	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946797	Metagenomics	Illumina HiSeq 2000	1946862	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946798	Metagenomics	Illumina HiSeq 2000	17565029	17	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946799	Metagenomics	Illumina HiSeq 2000	446490	26	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946800	Metagenomics	Illumina HiSeq 2000	14485905	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946801	Metagenomics	Illumina HiSeq 2000	7302245	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946802	Metagenomics	Illumina HiSeq 2000	8758753	17	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946803	Metagenomics	Illumina HiSeq 2000	12199644	56	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946804	Metagenomics	Illumina HiSeq 2000	15284611	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946805	Metagenomics	Illumina HiSeq 2000	10737503	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946806	Metagenomics	Illumina HiSeq 2000	8046862	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946807	Metagenomics	Illumina HiSeq 2000	10869261	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946808	Metagenomics	Illumina HiSeq 2000	8452235	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946809	Metagenomics	Illumina HiSeq 2000	14231036	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946810	Metagenomics	Illumina HiSeq 2000	6736967	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946811	Metagenomics	Illumina HiSeq 2000	15400501	38	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946812	Metagenomics	Illumina HiSeq 2000	5434086	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946813	Metagenomics	Illumina HiSeq 2000	11092940	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946814	Metagenomics	Illumina HiSeq 2000	17133574	51	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946815	Metagenomics	Illumina HiSeq 2000	17357796	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946816	Metagenomics	Illumina HiSeq 2000	1936711	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946817	Metagenomics	Illumina HiSeq 2000	15182778	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946818	Metagenomics	Illumina HiSeq 2000	15638088	56	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946819	Metagenomics	Illumina HiSeq 2000	897534	32	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946820	Metagenomics	Illumina HiSeq 2000	18261237	45	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946821	Metagenomics	Illumina HiSeq 2000	7161596	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946822	Metagenomics	Illumina HiSeq 2000	9592376	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946823	Metagenomics	Illumina HiSeq 2000	13797291	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946824	Metagenomics	Illumina HiSeq 2000	3561083	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946825	Metagenomics	Illumina HiSeq 2000	11207458	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946826	Metagenomics	Illumina HiSeq 2000	8416476	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946827	Metagenomics	Illumina HiSeq 2000	14055096	14	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946828	Metagenomics	Illumina HiSeq 2000	15278644	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946829	Metagenomics	Illumina HiSeq 2000	11057834	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946830	Metagenomics	Illumina HiSeq 2000	9505948	17	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946831	Metagenomics	Illumina HiSeq 2000	13372271	61	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946832	Metagenomics	Illumina HiSeq 2000	10925337	35	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946833	Metagenomics	Illumina HiSeq 2000	8398600	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946834	Metagenomics	Illumina HiSeq 2000	10635555	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946835	Metagenomics	Illumina HiSeq 2000	10234309	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946836	Metagenomics	Illumina HiSeq 2000	7465045	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946837	Metagenomics	Illumina HiSeq 2000	2256	9	Male		United States of America			D003424	0	
+PRJNA398089	SRR5946838	Metagenomics	Illumina HiSeq 2000	14771482	17	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946839	Metagenomics	Illumina HiSeq 2000	13133154	14	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946840	Metagenomics	Illumina HiSeq 2000	9016658	14	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946841	Metagenomics	Illumina HiSeq 2000	12289512	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946842	Metagenomics	Illumina HiSeq 2000	14220339	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946843	Metagenomics	Illumina HiSeq 2000	17021353	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946844	Metagenomics	Illumina HiSeq 2000	10456082	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946845	Metagenomics	Illumina HiSeq 2000	5938611	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946846	Metagenomics	Illumina HiSeq 2000	12954666	55	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946847	Metagenomics	Illumina HiSeq 2000	18785776	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946848	Metagenomics	Illumina HiSeq 2000	2570499	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946849	Metagenomics	Illumina HiSeq 2000	8323579	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946850	Metagenomics	Illumina HiSeq 2000	12047524	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946851	Metagenomics	Illumina HiSeq 2000	13716586	40	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946852	Metagenomics	Illumina HiSeq 2000	17935001	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946853	Metagenomics	Illumina HiSeq 2000	7413005	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946854	Metagenomics	Illumina HiSeq 2000	9209438	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946855	Metagenomics	Illumina HiSeq 2000	1575344	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946856	Metagenomics	Illumina HiSeq 2000	14302857	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946857	Metagenomics	Illumina HiSeq 2000	17636925	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946858	Metagenomics	Illumina HiSeq 2000	7518876	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946859	Metagenomics	Illumina HiSeq 2000	13153285	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946860	Metagenomics	Illumina HiSeq 2000	8404200	14	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946861	Metagenomics	Illumina HiSeq 2000	11283136	15	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946862	Metagenomics	Illumina HiSeq 2000	17647295	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946863	Metagenomics	Illumina HiSeq 2000	11821474	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946864	Metagenomics	Illumina HiSeq 2000	15198666	9	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946865	Metagenomics	Illumina HiSeq 2000	14709456	53	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946866	Metagenomics	Illumina HiSeq 2000	6676176	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946867	Metagenomics	Illumina HiSeq 2000	20152182	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946868	Metagenomics	Illumina HiSeq 2000	6461554	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946869	Metagenomics	Illumina HiSeq 2000	7291832	13	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946870	Metagenomics	Illumina HiSeq 2000	5635822	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946871	Metagenomics	Illumina HiSeq 2000	8099760	45	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946872	Metagenomics	Illumina HiSeq 2000	8948923	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946873	Metagenomics	Illumina HiSeq 2000	9058935	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946874	Metagenomics	Illumina HiSeq 2000	11266666	10	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946875	Metagenomics	Illumina HiSeq 2000	11984218	37	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946876	Metagenomics	Illumina HiSeq 2000	23352952	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946877	Metagenomics	Illumina HiSeq 2000	9786346	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946878	Metagenomics	Illumina HiSeq 2000	10025282	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946879	Metagenomics	Illumina HiSeq 2000	14781258	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946880	Metagenomics	Illumina HiSeq 2000	12775890	28	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946881	Metagenomics	Illumina HiSeq 2000	14279688	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946882	Metagenomics	Illumina HiSeq 2000	18213787	8	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946883	Metagenomics	Illumina HiSeq 2000	7190706	56	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946884	Metagenomics	Illumina HiSeq 2000	9667529	7	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946885	Metagenomics	Illumina HiSeq 2000	9119150	38	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946886	Metagenomics	Illumina HiSeq 2000	11039882	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946887	Metagenomics	Illumina HiSeq 2000	14755898	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946888	Metagenomics	Illumina HiSeq 2000	15211104	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946889	Metagenomics	Illumina HiSeq 2000	15686036	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946890	Metagenomics	Illumina HiSeq 2000	9770756	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946891	Metagenomics	Illumina HiSeq 2000	12643856	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946892	Metagenomics	Illumina HiSeq 2000	9972398	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946893	Metagenomics	Illumina HiSeq 2000	19874756	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946894	Metagenomics	Illumina HiSeq 2000	12497872	17	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946895	Metagenomics	Illumina HiSeq 2000	9562668	56	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946896	Metagenomics	Illumina HiSeq 2000	6733869	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946897	Metagenomics	Illumina HiSeq 2000	12982025	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946898	Metagenomics	Illumina HiSeq 2000	8089003	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946899	Metagenomics	Illumina HiSeq 2000	15995026	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946900	Metagenomics	Illumina HiSeq 2000	11834964	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946901	Metagenomics	Illumina HiSeq 2000	8058439	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946902	Metagenomics	Illumina HiSeq 2000	23274888	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946903	Metagenomics	Illumina HiSeq 2000	14363601	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946904	Metagenomics	Illumina HiSeq 2000	8855017	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946905	Metagenomics	Illumina HiSeq 2000	17093786	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946906	Metagenomics	Illumina HiSeq 2000	6406039	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946907	Metagenomics	Illumina HiSeq 2000	12527895	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946908	Metagenomics	Illumina HiSeq 2000	8840589	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946909	Metagenomics	Illumina HiSeq 2000	10066397	76	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946910	Metagenomics	Illumina HiSeq 2000	22334679	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946911	Metagenomics	Illumina HiSeq 2000	13135119	55	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946912	Metagenomics	Illumina HiSeq 2000	11870225	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946913	Metagenomics	Illumina HiSeq 2000	354351	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946914	Metagenomics	Illumina HiSeq 2000	9352382	37	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946915	Metagenomics	Illumina HiSeq 2000	9182796	76	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946916	Metagenomics	Illumina HiSeq 2000	10206710	13	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946917	Metagenomics	Illumina HiSeq 2000	974861	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946918	Metagenomics	Illumina HiSeq 2000	11609779	7	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946919	Metagenomics	Illumina HiSeq 2000	20097474	17	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946920	Metagenomics	Illumina HiSeq 2000	6823338	10	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946921	Metagenomics	Illumina HiSeq 2000	15028857	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946922	Metagenomics	Illumina HiSeq 2000	4510676	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946923	Metagenomics	Illumina HiSeq 2000	14309924	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946924	Metagenomics	Illumina HiSeq 2000	17176189	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946925	Metagenomics	Illumina HiSeq 2000	14778572	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946926	Metagenomics	Illumina HiSeq 2000	5869387	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946927	Metagenomics	Illumina HiSeq 2000	9495156	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946928	Metagenomics	Illumina HiSeq 2000	19184481	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946929	Metagenomics	Illumina HiSeq 2000	8825461	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946930	Metagenomics	Illumina HiSeq 2000	15880783	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946931	Metagenomics	Illumina HiSeq 2000	18002527	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946932	Metagenomics	Illumina HiSeq 2000	9933708	14	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946933	Metagenomics	Illumina HiSeq 2000	12439344	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946934	Metagenomics	Illumina HiSeq 2000	6047035	13	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946935	Metagenomics	Illumina HiSeq 2000	9704045	56	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946936	Metagenomics	Illumina HiSeq 2000	8909138	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946937	Metagenomics	Illumina HiSeq 2000	6353861	13	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946938	Metagenomics	Illumina HiSeq 2000	11181005	47	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946939	Metagenomics	Illumina HiSeq 2000	13479582	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946940	Metagenomics	Illumina HiSeq 2000	11501842	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946941	Metagenomics	Illumina HiSeq 2000	9362171	38	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946942	Metagenomics	Illumina HiSeq 2000	9793362	53	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946943	Metagenomics	Illumina HiSeq 2000	13927094	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946944	Metagenomics	Illumina HiSeq 2000	7660588	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946945	Metagenomics	Illumina HiSeq 2000	11045364	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946946	Metagenomics	Illumina HiSeq 2000	12259680	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946947	Metagenomics	Illumina HiSeq 2000	9369429	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946948	Metagenomics	Illumina HiSeq 2000	5606387	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946949	Metagenomics	Illumina HiSeq 2000	5134628	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946950	Metagenomics	Illumina HiSeq 2000	5463780	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946951	Metagenomics	Illumina HiSeq 2000	9804388	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946952	Metagenomics	Illumina HiSeq 2000	7554970	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946953	Metagenomics	Illumina HiSeq 2000	9983509	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946954	Metagenomics	Illumina HiSeq 2000	9880596	8	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946955	Metagenomics	Illumina HiSeq 2000	15652704	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946956	Metagenomics	Illumina HiSeq 2000	1091349	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946957	Metagenomics	Illumina HiSeq 2000	6737198	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946958	Metagenomics	Illumina HiSeq 2000	12892252	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946959	Metagenomics	Illumina HiSeq 2000	13819929	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946960	Metagenomics	Illumina HiSeq 2000	10097380	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946961	Metagenomics	Illumina HiSeq 2000	15764689	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946962	Metagenomics	Illumina HiSeq 2000	8025794	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946963	Metagenomics	Illumina HiSeq 2000	7618135	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946964	Metagenomics	Illumina HiSeq 2000	15833220	17	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946965	Metagenomics	Illumina HiSeq 2000	8091136	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946966	Metagenomics	Illumina HiSeq 2000	10476718	57	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946967	Metagenomics	Illumina HiSeq 2000	6301354	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946968	Metagenomics	Illumina HiSeq 2000	8032813	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946969	Metagenomics	Illumina HiSeq 2000	16988016	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946970	Metagenomics	Illumina HiSeq 2000	8948827	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946971	Metagenomics	Illumina HiSeq 2000	12982625	56	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946972	Metagenomics	Illumina HiSeq 2000	13994526	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946973	Metagenomics	Illumina HiSeq 2000	7502483	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946974	Metagenomics	Illumina HiSeq 2000	6304574	8	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946975	Metagenomics	Illumina HiSeq 2000	16540841	17	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946976	Metagenomics	Illumina HiSeq 2000	14142109	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946977	Metagenomics	Illumina HiSeq 2000	5997255	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946978	Metagenomics	Illumina HiSeq 2000	11471641	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946979	Metagenomics	Illumina HiSeq 2000	13188423	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946980	Metagenomics	Illumina HiSeq 2000	13333567	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946981	Metagenomics	Illumina HiSeq 2000	14702344	62	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946982	Metagenomics	Illumina HiSeq 2000	2771247	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946983	Metagenomics	Illumina HiSeq 2000	129901	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946984	Metagenomics	Illumina HiSeq 2000	10510512	53	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946985	Metagenomics	Illumina HiSeq 2000	21160122	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946986	Metagenomics	Illumina HiSeq 2000	12336990	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5946987	Metagenomics	Illumina HiSeq 2000	8909522	57	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946988	Metagenomics	Illumina HiSeq 2000	9792100	10	Female		United States of America			D035061	1	
+PRJNA398089	SRR5946989	Metagenomics	Illumina HiSeq 2000	16114296	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946990	Metagenomics	Illumina HiSeq 2000	19448257	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5946991	Metagenomics	Illumina HiSeq 2000	8212283	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946992	Metagenomics	Illumina HiSeq 2000	9832495	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946993	Metagenomics	Illumina HiSeq 2000	24495164	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5946994	Metagenomics	Illumina HiSeq 2000	3973171	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946995	Metagenomics	Illumina HiSeq 2000	13145101	43	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946996	Metagenomics	Illumina HiSeq 2000	7796143	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5946997	Metagenomics	Illumina HiSeq 2000	13777836	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946998	Metagenomics	Illumina HiSeq 2000	8735538	8	Female		United States of America			D003424	1	
+PRJNA398089	SRR5946999	Metagenomics	Illumina HiSeq 2000	10671026	51	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947000	Metagenomics	Illumina HiSeq 2000	19863594	40	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947001	Metagenomics	Illumina HiSeq 2000	10614670	76	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947002	Metagenomics	Illumina HiSeq 2000	8953109	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947003	Metagenomics	Illumina HiSeq 2000	791121	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947004	Metagenomics	Illumina HiSeq 2000	10804731	8	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947005	Metagenomics	Illumina HiSeq 2000	11940714	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947006	Metagenomics	Illumina HiSeq 2000	15280592	37	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947007	Metagenomics	Illumina HiSeq 2000	15291873	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947008	Metagenomics	Illumina HiSeq 2000	1962220	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947009	Metagenomics	Illumina HiSeq 2000	6637475	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947010	Metagenomics	Illumina HiSeq 2000	15421855	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947011	Metagenomics	Illumina HiSeq 2000	16129242	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947012	Metagenomics	Illumina HiSeq 2000	6421662	15	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947013	Metagenomics	Illumina HiSeq 2000	10197501	45	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947014	Metagenomics	Illumina HiSeq 2000	4684132	32	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947015	Metagenomics	Illumina HiSeq 2000	15518647	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947016	Metagenomics	Illumina HiSeq 2000	17215985	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947017	Metagenomics	Illumina HiSeq 2000	15526625	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947018	Metagenomics	Illumina HiSeq 2000	10969509	35	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947019	Metagenomics	Illumina HiSeq 2000	13555880	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947020	Metagenomics	Illumina HiSeq 2000	9217804	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947021	Metagenomics	Illumina HiSeq 2000	10786185	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947022	Metagenomics	Illumina HiSeq 2000	9431824	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947023	Metagenomics	Illumina HiSeq 2000	9276303	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947024	Metagenomics	Illumina HiSeq 2000	13917492	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947025	Metagenomics	Illumina HiSeq 2000	7428994	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947026	Metagenomics	Illumina HiSeq 2000	14483768	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947027	Metagenomics	Illumina HiSeq 2000	8942468	9	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947028	Metagenomics	Illumina HiSeq 2000	18104999	62	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947029	Metagenomics	Illumina HiSeq 2000	12526040	61	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947030	Metagenomics	Illumina HiSeq 2000	11200920	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947031	Metagenomics	Illumina HiSeq 2000	7615046	9	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947032	Metagenomics	Illumina HiSeq 2000	7718832	61	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947033	Metagenomics	Illumina HiSeq 2000	7813038	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947034	Metagenomics	Illumina HiSeq 2000	11064235	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947035	Metagenomics	Illumina HiSeq 2000	7652342	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947036	Metagenomics	Illumina HiSeq 2000	9051420	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947037	Metagenomics	Illumina HiSeq 2000	9116614	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947038	Metagenomics	Illumina HiSeq 2000	4196467	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947039	Metagenomics	Illumina HiSeq 2000	13493110	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947040	Metagenomics	Illumina HiSeq 2000	5463017	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947041	Metagenomics	Illumina HiSeq 2000	9615559	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947042	Metagenomics	Illumina HiSeq 2000	5483213	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947043	Metagenomics	Illumina HiSeq 2000	10561718	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947044	Metagenomics	Illumina HiSeq 2000	11343889	24	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947045	Metagenomics	Illumina HiSeq 2000	14885456	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947046	Metagenomics	Illumina HiSeq 2000	13145331	53	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947047	Metagenomics	Illumina HiSeq 2000	2452176	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947048	Metagenomics	Illumina HiSeq 2000	8027678	57	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947049	Metagenomics	Illumina HiSeq 2000	7058968	76	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947050	Metagenomics	Illumina HiSeq 2000	10081805	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947051	Metagenomics	Illumina HiSeq 2000	13874875	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947052	Metagenomics	Illumina HiSeq 2000	9854852	9	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947053	Metagenomics	Illumina HiSeq 2000	7291639	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947054	Metagenomics	Illumina HiSeq 2000	195363	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947055	Metagenomics	Illumina HiSeq 2000	14781937	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947056	Metagenomics	Illumina HiSeq 2000	292768	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947057	Metagenomics	Illumina HiSeq 2000	14967117	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947058	Metagenomics	Illumina HiSeq 2000	11624674	53	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947059	Metagenomics	Illumina HiSeq 2000	8253954	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947060	Metagenomics	Illumina HiSeq 2000	1358610	16	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947061	Metagenomics	Illumina HiSeq 2000	7317135	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947062	Metagenomics	Illumina HiSeq 2000	9953100	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947063	Metagenomics	Illumina HiSeq 2000	12349916	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947064	Metagenomics	Illumina HiSeq 2000	8281160	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947065	Metagenomics	Illumina HiSeq 2000	25912427	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947066	Metagenomics	Illumina HiSeq 2000	6902777	26	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947067	Metagenomics	Illumina HiSeq 2000	1725829	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947068	Metagenomics	Illumina HiSeq 2000	1380480	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947069	Metagenomics	Illumina HiSeq 2000	5810083	61	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947070	Metagenomics	Illumina HiSeq 2000	13082252	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947071	Metagenomics	Illumina HiSeq 2000	12127562	26	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947072	Metagenomics	Illumina HiSeq 2000	16251507	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947073	Metagenomics	Illumina HiSeq 2000	5049631	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947074	Metagenomics	Illumina HiSeq 2000	9387974	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947075	Metagenomics	Illumina HiSeq 2000	3562112	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947076	Metagenomics	Illumina HiSeq 2000	6682418	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947077	Metagenomics	Illumina HiSeq 2000	11131000	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947078	Metagenomics	Illumina HiSeq 2000	18882340	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947079	Metagenomics	Illumina HiSeq 2000	9717594	9	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947080	Metagenomics	Illumina HiSeq 2000	3082896	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947081	Metagenomics	Illumina HiSeq 2000	19071362	61	Male		United States of America			D035061	1	
+PRJNA398089	SRR5947082	Metagenomics	Illumina HiSeq 2000	10572074	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947083	Metagenomics	Illumina HiSeq 2000	1693756	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947084	Metagenomics	Illumina HiSeq 2000	1076580	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5947085	Metagenomics	Illumina HiSeq 2000	8771687	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947086	Metagenomics	Illumina HiSeq 2000	10927312	51	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947087	Metagenomics	Illumina HiSeq 2000	7838650	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947088	Metagenomics	Illumina HiSeq 2000	9333643	76	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947089	Metagenomics	Illumina HiSeq 2000	13616675	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947090	Metagenomics	Illumina HiSeq 2000	16135928	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947091	Metagenomics	Illumina HiSeq 2000	16002381	7	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947092	Metagenomics	Illumina HiSeq 2000	12120247	8	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947093	Metagenomics	Illumina HiSeq 2000	1176	11	Female		United States of America			D003093	0	
+PRJNA398089	SRR5947094	Metagenomics	Illumina HiSeq 2000	3747411	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947095	Metagenomics	Illumina HiSeq 2000	16264715	22	Female		United States of America			D003424	1	
+PRJNA398089	SRR5947096	Metagenomics	Illumina HiSeq 2000	13073478	76	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947097	Metagenomics	Illumina HiSeq 2000	16570347	40	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947098	Metagenomics	Illumina HiSeq 2000	11330947	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947099	Metagenomics	Illumina HiSeq 2000	5447239	14	Male		United States of America			D003424	1	
+PRJNA398089	SRR5947100	Metagenomics	Illumina HiSeq 2000	14167453	43	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947101	Metagenomics	Illumina HiSeq 2000	12876773	10	Female		United States of America			D035061	1	
+PRJNA398089	SRR5947102	Metagenomics	Illumina HiSeq 2000	7123506	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947103	Metagenomics	Illumina HiSeq 2000	1210253	26	Female		United States of America			D003093	1	
+PRJNA398089	SRR5947104	Metagenomics	Illumina HiSeq 2000	10672376	9	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950484	Metagenomics	Illumina HiSeq 2000	9085292	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950485	Metagenomics	Illumina HiSeq 2000	5690068	32	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950486	Metagenomics	Illumina HiSeq 2000	9427193		Female		United States of America			D003424	1	
+PRJNA398089	SRR5950487	Metagenomics	Illumina HiSeq 2000	9233802	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950488	Metagenomics	Illumina HiSeq 2000	15559449	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950489	Metagenomics	Illumina HiSeq 2000	10650728	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950490	Metagenomics	Illumina HiSeq 2000	10654053	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950491	Metagenomics	Illumina HiSeq 2000	11325512	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950492	Metagenomics	Illumina HiSeq 2000	15423903	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950493	Metagenomics	Illumina HiSeq 2000	2909162	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950494	Metagenomics	Illumina HiSeq 2000	9842340	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950495	Metagenomics	Illumina HiSeq 2000	11667569	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950496	Metagenomics	Illumina HiSeq 2000	11954441	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950497	Metagenomics	Illumina HiSeq 2000	10332764	14	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950498	Metagenomics	Illumina HiSeq 2000	10499172	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950499	Metagenomics	Illumina HiSeq 2000	5098677	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950500	Metagenomics	Illumina HiSeq 2000	9847404	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950501	Metagenomics	Illumina HiSeq 2000	11349816	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950502	Metagenomics	Illumina HiSeq 2000	10702348	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950503	Metagenomics	Illumina HiSeq 2000	12589703	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950504	Metagenomics	Illumina HiSeq 2000	11201559	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950505	Metagenomics	Illumina HiSeq 2000	15204535	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950506	Metagenomics	Illumina HiSeq 2000	17512702	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950507	Metagenomics	Illumina HiSeq 2000	7530883	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950508	Metagenomics	Illumina HiSeq 2000	12549495	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950509	Metagenomics	Illumina HiSeq 2000	11814021	38	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950510	Metagenomics	Illumina HiSeq 2000	9604708	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950511	Metagenomics	Illumina HiSeq 2000	9838487	15	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950512	Metagenomics	Illumina HiSeq 2000	10429510	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950513	Metagenomics	Illumina HiSeq 2000	16962338	17	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950514	Metagenomics	Illumina HiSeq 2000	9935901	46	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950515	Metagenomics	Illumina HiSeq 2000	10200791	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950516	Metagenomics	Illumina HiSeq 2000	10069991	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950517	Metagenomics	Illumina HiSeq 2000	15142379	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950518	Metagenomics	Illumina HiSeq 2000	7704647	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950519	Metagenomics	Illumina HiSeq 2000	6555421	61	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950520	Metagenomics	Illumina HiSeq 2000	15797767	44	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950521	Metagenomics	Illumina HiSeq 2000	9650670	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950522	Metagenomics	Illumina HiSeq 2000	14368329	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950523	Metagenomics	Illumina HiSeq 2000	3959416	36	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950524	Metagenomics	Illumina HiSeq 2000	10919648	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950525	Metagenomics	Illumina HiSeq 2000	8871069	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950526	Metagenomics	Illumina HiSeq 2000	18618443	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950527	Metagenomics	Illumina HiSeq 2000	10482887		Female		United States of America			D003424	1	
+PRJNA398089	SRR5950528	Metagenomics	Illumina HiSeq 2000	15048314	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950529	Metagenomics	Illumina HiSeq 2000	927	6	Male		United States of America			D003093	0	
+PRJNA398089	SRR5950530	Metagenomics	Illumina HiSeq 2000	2258	69	Male		United States of America			D035061	0	
+PRJNA398089	SRR5950531	Metagenomics	Illumina HiSeq 2000	12407642	57	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950532	Metagenomics	Illumina HiSeq 2000	15229050	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950533	Metagenomics	Illumina HiSeq 2000	9631401	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950534	Metagenomics	Illumina HiSeq 2000	13799178	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950535	Metagenomics	Illumina HiSeq 2000	11131964	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950536	Metagenomics	Illumina HiSeq 2000	15264849	36	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950537	Metagenomics	Illumina HiSeq 2000	12354858	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950538	Metagenomics	Illumina HiSeq 2000	9755580	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950539	Metagenomics	Illumina HiSeq 2000	7107253	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950540	Metagenomics	Illumina HiSeq 2000	16531930	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950541	Metagenomics	Illumina HiSeq 2000	8879758	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950542	Metagenomics	Illumina HiSeq 2000	7081508	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950543	Metagenomics	Illumina HiSeq 2000	9177770	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950544	Metagenomics	Illumina HiSeq 2000	7978006	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950545	Metagenomics	Illumina HiSeq 2000	9261741	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950546	Metagenomics	Illumina HiSeq 2000	9506851	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950547	Metagenomics	Illumina HiSeq 2000	12597653	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950548	Metagenomics	Illumina HiSeq 2000	6833634	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950549	Metagenomics	Illumina HiSeq 2000	12022158	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950550	Metagenomics	Illumina HiSeq 2000	9469030	15	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950551	Metagenomics	Illumina HiSeq 2000	11010806	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950552	Metagenomics	Illumina HiSeq 2000	5614553	14	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950553	Metagenomics	Illumina HiSeq 2000	11979253	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950554	Metagenomics	Illumina HiSeq 2000	12763682	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950555	Metagenomics	Illumina HiSeq 2000	13509021	46	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950556	Metagenomics	Illumina HiSeq 2000	8744105	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950557	Metagenomics	Illumina HiSeq 2000	8556172	14	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950558	Metagenomics	Illumina HiSeq 2000	7163694	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950559	Metagenomics	Illumina HiSeq 2000	11322661	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950560	Metagenomics	Illumina HiSeq 2000	9063980	35	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950561	Metagenomics	Illumina HiSeq 2000	9758236	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950562	Metagenomics	Illumina HiSeq 2000	7425149	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950563	Metagenomics	Illumina HiSeq 2000	9913957	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950564	Metagenomics	Illumina HiSeq 2000	6073700	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950565	Metagenomics	Illumina HiSeq 2000	14369805	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950566	Metagenomics	Illumina HiSeq 2000	15646815	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950567	Metagenomics	Illumina HiSeq 2000	10214367	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950568	Metagenomics	Illumina HiSeq 2000	11323955	36	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950569	Metagenomics	Illumina HiSeq 2000	11438875	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950570	Metagenomics	Illumina HiSeq 2000	14309278	17	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950571	Metagenomics	Illumina HiSeq 2000	5790055	28	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950572	Metagenomics	Illumina HiSeq 2000	13851937	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950573	Metagenomics	Illumina HiSeq 2000	9891390	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950574	Metagenomics	Illumina HiSeq 2000	16115479	17	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950575	Metagenomics	Illumina HiSeq 2000	13624718	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950576	Metagenomics	Illumina HiSeq 2000	7913124	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950577	Metagenomics	Illumina HiSeq 2000	11480253	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950578	Metagenomics	Illumina HiSeq 2000	10567619	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950579	Metagenomics	Illumina HiSeq 2000	10399730	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950580	Metagenomics	Illumina HiSeq 2000	8789312	36	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950581	Metagenomics	Illumina HiSeq 2000	8733238	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950582	Metagenomics	Illumina HiSeq 2000	9794377	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950583	Metagenomics	Illumina HiSeq 2000	13942528	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950584	Metagenomics	Illumina HiSeq 2000	10324230	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950585	Metagenomics	Illumina HiSeq 2000	18605942	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950586	Metagenomics	Illumina HiSeq 2000	7960353	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950587	Metagenomics	Illumina HiSeq 2000	12410247	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950588	Metagenomics	Illumina HiSeq 2000	1157820	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950589	Metagenomics	Illumina HiSeq 2000	23154259	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950590	Metagenomics	Illumina HiSeq 2000	14351321	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950591	Metagenomics	Illumina HiSeq 2000	11444414	46	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950592	Metagenomics	Illumina HiSeq 2000	8498033	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950593	Metagenomics	Illumina HiSeq 2000	11011826	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950594	Metagenomics	Illumina HiSeq 2000	10057100	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950595	Metagenomics	Illumina HiSeq 2000	6975032	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950596	Metagenomics	Illumina HiSeq 2000	13187626	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950597	Metagenomics	Illumina HiSeq 2000	2449776	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950598	Metagenomics	Illumina HiSeq 2000	13146512	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950599	Metagenomics	Illumina HiSeq 2000	13479075	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950600	Metagenomics	Illumina HiSeq 2000	12259032	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950601	Metagenomics	Illumina HiSeq 2000	12346826	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950602	Metagenomics	Illumina HiSeq 2000	11095140	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950603	Metagenomics	Illumina HiSeq 2000	12371123	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950604	Metagenomics	Illumina HiSeq 2000	8614057	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950605	Metagenomics	Illumina HiSeq 2000	21113317	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950606	Metagenomics	Illumina HiSeq 2000	5992706	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950607	Metagenomics	Illumina HiSeq 2000	18035340	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950608	Metagenomics	Illumina HiSeq 2000	13473077	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950609	Metagenomics	Illumina HiSeq 2000	14297280	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950610	Metagenomics	Illumina HiSeq 2000	5721239	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950611	Metagenomics	Illumina HiSeq 2000	13211626	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950612	Metagenomics	Illumina HiSeq 2000	15914065	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950613	Metagenomics	Illumina HiSeq 2000	6753779	12	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950614	Metagenomics	Illumina HiSeq 2000	10985881	37	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950615	Metagenomics	Illumina HiSeq 2000	231672	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950616	Metagenomics	Illumina HiSeq 2000	10166693		Female		United States of America			D003424	1	
+PRJNA398089	SRR5950617	Metagenomics	Illumina HiSeq 2000	14558155	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950618	Metagenomics	Illumina HiSeq 2000	21460412	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950619	Metagenomics	Illumina HiSeq 2000	12203225	46	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950620	Metagenomics	Illumina HiSeq 2000	15110044	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950621	Metagenomics	Illumina HiSeq 2000	12307152	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950622	Metagenomics	Illumina HiSeq 2000	707976	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950623	Metagenomics	Illumina HiSeq 2000	10478344	46	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950624	Metagenomics	Illumina HiSeq 2000	220	16	Female		United States of America			D003093	0	
+PRJNA398089	SRR5950625	Metagenomics	Illumina HiSeq 2000	6908756	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950626	Metagenomics	Illumina HiSeq 2000	7978949	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950627	Metagenomics	Illumina HiSeq 2000	8955255	32	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950628	Metagenomics	Illumina HiSeq 2000	14150114	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950629	Metagenomics	Illumina HiSeq 2000	6565913	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950630	Metagenomics	Illumina HiSeq 2000	15067890	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950631	Metagenomics	Illumina HiSeq 2000	990972	9	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950632	Metagenomics	Illumina HiSeq 2000	14501473	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950633	Metagenomics	Illumina HiSeq 2000	11261265	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950634	Metagenomics	Illumina HiSeq 2000	6349024	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950635	Metagenomics	Illumina HiSeq 2000	16964566	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950636	Metagenomics	Illumina HiSeq 2000	10664948		Female		United States of America			D003424	1	
+PRJNA398089	SRR5950637	Metagenomics	Illumina HiSeq 2000	11020095	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950638	Metagenomics	Illumina HiSeq 2000	9318059	13	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950639	Metagenomics	Illumina HiSeq 2000	12931847	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950640	Metagenomics	Illumina HiSeq 2000	15389249	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950641	Metagenomics	Illumina HiSeq 2000	8443025	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950642	Metagenomics	Illumina HiSeq 2000	8460820	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950643	Metagenomics	Illumina HiSeq 2000	8069758	36	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950644	Metagenomics	Illumina HiSeq 2000	19267161	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950645	Metagenomics	Illumina HiSeq 2000	5371929	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950646	Metagenomics	Illumina HiSeq 2000	10527352	10	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950647	Metagenomics	Illumina HiSeq 2000	213433	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950648	Metagenomics	Illumina HiSeq 2000	12714237	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950649	Metagenomics	Illumina HiSeq 2000	12639223	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950650	Metagenomics	Illumina HiSeq 2000	7888925	46	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950651	Metagenomics	Illumina HiSeq 2000	10298329	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950652	Metagenomics	Illumina HiSeq 2000	8578614	56	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950653	Metagenomics	Illumina HiSeq 2000	4239578	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950654	Metagenomics	Illumina HiSeq 2000	5180214	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950655	Metagenomics	Illumina HiSeq 2000	7856616	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950656	Metagenomics	Illumina HiSeq 2000	16910635	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950657	Metagenomics	Illumina HiSeq 2000	14850084	17	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950658	Metagenomics	Illumina HiSeq 2000	9043675	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950659	Metagenomics	Illumina HiSeq 2000	15872005	14	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950660	Metagenomics	Illumina HiSeq 2000	9406533	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950661	Metagenomics	Illumina HiSeq 2000	10508607	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950662	Metagenomics	Illumina HiSeq 2000	20407826	46	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950663	Metagenomics	Illumina HiSeq 2000	7792178	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950664	Metagenomics	Illumina HiSeq 2000	7273535	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950665	Metagenomics	Illumina HiSeq 2000	5653743	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950666	Metagenomics	Illumina HiSeq 2000	7226121	15	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950667	Metagenomics	Illumina HiSeq 2000	15803575	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950668	Metagenomics	Illumina HiSeq 2000	5020561	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950669	Metagenomics	Illumina HiSeq 2000	11775482	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950670	Metagenomics	Illumina HiSeq 2000	11450658	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950671	Metagenomics	Illumina HiSeq 2000	5824228	11	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950672	Metagenomics	Illumina HiSeq 2000	9386130	45	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950673	Metagenomics	Illumina HiSeq 2000	15859503	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950674	Metagenomics	Illumina HiSeq 2000	10177968	32	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950675	Metagenomics	Illumina HiSeq 2000	4088353	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950676	Metagenomics	Illumina HiSeq 2000	9254365	32	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950677	Metagenomics	Illumina HiSeq 2000	8696584	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950678	Metagenomics	Illumina HiSeq 2000	14688388	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950679	Metagenomics	Illumina HiSeq 2000	19915332	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950680	Metagenomics	Illumina HiSeq 2000	19693994	38	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950681	Metagenomics	Illumina HiSeq 2000	9126806	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950682	Metagenomics	Illumina HiSeq 2000	2536220	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950683	Metagenomics	Illumina HiSeq 2000	16651772	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950684	Metagenomics	Illumina HiSeq 2000	9290142	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950685	Metagenomics	Illumina HiSeq 2000	8914995	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950686	Metagenomics	Illumina HiSeq 2000	13961826	62	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950687	Metagenomics	Illumina HiSeq 2000	14798678	13	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950688	Metagenomics	Illumina HiSeq 2000	5955166	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950689	Metagenomics	Illumina HiSeq 2000	10426662	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950690	Metagenomics	Illumina HiSeq 2000	14249169	61	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950691	Metagenomics	Illumina HiSeq 2000	10311558	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950692	Metagenomics	Illumina HiSeq 2000	12206908	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950693	Metagenomics	Illumina HiSeq 2000	11814757	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950694	Metagenomics	Illumina HiSeq 2000	11184491	46	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950695	Metagenomics	Illumina HiSeq 2000	2606768	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950696	Metagenomics	Illumina HiSeq 2000	7008926	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950697	Metagenomics	Illumina HiSeq 2000	5108685	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950698	Metagenomics	Illumina HiSeq 2000	7034989	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950699	Metagenomics	Illumina HiSeq 2000	8932013	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950700	Metagenomics	Illumina HiSeq 2000	10687978	35	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950701	Metagenomics	Illumina HiSeq 2000	3795888	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950702	Metagenomics	Illumina HiSeq 2000	11353196	61	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950703	Metagenomics	Illumina HiSeq 2000	14778362	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950704	Metagenomics	Illumina HiSeq 2000	10143839	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950705	Metagenomics	Illumina HiSeq 2000	8741924	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950706	Metagenomics	Illumina HiSeq 2000	7456830	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950707	Metagenomics	Illumina HiSeq 2000	15565393	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950708	Metagenomics	Illumina HiSeq 2000	15224178	14	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950709	Metagenomics	Illumina HiSeq 2000	7319772	16	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950710	Metagenomics	Illumina HiSeq 2000	10529590	46	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950711	Metagenomics	Illumina HiSeq 2000	12027248	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950712	Metagenomics	Illumina HiSeq 2000	17216015	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950713	Metagenomics	Illumina HiSeq 2000	8614578	10	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950714	Metagenomics	Illumina HiSeq 2000	4933373	32	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950715	Metagenomics	Illumina HiSeq 2000	13267975	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950716	Metagenomics	Illumina HiSeq 2000	9107802	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950717	Metagenomics	Illumina HiSeq 2000	13815544	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950718	Metagenomics	Illumina HiSeq 2000	15349028	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950719	Metagenomics	Illumina HiSeq 2000	7250952	13	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950720	Metagenomics	Illumina HiSeq 2000	3216799	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950721	Metagenomics	Illumina HiSeq 2000	2549066	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950722	Metagenomics	Illumina HiSeq 2000	6813410	37	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950723	Metagenomics	Illumina HiSeq 2000	14459928	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950724	Metagenomics	Illumina HiSeq 2000	9823490	6	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950725	Metagenomics	Illumina HiSeq 2000	9860278	45	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950726	Metagenomics	Illumina HiSeq 2000	10749258	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950727	Metagenomics	Illumina HiSeq 2000	16154594	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950728	Metagenomics	Illumina HiSeq 2000	13412375	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950729	Metagenomics	Illumina HiSeq 2000	21529591	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950730	Metagenomics	Illumina HiSeq 2000	15101961	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950731	Metagenomics	Illumina HiSeq 2000	10565018	13	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950732	Metagenomics	Illumina HiSeq 2000	9384106	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950733	Metagenomics	Illumina HiSeq 2000	10431798	56	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950734	Metagenomics	Illumina HiSeq 2000	7252450	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950735	Metagenomics	Illumina HiSeq 2000	11499936	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950736	Metagenomics	Illumina HiSeq 2000	7395325	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950737	Metagenomics	Illumina HiSeq 2000	7055799		Female		United States of America			D003424	1	
+PRJNA398089	SRR5950738	Metagenomics	Illumina HiSeq 2000	495864	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950739	Metagenomics	Illumina HiSeq 2000	15982325	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950740	Metagenomics	Illumina HiSeq 2000	11636322	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950741	Metagenomics	Illumina HiSeq 2000	2498	6	Male		United States of America			D003093	0	
+PRJNA398089	SRR5950742	Metagenomics	Illumina HiSeq 2000	10898069	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950743	Metagenomics	Illumina HiSeq 2000	1931687	15	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950744	Metagenomics	Illumina HiSeq 2000	10628039	36	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950745	Metagenomics	Illumina HiSeq 2000	16059448	21	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950746	Metagenomics	Illumina HiSeq 2000	4847942	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950747	Metagenomics	Illumina HiSeq 2000	9362993	23	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950748	Metagenomics	Illumina HiSeq 2000	10199372	35	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950749	Metagenomics	Illumina HiSeq 2000	9562180	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950750	Metagenomics	Illumina HiSeq 2000	10674803	33	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950751	Metagenomics	Illumina HiSeq 2000	747950	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950752	Metagenomics	Illumina HiSeq 2000	14052303	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950753	Metagenomics	Illumina HiSeq 2000	10525717	16	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950754	Metagenomics	Illumina HiSeq 2000	7232394	62	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950755	Metagenomics	Illumina HiSeq 2000	13626514	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950756	Metagenomics	Illumina HiSeq 2000	11357435	32	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950757	Metagenomics	Illumina HiSeq 2000	7690596	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950758	Metagenomics	Illumina HiSeq 2000	22578395	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950759	Metagenomics	Illumina HiSeq 2000	12704920	62	Female		United States of America			D035061	1	
+PRJNA398089	SRR5950760	Metagenomics	Illumina HiSeq 2000	8913414	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950761	Metagenomics	Illumina HiSeq 2000	9094286		Female		United States of America			D003424	1	
+PRJNA398089	SRR5950762	Metagenomics	Illumina HiSeq 2000	44454	26	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950763	Metagenomics	Illumina HiSeq 2000	10021425	38	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950764	Metagenomics	Illumina HiSeq 2000	11768638	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950765	Metagenomics	Illumina HiSeq 2000	5243135	13	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950766	Metagenomics	Illumina HiSeq 2000	2256712	32	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950767	Metagenomics	Illumina HiSeq 2000	14631031	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950768	Metagenomics	Illumina HiSeq 2000	11206517	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950769	Metagenomics	Illumina HiSeq 2000	15619888	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950770	Metagenomics	Illumina HiSeq 2000	15569954	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950771	Metagenomics	Illumina HiSeq 2000	8905513	50	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950772	Metagenomics	Illumina HiSeq 2000	7783767	36	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950773	Metagenomics	Illumina HiSeq 2000	9037270	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950774	Metagenomics	Illumina HiSeq 2000	13818670	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950775	Metagenomics	Illumina HiSeq 2000	9675106	38	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950776	Metagenomics	Illumina HiSeq 2000	3049081	44	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950777	Metagenomics	Illumina HiSeq 2000	12213829	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950778	Metagenomics	Illumina HiSeq 2000	6994992	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950779	Metagenomics	Illumina HiSeq 2000	8864829	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950780	Metagenomics	Illumina HiSeq 2000	22183489	46	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950781	Metagenomics	Illumina HiSeq 2000	19442146	12	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950782	Metagenomics	Illumina HiSeq 2000	10327033	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5950783	Metagenomics	Illumina HiSeq 2000	11051935	51	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950784	Metagenomics	Illumina HiSeq 2000	13566015	29	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950785	Metagenomics	Illumina HiSeq 2000	11367855	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950786	Metagenomics	Illumina HiSeq 2000	7071199		Female		United States of America			D003424	1	
+PRJNA398089	SRR5950787	Metagenomics	Illumina HiSeq 2000	11689719	23	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950788	Metagenomics	Illumina HiSeq 2000	10947488	36	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950789	Metagenomics	Illumina HiSeq 2000	19918525	42	Female		United States of America			D003093	1	
+PRJNA398089	SRR5950790	Metagenomics	Illumina HiSeq 2000	11786981	45	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950791	Metagenomics	Illumina HiSeq 2000	12128936	69	Male		United States of America			D035061	1	
+PRJNA398089	SRR5950792	Metagenomics	Illumina HiSeq 2000	10617639	25	Male		United States of America			D003093	1	
+PRJNA398089	SRR5950793	Metagenomics	Illumina HiSeq 2000	10655239	15	Male		United States of America			D003424	1	
+PRJNA398089	SRR5950794	Metagenomics	Illumina HiSeq 2000	8565036	36	Female		United States of America			D003093	1	
+PRJNA398089	SRR5962882	Metagenomics	Illumina HiSeq 2000	15307501	11	Male		United States of America			D035061	1	
+PRJNA398089	SRR5962883	Metagenomics	Illumina HiSeq 2000	12089985	6	Female		United States of America			D035061	1	
+PRJNA398089	SRR5962884	Metagenomics	Illumina HiSeq 2000	13080638	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5962885	Metagenomics	Illumina HiSeq 2000	13529136	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5962886	Metagenomics	Illumina HiSeq 2000	6891489	37	Female		United States of America			D003093	1	
+PRJNA398089	SRR5962887	Metagenomics	Illumina HiSeq 2000	8901309	36	Female		United States of America			D003424	1	
+PRJNA398089	SRR5962888	Metagenomics	Illumina HiSeq 2000	8002406	47	Female		United States of America			D003093	1	
+PRJNA398089	SRR5962889	Metagenomics	Illumina HiSeq 2000	4264781	37	Female		United States of America			D003093	1	
+PRJNA398089	SRR5962890	Metagenomics	Illumina HiSeq 2000	7021108	16	Male		United States of America			D003424	1	
+PRJNA398089	SRR5962891	Metagenomics	Illumina HiSeq 2000	11481060	10	Female		United States of America			D003424	1	
+PRJNA398089	SRR5962892	Metagenomics	Illumina HiSeq 2000	10332875	8	Male		United States of America			D003424	1	
+PRJNA398089	SRR5962893	Metagenomics	Illumina HiSeq 2000	13128374	8	Male		United States of America			D035061	1	
+PRJNA398089	SRR5962894	Metagenomics	Illumina HiSeq 2000	8447798	47	Female		United States of America			D003093	1	
+PRJNA398089	SRR5962895	Metagenomics	Illumina HiSeq 2000	4488295	11	Male		United States of America			D003424	1	
+PRJNA398089	SRR5962896	Metagenomics	Illumina HiSeq 2000	12130731	6	Female		United States of America			D035061	1	
+PRJNA398089	SRR5962897	Metagenomics	Illumina HiSeq 2000	833	11	Male		United States of America			D003424	0	
+PRJNA398089	SRR5962898	Metagenomics	Illumina HiSeq 2000	5021346	74	Male		United States of America			D003093	1	
+PRJNA398089	SRR5962899	Metagenomics	Illumina HiSeq 2000	11692836	60	Male		United States of America			D003424	1	
+PRJNA398089	SRR5962900	Metagenomics	Illumina HiSeq 2000	10152187	29	Female		United States of America			D003093	1	
+PRJNA398089	SRR5962901	Metagenomics	Illumina HiSeq 2000	5163527	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5962902	Metagenomics	Illumina HiSeq 2000	11562147	32	Female		United States of America			D035061	1	
+PRJNA398089	SRR5962903	Metagenomics	Illumina HiSeq 2000	3667319	19	Female		United States of America			D003424	1	
+PRJNA398089	SRR5962904	Metagenomics	Illumina HiSeq 2000	15172594	17	Female		United States of America			D035061	1	
+PRJNA398089	SRR5962905	Metagenomics	Illumina HiSeq 2000	13171520	45	Male		United States of America			D003424	1	
+PRJNA398089	SRR5962906	Metagenomics	Illumina HiSeq 2000	8637240	57	Male		United States of America			D035061	1	
+PRJNA398089	SRR5962907	Metagenomics	Illumina HiSeq 2000	7815946	16	Male		United States of America			D003093	1	
+PRJNA398089	SRR5962908	Metagenomics	Illumina HiSeq 2000	9753099	26	Female		United States of America			D003093	1	

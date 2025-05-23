@@ -1,389 +1,1735 @@
-#Essentials
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from sklearn.model_selection import train_test_split
+import torch.distributions as td
+import torch.utils.data
+from torch.nn import functional as F
+from tqdm import tqdm
 from sklearn.decomposition import PCA
-from torch.utils.data import DataLoader, Subset, ConcatDataset, TensorDataset
-from torchvision import datasets, transforms
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import os
-from umap import UMAP
+from scipy.stats import gaussian_kde
+import matplotlib.pyplot as plt
+import math
+from BatchEffectDataLoader import class_to_int, one_hot_encoding
+import random
 
-# Defining Autoencoder with batch information class
-class BatchAutoencoder(nn.Module):
-    def __init__(self, 
-                 d_z = 10, 
-                 input_size = 1024, 
-                 batch_size = 10):
+# ---------- PRIOR CLASSES DEFINITIONS ---------- #
+
+
+class NormalPrior(nn.Module):
+    def __init__(self, d_z):
+        """
+        Define a Gaussian Normal prior distribution with zero mean and unit variance (Standard distribution).
+
+        Parameters:
+            d_z: [int]
+                Dimension of the latent space
+        """
         super().__init__()
         self.d_z = d_z
-        self.input_size = input_size
-        self.batch_size = batch_size
-        self.encoder = nn.Sequential(
-            nn.Linear(input_size + batch_size, 128),
-            nn.Linear(128, 64),
-            nn.Linear(64, d_z)
-        )
+        self.mu = nn.Parameter(torch.zeros(self.d_z), requires_grad=False)
+        self.var = nn.Parameter(torch.ones(self.d_z), requires_grad=False)
 
-        self.decoder = nn.Sequential(
-            nn.Linear(d_z, 64),
-            nn.Linear(64, 128),
-            nn.Linear(128, input_size)
-        )
+    def forward(self):
+        """
+        Return prior distribution. This allows the computation of KL-divergence by calling self.prior() in the VAE class.
+
+        Returns:
+            prior: [torch.distributions.Distribution]
+        """
+        return td.Independent(td.Normal(loc=self.mu, scale=self.var), 1)
+
+
+class MoGPrior(nn.Module):
+    def __init__(self, d_z, n_comp, multiplier=1.0):
+        """
+        Define a Mixture of Gaussian Normal prior distribution.
+
+        Parameters:
+            d_z: [int]
+                Dimension of the latent space
+            n_comp: [int]
+                Number of components for the MoG distribution
+            multiplier: [float]
+                Parameter that controls sparsity of each Gaussian component
+        """
+        super().__init__()
+        self.d_z = d_z
+        self.n_comp = n_comp
+
+        self.mu = nn.Parameter(torch.randn(n_comp, self.d_z) * multiplier)
+        self.var = nn.Parameter(torch.randn(n_comp, self.d_z))
+        self.pi = nn.Parameter(torch.zeros(n_comp))
+
+    def forward(self):
+        """
+        Return prior distribution, allowing for the computation of the KL-divergence by calling self.prior().
+
+        Returns:
+            prior: [torch.distributions.Distribution]
+        """
+        # Get parameters for each MoG component
+        means = self.mu
+        stds = torch.sqrt(torch.nn.functional.softplus(self.var) + 1e-8)
+        logits = self.pi
+
+        # Call MoG distribution
+        prior = MixtureOfGaussians(logits, means, stds)
+
+        return prior
+
+
+class VMMPrior(nn.Module):
+    def __init__(self, d_z, n_comp, mu, multiplier=1.0):
+        """
+        Define a Mixture of Gaussian Normal prior distribution.
+
+        Parameters:
+            d_z: [int]
+                Dimension of the latent space
+            n_comp: [int]
+                Number of components for the MoG distribution
+            multiplier: [float]
+                Parameter that controls sparsity of each Gaussian component
+        """
+        super().__init__()
+        self.d_z = d_z
+        self.n_comp = n_comp
+
+        self.mu = mu
+        self.var = nn.Parameter(torch.randn(n_comp, self.d_z))
+        self.pi = nn.Parameter(torch.zeros(n_comp))
+
+    def forward(self):
+        """
+        Return prior distribution, allowing for the computation of the KL-divergence by calling self.prior().
+
+        Returns:
+            prior: [torch.distributions.Distribution]
+        """
+        # Get parameters for each MoG component
+        means = self.mu
+        stds = torch.sqrt(torch.nn.functional.softplus(self.var) + 1e-8)
+        logits = self.pi
+
+        # Call MoG distribution
+        prior = MixtureOfGaussians(logits, means, stds)
+
+        return prior
+
+
+# ---------- ENCODER CLASSES DEFINITIONS ---------- #
+
+
+class NormalEncoder(nn.Module):
+    def __init__(self, encoder_net):
+        """
+        Define a Gaussian Normal encoder to obtain the parameters of the Normal distribution.
+
+        Parameters:
+            encoder_net: [torch.nn.Module]
+                The encoder network, takes a tensor of dimension (batch, features) and
+                outputs a tensor of dimension (batch, 2*d_z), where d_z is the dimension of the
+                latent space.
+        """
+        super().__init__()
+        self.encoder_net = encoder_net
+
+    def encode(self, x):
+
+        mu, var = torch.chunk(
+            self.encoder_net(x), 2, dim=-1
+        )  # chunk is used for separating the encoder output (batch, 2*d_z) into two separate vectors (batch, d_z)
+
+        return mu, var
 
     def forward(self, x):
-        x = x.view(-1, self.input_size + self.batch_size)
-        z = self.encoder(x)
-        decoded = self.decoder(z)
-        return decoded.view(-1, self.input_size)
-    
-    def encode(self, x):
-        x = x.view(-1, self.input_size + self.batch_size)
-        return self.encoder(x)
-    
-    def decode(self, z):
-        return self.decoder(z)
-    
-    def loss(self, out, x):
-        x = x.view(-1, self.input_size + self.batch_size)
-        x = x[:, :-self.batch_size]
-        return nn.MSELoss()(out, x)
+        """
+        Computes the Gaussian Normal distribution over the latent space.
 
-# Defining Batch Discriminator class
+        Parameters:
+            x: [torch.Tensor]
+        """
+        mu, var = self.encode(x)
+        std = torch.sqrt(torch.nn.functional.softplus(var) + 1e-8)
+
+        return td.Independent(td.Normal(loc=mu, scale=std), 1)
+
+
+class MoGEncoder(nn.Module):
+    def __init__(self, encoder_net, n_comp):
+        """
+        Define a Mixture of Gaussians encoder to obtain the parameters of the MoG distribution.
+
+        Parameters:
+            encoder_net: [torch.nn.Module]
+                The encoder network, takes a tensor of dimension (batch, features) and
+                outputs a tensor of dimension (batch, n_comp*(2*d_z + 1)), where d_z is the dimension
+                of the latent space, and n_comp the number of components of the MoG distribution.
+            n_comp: [int]
+                Number of components for the MoG distribution.
+        """
+        super().__init__()
+        self.n_comp = n_comp
+        self.encoder_net = encoder_net
+
+    def encode(self, x):
+
+        comps = torch.chunk(
+            self.encoder_net(x), self.n_comp, dim=-1
+        )  # chunk used for separating the encoder output (batch, n_comp*(2*d_z + 1)) into n_comp separate vectors (batch, n_comp)
+
+        # Parameters list (for extracting in loop)
+        mu_list = []
+        var_list = []
+        pi_list = []
+
+        for comp in comps:
+            params = comp[
+                :, :-1
+            ]  # parameters mu and var are on the 2*d_z first values of the component
+            pi_comp = comp[
+                :, -1
+            ]  # mixing probabilities is the last value of the component
+
+            mu, var = torch.chunk(
+                params, 2, dim=-1
+            )  # separating mu from var using chunk
+
+            mu_list.append(mu)
+            var_list.append(var)
+            pi_list.append(pi_comp)
+
+        # Convert parameters list into tensor
+        means = torch.stack(mu_list, dim=1)
+        stds = torch.sqrt(
+            torch.nn.functional.softplus(torch.stack(var_list, dim=1)) + 1e-8
+        )
+        pis = torch.stack(pi_list, dim=1)
+
+        # Clamp to avoid error values (too low or too high)
+        stds = torch.clamp(stds, min=1e-5, max=1e5)
+
+        return pis, means, stds
+
+    def forward(self, x):
+        """
+        Computes the MoG distribution over the latent space.
+
+        Parameters:
+            x: [torch.Tensor]
+        """
+        comps = torch.chunk(
+            self.encoder_net(x), self.n_comp, dim=-1
+        )  # chunk used for separating the encoder output (batch, n_comp*(2*d_z + 1)) into n_comp separate vectors (batch, n_comp)
+
+        # Parameters list (for extracting in loop)
+        mu_list = []
+        var_list = []
+        pi_list = []
+
+        for comp in comps:
+            params = comp[
+                :, :-1
+            ]  # parameters mu and var are on the 2*d_z first values of the component
+            pi_comp = comp[
+                :, -1
+            ]  # mixing probabilities is the last value of the component
+
+            mu, var = torch.chunk(
+                params, 2, dim=-1
+            )  # separating mu from var using chunk
+
+            mu_list.append(mu)
+            var_list.append(var)
+            pi_list.append(pi_comp)
+
+        # Convert parameters list into tensor
+        means = torch.stack(mu_list, dim=1)
+        stds = torch.sqrt(
+            torch.nn.functional.softplus(torch.stack(var_list, dim=1)) + 1e-8
+        )
+        pis = torch.stack(pi_list, dim=1)
+
+        # Clamp to avoid error values (too low or too high)
+        stds = torch.clamp(stds, min=1e-5, max=1e5)
+        # Create individual Gaussian distribution per component
+        mog_dist = MixtureOfGaussians(pis, means, stds)
+
+        return mog_dist
+
+
+# ---------- DECODER CLASSES DEFINITIONS ---------- #
+
+
+class NegativeBinomialDecoder(nn.Module):
+    def __init__(self, decoder_net):
+        """
+        Define a Negative Binomial decoder to obtain the parameters of the Negative Binomial distribution.
+
+        Parameters:
+            decoder_net: [torch.nn.Module]
+                The decoder network, takes a tensor of dimension (batch, d_z) and outputs
+                a tensor of dimension (batch, 2*features), where d_z is the dimension of the
+                latent space.
+        """
+        super().__init__()
+        self.decoder_net = decoder_net
+
+    def forward(self, z):
+        """
+        Computes the Negative Binomial distribution over the data space. What we are getting is the mean
+        and the dispersion parameters, so it is needed a parameterization in order to get the NB
+        distribution parameters: total_count (dispersion) and probs (dispersion/(dispersion + mean))
+
+        Parameters:
+            z: [torch.Tensor]
+        """
+        mu, theta = torch.chunk(self.decoder_net(z), 2, dim=-1)
+        # Ensure mean and dispersion are positive numbers
+        mu = F.softplus(mu)
+        theta = F.softplus(theta)
+        # Parameterization into NB parameters
+        p = theta / (theta + mu)
+        r = theta
+
+        return td.Independent(td.NegativeBinomial(total_count=r, probs=p), 1)
+
+
+class ZINBDecoder(nn.Module):
+    def __init__(self, decoder_net):
+        """
+        Define a Zero-inflated Negative Binomial decoder to obtain the parameters of the ZINB distribution.
+
+        Parameters:
+            decoder_net: [torch.nn.Module]
+                The decoder network, takes a tensor of dimension (batch, d_z) and outputs
+                a tensor of dimension (batch, 3*features), where d_z is the dimension of the
+                latent space.
+        """
+        super().__init__()
+        self.decoder_net = decoder_net
+
+    def forward(self, z):
+        """
+        Computes the Zero-inflated Negative Binomial distribution over the data space. What we are getting is the mean
+        and the dispersion parameters, so it is needed a parameterization in order to get the NB
+        distribution parameters: total_count (dispersion) and probs (dispersion/(dispersion + mean)). We are also
+        getting the pi_logits parameters, which accounts for the zero inflation probability.
+
+        Parameters:
+            z: [torch.Tensor]
+        """
+        mu, theta, pi_logits = torch.chunk(self.decoder_net(z), 3, dim=-1)
+        # Ensure mean and dispersion are positive numbers and pi is in range [0,1]
+
+        mu = F.softplus(mu)
+        theta = F.softplus(theta) + 1e-4
+
+        pi = torch.sigmoid(pi_logits)
+
+        # Parameterization into NB parameters
+        p = theta / (theta + mu)
+
+        r = theta
+
+        # Clamp values to avoid huge / small probabilities
+        p = torch.clamp(p, min=1e-5, max=1 - 1e-5)
+
+        # Create Negative Binomial component
+        nb = td.NegativeBinomial(total_count=r, probs=p)
+        # nb = td.Independent(nb, 1)
+
+        return td.Independent(ZINB(nb, pi), 1)
+
+
+class DirichletDecoder(nn.Module):
+    def __init__(self, decoder_net):
+        """
+        Define a Dirichlet decoder to obtain relative abundance values of the Dirichlet distribution.
+
+        Parameters:
+            decoder_net: [torch.nn.Module]
+                The decoder network, takes a tensor of dimension (batch, d_z) and outputs
+                a tensor of dimension (batch, features), where d_z is the dimension of the
+                latent space.
+        """
+        super().__init__()
+        self.decoder_net = decoder_net
+
+    def forward(self, z):
+        """
+        Computes the Dirichlet distribution over the data space. What we are getting is the concentration parameter
+        that is going to be the input for the td.Dirichlet distribution function.
+
+        Parameters:
+            z: [torch.Tensor]
+        """
+        concentration = self.decoder_net(z)
+        # For stability, value is required to be positive and greater than 0
+        concentration = F.softplus(concentration + 1e-4)
+        dirichlet_dist = td.Dirichlet(concentration)
+        return td.Independent(dirichlet_dist, 1)
+
+
+class ZIDirichletDecoder(nn.Module):
+    def __init__(self, decoder_net):
+        """
+        Define a Zero-Inflated Dirichlet decoder to obtain relative abundance values of the ZIDirichlet distribution.
+
+        Parameters:
+            decoder_net: [torch.nn.Module]
+                The decoder network, takes a tensor of dimension (batch, d_z) and outputs
+                a tensor of dimension (batch, 2*features), where d_z is the dimension of the
+                latent space.
+        """
+        super().__init__()
+        self.decoder_net = decoder_net
+
+    def forward(self, z):
+        """
+        Computes the Zero-Inflated Dirichlet distribution over the data space. What we are getting is the concentration
+        parameter that is going to be the input for the ZIDirichlet distribution function.
+
+        Parameters:
+            z: [torch.Tensor]
+        """
+        concentration, pi_logits = torch.chunk(self.decoder_net(z), 2, dim=-1)
+
+        concentration = F.softplus(concentration) + 1e-4
+
+        pi = torch.sigmoid(pi_logits)
+
+        dirichlet_dist = td.Dirichlet(concentration)
+        return td.Independent(ZIDirichlet(pi, dirichlet_dist), 1)
+
+
+# ---------- DISTRIBUTIONS CLASSES DEFINITIONS ---------- #
+
+
+class ZINB(td.Distribution):
+    """
+    Zero-inflated Negative Binomial (ZINB) distribution definition. The ZINB distribution is defined by the following:
+        For x = 0:
+            ZINB.log_prob(0) = log(pi + (1 - pi) * NegativeBinomial(0 | r, p))
+
+        For x > 0:
+            ZINB.log_prob(x) = log(1 - pi) + NegativeBinomial(x |r, p).log_prob(x)
+    """
+
+    arg_constraints = {}
+    support = td.constraints.nonnegative_integer
+    has_rsample = False
+
+    def __init__(self, nb, pi, validate_args=None):
+        """
+        Parameters:
+            nb: [torch.distributions.Independent(torch.distributions.NegativeBinomial)]
+                Negative Binomial distribution component
+            pi: [torch.Tensor]
+                Zero-inflation probability from decoder output
+        """
+        self.nb = nb
+        self.pi = pi
+        batch_shape = nb.batch_shape
+        super().__init__(batch_shape=batch_shape, validate_args=validate_args)
+
+    def log_prob(self, x):
+        """
+        Defines the log_prob() function inherent from torch.distributions.Distribution.
+
+        Parameters:
+            x: [torch.Tensor]
+        """
+        nb_log_prob = self.nb.log_prob(x)  # log probability of NB where x > 0
+        nb_prob_zero = torch.exp(
+            self.nb.log_prob(torch.zeros_like(x))
+        )  # probability of NB where x = 0
+        log_prob_zero = torch.log(self.pi + (1 - self.pi) * nb_prob_zero + 1e-8)
+        log_prob_nonzero = torch.log(1 - self.pi + 1e-8) + nb_log_prob
+
+        return torch.where(x == 0, log_prob_zero, log_prob_nonzero)
+
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Defines the sample() function, which is used to sample data points using the distribution parameters.
+            For x = 0:
+                Binary mask for zero-inflated values
+            For x > 0:
+                Sample from Negative Binomial distribution
+        """
+        shape = self._extended_shape(sample_shape)
+        zero_inflated = torch.bernoulli(self.pi.expand(shape))
+
+        nb_sample = self.nb.sample(sample_shape)
+
+        return torch.where(zero_inflated.bool(), torch.zeros_like(nb_sample), nb_sample)
+
+
+@td.kl.register_kl(ZINB, ZINB)
+def kl_zinb_zinb(p, q):
+    # Monte Carlo sampling from p
+    num_samples = 5000
+    samples = p.sample((num_samples,))
+    log_p = p.log_prob(samples)
+    log_q = q.log_prob(samples)
+
+    kl = (log_p - log_q).mean(dim=0)
+    return kl
+
+
+class ZIDirichlet(td.Distribution):
+    """
+    A Zero-inflated Dirichlet distribution.
+    """
+
+    arg_constraints = {
+        "zero_prob": td.constraints.unit_interval,
+    }
+    support = td.constraints.simplex
+    has_rsample = False
+
+    def __init__(self, zero_prob, dirichlet, validate_args=None):
+        self.zero_prob = zero_prob
+        self.dirichlet = dirichlet
+        batch_shape = dirichlet.batch_shape
+        super().__init__(batch_shape=batch_shape, validate_args=validate_args)
+
+    def log_prob(self, x):
+        """
+        Defines the log_prob() function inherent from torch.distributions.Distribution.
+
+        Parameters:
+            x: [torch.Tensor]
+        """
+
+        dirichlet_log_prob = self.dirichlet.log_prob(x).unsqueeze(
+            -1
+        )  # log probability of Dirichlet where x > 0
+
+        log_prob_zero = torch.log(self.zero_prob + 1e-8)
+        log_prob_nonzero = torch.log(1 - self.zero_prob + 1e-8) + dirichlet_log_prob
+
+        return torch.where(x == 0, log_prob_zero, log_prob_nonzero)
+
+    def sample(self, sample_shape=torch.Size()):
+        shape = self._extended_shape(sample_shape)
+        zero_inflated = torch.bernoulli(self.zero_prob.expand(shape))
+
+        dirichlet_sample = self.dirichlet.sample(sample_shape)
+
+        return torch.where(
+            zero_inflated.bool(), torch.zeros_like(dirichlet_sample), dirichlet_sample
+        )
+
+
+@td.kl.register_kl(ZIDirichlet, ZIDirichlet)
+def kl_zidirichlet_zidirichlet(p, q):
+    # Monte Carlo sampling from p
+    num_samples = 5000
+    samples = p.sample((num_samples,))
+    log_p = p.log_prob(samples)
+    log_q = q.log_prob(samples)
+
+    kl = (log_p - log_q).mean(dim=0)
+    return kl
+
+
+class MixtureOfGaussians(td.Distribution):
+    """
+    A Mixture of Gaussians distribution with reparameterized sampling. Computation of gradients is possible.
+    """
+
+    arg_constraints = {}
+    support = td.constraints.real
+    has_rsample = True  # Implemented the rsample() through the Gumbel-softmax reparameterization trick.
+
+    def __init__(
+        self, mixture_logits, means, stds, temperature=1e-5, validate_args=None
+    ):
+        self.mixture_logits = mixture_logits
+        self.means = means
+        self.stds = stds
+        self.temperature = temperature
+
+        batch_shape = self.mixture_logits.shape[:-1]
+        event_shape = self.means.shape[-1:]
+        super().__init__(
+            batch_shape=batch_shape,
+            event_shape=event_shape,
+            validate_args=validate_args,
+        )
+
+    def rsample(self, sample_shape=torch.Size()):
+        """
+        Reparameterized sampling using the Gubel-softmax trick.
+        """
+
+        # Step 1 - Sample for every component
+
+        logits = self.mixture_logits.expand(sample_shape + self.mixture_logits.shape)
+        means = self.means.expand(sample_shape + self.means.shape)
+        stds = self.stds.expand(sample_shape + self.stds.shape)
+
+        eps = torch.randn_like(means)
+        comp_samples = means + eps * stds
+
+        # Step 2 - Generate Gumbel noise for each component
+        u = torch.rand_like(logits)
+        gumbel_noise = -torch.log(-torch.log(u + 1e-5) + 1e-5)
+
+        # Step 3 - Compute y_i (gumbel-softmax trick)
+        weights = F.softmax((logits + gumbel_noise) / self.temperature, dim=-1)
+        weights = weights.unsqueeze(-1)
+
+        # Step 4 - Sum every component for final sampling
+        sample = torch.sum(weights * comp_samples, dim=-2)
+        return sample
+
+    def sample(self, sample_shape=torch.Size()):
+        """
+        Sample from the MoG distribution.
+        """
+        return self.rsample(sample_shape)
+
+    def log_prob(self, value):
+        """
+        Compute the log probability of a given value. The log prob of a MoG is defined as:
+
+            log_prob(x) = log [sum_k (pi_k * N(x; mu_k, sigma_k^2)]
+
+        Where pi_k are the mixture probabilities.
+        """
+        value = value.unsqueeze(-2)
+
+        normal = td.Normal(self.means, self.stds)
+        log_prob_comp = normal.log_prob(value)
+        log_prob_comps = log_prob_comp.sum(dim=-1)
+
+        log_weights = F.log_softmax(self.mixture_logits, dim=-1)
+        log_weights = log_weights.expand(log_prob_comps.shape)
+
+        log_prob = torch.logsumexp(log_weights + log_prob_comps, dim=-1)
+
+        return log_prob
+
+    @property
+    def mean(self):
+        """
+        Mixture mean: weighted sum of component means
+        """
+        weights = F.softmax(self.mixture_logits, dim=-1)
+
+        return torch.sum(weights.unsqueeze(-1) * self.means, dim=-2)
+
+    def variance(self):
+        """
+        Mixture variance: weighted sum of (variance + squared mean) minus squared mixture mean
+        """
+        weights = F.softmax(self.mixture_logits, dim=-1)
+        mixture_mean = self.mean
+
+        comp_var = self.stds**2
+        second_moment = torch.sum(
+            weights.unsqueeze(-1) * (comp_var + self.means**2), dim=-2
+        )
+
+        return second_moment - mixture_mean**2
+
+    def entropy(self):
+
+        raise NotImplementedError(
+            "Entropy is not implemented in Mixture of Gaussians distribution."
+        )
+
+
+# In order to register the kd.kl_divergence() function for the MixtureOfGaussians class
+@td.kl.register_kl(MixtureOfGaussians, MixtureOfGaussians)
+def kl_mog_mog(p, q):
+    # Monte Carlo sampling from p
+    num_samples = 5000
+    samples = p.rsample((num_samples,))
+    log_p = p.log_prob(samples)
+    log_q = q.log_prob(samples)
+
+    kl = (log_p - log_q).mean(dim=0)
+    return kl
+
+
+# ---------- VAE CLASSES DEFINITIONS ---------- #
+
+
+class VAE(nn.Module):
+    """
+    Define a Variational Autoencoder (VAE) model.
+    """
+
+    def __init__(self, prior, decoder, encoder, beta=1.0):
+        """
+        Parameters:
+        prior: [torch.nn.Module]
+           The prior distribution over the latent space.
+        decoder: [torch.nn.Module]
+              The decoder distribution over the data space.
+        encoder: [torch.nn.Module]
+                The encoder distribution over the latent space.
+        """
+
+        super(VAE, self).__init__()
+        self.prior = prior
+        self.decoder = decoder
+        self.encoder = encoder
+        self.beta = beta
+
+    def elbo(self, x):
+        """
+        Compute the ELBO for the given batch of data.
+
+        Parameters:
+        x: [torch.Tensor]
+           A tensor of dimension `(batch_size, feature_dim1, feature_dim2, ...)`
+           n_samples: [int]
+           Number of samples to use for the Monte Carlo estimate of the ELBO.
+        """
+        q = self.encoder(x)
+        z = q.rsample()
+        elbo = torch.mean(
+            self.decoder(z).log_prob(x) - self.beta * td.kl_divergence(q, self.prior()),
+            dim=0,
+        )
+
+        return elbo
+
+    def kl_div_loss(self, x):
+        q = self.encoder(x)
+        z = q.rsample()
+        kl_loss = torch.mean(
+            self.beta * td.kl_divergence(q, self.prior()),
+            dim=0,
+        )
+        return kl_loss
+
+    def sample(self, n_samples=1):
+        """
+        Sample from the model.
+
+        Parameters:
+        n_samples: [int]
+           Number of samples to generate.
+        """
+        z = self.prior().sample(torch.Size([n_samples]))
+        return self.decoder(z).sample()
+
+    def forward(self, x):
+        """
+        Compute the negative ELBO for the given batch of data.
+
+        Parameters:
+        x: [torch.Tensor]
+           A tensor of dimension `(batch_size, feature_dim1, feature_dim2)`
+        """
+        return -self.elbo(x)
+
+    def get_posterior(self, x):
+        """
+        Given a set of points, compute the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        q = self.encoder(x)
+        z = q.rsample()
+        return z
+
+    def pca_posterior(self, x):
+        """
+        Given a set of points, compute the PCA of the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        z = self.get_posterior(x)
+        pca = PCA(n_components=2)
+        return pca.fit_transform(z.detach().cpu())
+
+    def pca_prior(self, n_samples):
+        """
+        Given a number of samples, get the PCA from the sampling of the prior distribution.
+        """
+        samples = self.prior().sample(torch.Size([n_samples]))
+        pca = PCA(n_components=2)
+        return pca.fit_transform(samples.detach().cpu())
+
+
+class ConditionalVAE(nn.Module):
+    """
+    Define a conditional Variational Autoencoder (VAE) model.
+    """
+
+    def __init__(self, prior, decoder, encoder, beta=1.0):
+        """
+        Parameters:
+        prior: [torch.nn.Module]
+           The prior distribution over the latent space.
+        decoder: [torch.nn.Module]
+              The decoder distribution over the data space.
+        encoder: [torch.nn.Module]
+                The encoder distribution over the latent space.
+        """
+
+        super(ConditionalVAE, self).__init__()
+        self.prior = prior
+        self.decoder = decoder
+        self.encoder = encoder
+        self.beta = beta
+
+    def elbo(self, x):
+        """
+        Compute the ELBO for the given batch of data.
+
+        Parameters:
+        x: [torch.Tensor]
+           A tensor of dimension `(batch_size, feature_dim1, feature_dim2, ...)`
+           n_samples: [int]
+           Number of samples to use for the Monte Carlo estimate of the ELBO.
+        """
+        q = self.encoder(x)
+        z = q.rsample()
+        elbo = torch.mean(
+            self.decoder(z).log_prob(x) - self.beta * td.kl_divergence(q, self.prior()),
+            dim=0,
+        )
+
+        return elbo
+
+    def kl_div_loss(self, x):
+        q = self.encoder(x)
+        z = q.rsample()
+        kl_loss = torch.mean(
+            self.beta * td.kl_divergence(q, self.prior()),
+            dim=0,
+        )
+        return kl_loss
+
+    def sample(self, n_samples=1):
+        """
+        Sample from the model.
+
+        Parameters:
+        n_samples: [int]
+           Number of samples to generate.
+        """
+        z = self.prior().sample(torch.Size([n_samples]))
+        return self.decoder(z).sample()
+
+    def forward(self, x):
+        """
+        Compute the negative ELBO for the given batch of data.
+
+        Parameters:
+        x: [torch.Tensor]
+           A tensor of dimension `(batch_size, feature_dim1, feature_dim2)`
+        """
+        # Obtain posterior and sample
+        q_zx = self.encoder(x)
+        z = q_zx.rsample()
+
+        # Forward pass to the decoder
+        p_xz = self.decoder(z)
+
+        # Loss function
+        log_q_zx = q_zx.log_prob(z)
+        log_p_z = self.log_prob(z)
+
+        recon_term = p_xz.log_prob(x).mean()
+        kl_term = self.beta * (log_q_zx - log_p_z).mean()
+
+        return -recon_term + kl_term
+
+    def get_posterior(self, x):
+        """
+        Given a set of points, compute the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        q = self.encoder(x)
+        z = q.rsample()
+        return z
+
+    def log_prob(self, z):
+
+        return self.prior().log_prob(z)
+
+    def pca_posterior(self, x):
+        """
+        Given a set of points, compute the PCA of the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        z = self.get_posterior(x)
+        pca = PCA(n_components=2)
+        return pca.fit_transform(z.detach().cpu())
+
+    def pca_prior(self, n_samples):
+        """
+        Given a number of samples, get the PCA from the sampling of the prior distribution.
+        """
+        samples = self.prior().sample(torch.Size([n_samples]))
+        pca = PCA(n_components=2)
+        return pca.fit_transform(samples.detach().cpu())
+
+
+class VampPriorMixtureConditionalVAE(nn.Module):
+    """
+    Define a VampPrior Variational Autoencoder model.
+    """
+
+    def __init__(
+        self,
+        encoder,
+        decoder,
+        input_dim,
+        batch_dim,
+        n_comps,
+        d_z,
+        beta=1.0,
+        data_loader=None,
+    ):
+        super().__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+        self.input_dim = input_dim
+        self.batch_dim = batch_dim
+        self.K = n_comps
+        self.d_z = d_z
+        self.beta = beta
+
+        # Pseudo-inputs
+        if data_loader is not None:
+            self.u = self.sample_from_dataloader(data_loader)
+        else:
+            self.u = nn.Parameter(
+                torch.cat(
+                    [torch.rand(n_comps, input_dim), torch.zeros(n_comps, batch_dim)],
+                    dim=1,
+                )
+            )
+
+        # MoG prior parameters besides location
+        self.prior_var = nn.Parameter(torch.randn(n_comps, self.d_z))
+        self.prior_pi = nn.Parameter(torch.zeros(n_comps))
+
+    def sample_from_dataloader(self, data_loader):
+        all_data = []
+        bio_label = []
+        for batch in data_loader:
+            x = batch[0]
+            z = batch[2]  # biological variability
+            all_data.append(x)
+            bio_label.append(z)
+            if len(all_data) * x.shape[0] >= self.K:
+                break
+
+        all_data = torch.cat(all_data, dim=0)
+        bio_label = torch.cat(bio_label, dim=0)
+        bio_dict = torch.unique(bio_label, dim=0)
+
+        selected_u = []
+
+        for label in bio_dict:
+            for i in range(all_data.shape[0]):
+                if torch.equal(bio_label[i], label):
+                    selected_u.append(all_data[i])
+                    break
+
+        selected_u = torch.stack(selected_u)
+        selected_u = torch.cat([selected_u, torch.zeros(self.K, self.batch_dim)], dim=1)
+        return nn.Parameter(selected_u.clone().detach().requires_grad_(True))
+
+    def get_prior(self):
+        # encode pseudo inputs
+        mog_u = self.encoder(self.u)
+
+        # sample from encoded distribution to compute prior components centroids
+        mu_u = mog_u.rsample()
+
+        # compute prior
+        w = self.prior_pi.view(-1)
+        stds = torch.sqrt(torch.nn.functional.softplus(self.prior_var) + 1e-8)
+        prior = MixtureOfGaussians(w, mu_u, stds)
+
+        return prior
+
+    def sample(self, n_samples):
+
+        prior = self.get_prior()
+
+        return prior.rsample(sample_shape=torch.Size([n_samples]))
+
+    def pca_prior(self, n_samples):
+        """
+        Given a number of samples, get the PCA from the sampling of the prior distribution.
+        """
+        samples = self.sample(n_samples)
+        pca = PCA(n_components=2)
+        return pca.fit_transform(samples.detach().cpu())
+
+    def get_posterior(self, x):
+        """
+        Given a set of points, compute the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        q = self.encoder(x)
+        z = q.rsample()
+        return z
+
+    def pca_posterior(self, x):
+        """
+        Given a set of points, compute the PCA of the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        z = self.get_posterior(x)
+        pca = PCA(n_components=2)
+        return pca.fit_transform(z.detach().cpu())
+
+    def log_prob(self, z):
+
+        prior = self.get_prior()
+
+        return prior.log_prob(z)
+
+    def forward(self, x):
+        # Obtain posterior and sample
+        q_zx = self.encoder(x)
+        z = q_zx.rsample()
+
+        # Forward pass to the decoder
+        p_xz = self.decoder(z)
+
+        # Loss function
+        log_q_zx = q_zx.log_prob(z)
+        log_p_z = self.log_prob(z)
+
+        recon_term = p_xz.log_prob(x).mean()
+        kl_term = self.beta * (log_q_zx - log_p_z).mean()
+
+        return -recon_term + kl_term
+
+
+# ---------- DISCRIMINATOR AND CONTRASTIVE LEARNING ---------- #
+
+
 class BatchDiscriminator(nn.Module):
-    def __init__(self,
-                 input_size = 1024,
-                 hl1_size = 128,
-                 hl2_size = 64,
-                 batch_size = 10,
-                 tissue_size = 2):
+    """
+    Define the Batch Discriminator for adversarial training
+    """
+
+    def __init__(self, net):
         super().__init__()
-        self.input_size = input_size
-        self.hl1_size = hl1_size
-        self.hl2_size = hl2_size
-        self.batch_size = batch_size
-        self.tissue_size = tissue_size
-        self.ffnn = nn.Sequential(
-            nn.Linear(input_size + tissue_size, hl1_size),
-            nn.ReLU(),
-            nn.Linear(hl1_size, hl2_size),
-            nn.ReLU(),
-            nn.Linear(hl2_size, batch_size)
-        )
+        self.net = net
 
     def forward(self, x):
-        x = x.view(-1, self.input_size + self.tissue_size)
-        y = self.ffnn(x)
-        return y
-    
-    def loss(self, out, y):
-        return nn.CrossEntropyLoss()(out, y)
+        batch_class = self.net(x)
+        return batch_class
 
-# Defining tissue classifier class
-class TissueClassifier(nn.Module):
-    def __init__(self,
-                 input_size,
-                 hl1_size = 128,
-                 hl2_size = 64,
-                 tissue_size = 2):
+    def loss(self, pred, true):
+
+        loss = nn.CrossEntropyLoss()
+
+        return loss(pred, true)
+
+
+class SupervisedContrastiveLoss(nn.Module):
+    """
+    Contrastive loss definition
+    """
+
+    def __init__(self, temp=0.1):
         super().__init__()
-        self.input_size = input_size
-        self.hl1_size = hl1_size
-        self.hl2_size = hl2_size
-        self.tissue_size = tissue_size
-        self.ffnn = nn.Sequential(
-            nn.Linear(input_size, hl1_size),
-            nn.ReLU(),
-            nn.Linear(hl1_size, hl2_size),
-            nn.ReLU(),
-            nn.Linear(hl2_size, tissue_size)
-        )
+        self.temp = temp
 
-    def forward(self, x):
-        x = x.view(-1, self.input_size)
-        y = self.ffnn(x)
-        return y
-    
-    def loss(self, out, y):
-        return nn.CrossEntropyLoss()(out, y)
-
-# Define discriminator that differentiates between original data from recreated data
-# This assures that the original data distribution is conserved
-class DataDiscriminator(nn.Module):
-    def __init__(self,
-                 input_size,
-                 exp_size,
-                 hl1_size = 128,
-                 hl2_size = 64,
-                 output_size = 2):
-        super().__init__()
-        self.input_size = input_size + exp_size
-        self.hl1_size = hl1_size
-        self.hl2_size = hl2_size
-        self.output_size = output_size
-        self.ffnn = nn.Sequential(
-            nn.Linear(input_size + exp_size, hl1_size),
-            nn.ReLU(),
-            nn.Linear(hl1_size, hl2_size),
-            nn.ReLU(),
-            nn.Linear(hl2_size, output_size)
-        )
-
-    def forward(self, x):
-        x = x.view(-1, self.input_size)
-        y = self.ffnn(x)
-        return y
-    
-    def loss(self, out, y):
-        return nn.CrossEntropyLoss()(out, y)
-
-
-# Defining ABaCo algorithm
-class ABaCo(nn.Module):
-
-    #ABaCo core part is a regular autoencoder
-    def __init__(self, 
-                 d_z = 10, 
-                 input_size = 1024, 
-                 batch_size = 10):
-        super().__init__()
-        self.d_z = d_z
-        self.input_size = input_size
-        self.batch_size = batch_size
-        self.encoder = nn.Sequential(
-            nn.Linear(input_size + batch_size, 512),
-            nn.Linear(512, 256),
-            nn.Linear(256, 128),
-            nn.Linear(128, d_z)
-        )
-
-        self.decoder = nn.Sequential(
-            nn.Linear(d_z, 128),
-            nn.Linear(128, 256),
-            nn.Linear(256, 512),
-            nn.Linear(512, input_size)
-        )
-
-    def forward(self, x):
-        x = x.view(-1, self.input_size + self.batch_size)
-        z = self.encoder(x)
-        decoded = self.decoder(z)
-        return decoded.view(-1, self.input_size)
-    
-    def encode(self, x):
-        x = x.view(-1, self.input_size + self.batch_size)
-        return self.encoder(x)
-    
-    def decode(self, z):
-        return self.decoder(z)
-    
-    # Define the classifier and discriminator models
-    def train_model(self,
-                    batch_model: BatchDiscriminator,
-                    out_class_model: TissueClassifier,
-                    latent_class_model: TissueClassifier,
-                    data_disc_model: DataDiscriminator,
-                    train_loader,
-                    ohe_exp_loader,
-                    num_epochs,
-                    device,
-                    w_recon = 1.0,
-                    w_adver = 1.0,
-                    w_latent = 1.0,
-                    w_output = 1.0,
-                    w_disc = 1.0,
-                    w_data = 1.0,
-                    lr_recon = 1e-5,
-                    lr_adver = 1e-5,
-                    lr_latent = 1e-5,
-                    lr_output = 1e-5,
-                    lr_disc = 1e-5,
-                    lr_data = 1e-5,
-                    val_loader = None,
-                    test_loader = None,
-                    model_name = "model",
-                    save_model = False
-                    ):
+    def forward(self, latent_points, labels):
         """
-        Placeholder
+        latent_points: [batch_size, d_z]
+        labels: [batch_size]
         """
-        train_dis_losses = []
-        train_adv_losses = []
-        train_recon_losses = []
-        train_latent_losses = []
-        train_output_losses = []
-        train_data_losses = []
-        test_losses = []
-        val_losses = []
-        lowest_val_loss = float('inf')
-        best_epoch = -1
-        best_model_state = None
+        B, d_z = latent_points.shape
+        # Normalizing to unit length
+        embeddings = F.normalize(latent_points, dim=1)
+        # Cosine similarity matrix
+        sim_matrix = (
+            torch.matmul(embeddings, embeddings.T) / self.temp
+            - torch.eye(B, device=latent_points.device) * 1e-9
+        )
+        # Masking [i, j] = 1 if i and j share label
+        labels = labels.contiguous().view(-1, 1)
+        mask = torch.eq(labels, labels.T).float().to(embeddings.device)
+        # Compute log-sum-exp over all except self
+        exp_sim = torch.exp(sim_matrix)
+        log_prob = sim_matrix - torch.log(exp_sim.sum(dim=1, keepdim=True))
+        mean_log_prob = (mask * log_prob).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+        # Compute loss
+        loss = -mean_log_prob.mean()
+        return loss
 
-        #Optimizer for discriminator only
-        step_1_optimizer = torch.optim.Adam(batch_model.parameters(), lr = lr_disc, weight_decay=1e-5)
-        #Optimizer for adversarial training (autoencoder only)
-        step_2_optimizer = torch.optim.Adam(self.parameters(), lr = lr_adver, weight_decay=1e-5)
-        #Optimizer for biological conservation (autoencoder and classifiers)
-        step_3_1_optimizer = torch.optim.Adam(self.parameters(), lr = lr_recon, weight_decay=1e-5)
-        step_3_2_optimizer = torch.optim.Adam(latent_class_model.parameters(), lr = lr_latent, weight_decay=1e-5)
-        step_3_3_optimizer = torch.optim.Adam(out_class_model.parameters(), lr = lr_output, weight_decay=1e-5)
-        #v2 - Optimizer for discriminator of original distribution data and adversarial training AE
-        step_4_optimizer = torch.optim.Adam(data_disc_model.parameters(), lr = lr_data, weight_decay=1e-5)
-        step_5_optimizer = torch.optim.Adam(self.parameters(), lr = lr_adver, weight_decay=1e-5)
 
-        #Loss function for discriminator only
-        step_1_criterion = nn.CrossEntropyLoss()
-        #Adversarial loss function of autoencoder
-        step_2_criterion = nn.KLDivLoss()
-        #Biological conservation loss functions
-        step_3_1_criterion = nn.MSELoss()
-        step_3_2_criterion = nn.CrossEntropyLoss()
-        step_3_3_criterion = nn.CrossEntropyLoss()
-        #Original data distribution conservation loss functions
-        step_4_criterion = nn.CrossEntropyLoss()
-        step_5_criterion = nn.CrossEntropyLoss()
+# ---------- TRAINING LOOP ---------- #
 
-        for epoch in range(num_epochs):
-            #Training
-            self.train()
-            batch_model.train()
-            out_class_model.train()
-            latent_class_model.train()
-            train_dis_loss = 0.0
-            train_adv_loss = 0.0
-            train_recon_loss = 0.0
-            train_output_loss = 0.0
-            train_latent_loss = 0.0
-            train_data_loss = 0.0
 
-            for (x, y, k), (ohe_exp) in zip(train_loader, ohe_exp_loader):
-                #Forward pass to Autoencoder
-                x = x.to(device)
-                z = self.encode(x)
-                out_ae = self.decode(z)
+def adversarial_loss(
+    pred_logits: torch.Tensor,
+    true_labels: torch.Tensor,
+    loss_type: str = "CrossEntropy",
+):
+    """
+    Compute adversarial loss for generator (to fool discriminator).
 
-                #Forward pass to discriminator
-                input_disc = torch.concat((out_ae, ohe_exp), 1) # reconstructed otus + tissue ohe
-                out_batch_class = batch_model(input_disc)
+    Args:
+        pred_logits: [batch_size, n_classes] raw discriminator outputs.
+        true_labels: [batch_size] long tensor of class indices.
+        loss_type: "CrossEntropy" or "Uniform".
 
-                #1st Backpropagation: Discriminator
-                step_1_loss = w_disc * step_1_criterion(out_batch_class, x[:, -self.batch_size:])
-                step_1_optimizer.zero_grad()
-                step_1_loss.backward(retain_graph=True)
-                step_1_optimizer.step()
-                out_batch_class = out_batch_class.detach()
-                out_batch_class = batch_model(input_disc)
-                out_ae = out_ae.detach()
-                z = z.detach()
-                z = self.encode(x)
-                out_ae = self.decode(z)
+    Returns:
+        A scalar loss (negated for generator on CrossEntropy).
+    """
+    if loss_type == "CrossEntropy":
+        ce = F.cross_entropy(pred_logits, true_labels)
+        return -ce
 
-                #2nd Backpropagation: Adversarial AE
-                target_dist = torch.full_like(out_batch_class, 1/self.batch_size)
-                out_batch_prob = torch.log_softmax(out_batch_class, dim=1)
-                step_2_loss = w_adver * step_2_criterion(out_batch_prob, target_dist)
-                step_2_optimizer.zero_grad()
-                step_2_loss.backward(retain_graph=True)
-                step_2_optimizer.step()
-                out_batch_class = out_batch_class.detach()
-                out_batch_class = batch_model(input_disc)
-                out_ae = out_ae.detach()
-                z = z.detach()
-                z = self.encode(x)
-                out_ae = self.decode(z)
+    elif loss_type == "Uniform":
+        log_probs = F.log_softmax(pred_logits, dim=1)
+        target = torch.full_like(log_probs, 1.0 / pred_logits.size(1))
+        return F.kl_div(log_probs, target, reduction="batchmean")
 
-                #Forward pass to classificators
-                out_out_class = out_class_model(out_ae)     #this classifies using AE output
-                out_latent_class = latent_class_model(z)    #this classifies using AE latent space
+    else:
+        raise ValueError(f"Unsupported adversarial loss type: {loss_type}")
 
-                #3rd Backpropagation: Triple loss function
-                # step_3_1_loss = step_3_1_criterion(out_ae, x[:,:-self.batch_size])
-                step_3_1_loss = 0
-                for i in range(x.shape[0]):
-                    k_i = k[i].item()
-                    step_3_1_loss += step_3_1_criterion(out_ae[i, :k_i], x[i, :k_i]) # Only compute loss on features values (not zero padding values)
 
-                step_3_1_loss /= x.shape[0] # Normalize for the batch size
-                step_3_2_loss = step_3_2_criterion(out_latent_class, y)
-                step_3_3_loss = step_3_3_criterion(out_out_class, y)
-                step_3_loss = w_recon * step_3_1_loss + w_latent * step_3_2_loss + w_output * step_3_3_loss
-                step_3_1_optimizer.zero_grad()
-                step_3_2_optimizer.zero_grad()
-                step_3_3_optimizer.zero_grad()
-                step_3_loss.backward()
-                step_3_1_optimizer.step()
-                step_3_2_optimizer.step()
-                step_3_3_optimizer.step()
-                out_ae = out_ae.detach()
-                z = z.detach()
-                z = self.encode(x)
-                out_ae = self.decode(z)
+def pre_train_abaco(
+    vae,
+    vae_optim_pre,
+    discriminator,
+    disc_optim,
+    adv_optim,
+    data_loader,
+    epochs,
+    device,
+    w_contra=1.0,
+    temp=0.1,
+    w_elbo=1.0,
+    w_disc=1.0,
+    w_adv=1.0,
+    disc_loss_type="CrossEntropy",
+    n_disc_updates=1,
+    label_smooth=0.1,
+    normal=False,
+    count=True,
+):
+    """
+    Pre-training of conditional VAE with contrastive loss and adversarial mixing in latent space.
+    """
+    vae.train()
+    discriminator.train()
+    contra_criterion = SupervisedContrastiveLoss(temp)
 
-                #4th Backpropagation: Training data discriminator
-                original_data = torch.concat((x[:, :-self.batch_size], ohe_exp), 1)
-                recon_data = torch.concat((out_ae, ohe_exp), 1)
-                out_real_data_class = data_disc_model(original_data)
-                out_recon_data_class = data_disc_model(recon_data)
+    total_steps = len(data_loader) * epochs
+    progress_bar = tqdm(
+        range(total_steps),
+        desc="Pre-training: VAE for reconstructing data and batch mixing adversarial training",
+    )
 
-                #Original data class
-                original_class = torch.zeros(x.shape[0], 2, device=device)
-                original_class[:x.shape[0]] = torch.tensor([1, 0], device=device)
+    for epoch in range(1, epochs + 1):
+        for x, y_onehot, z_onehot in data_loader:
+            # Move all tensors to the correct device
+            x = x.to(device)
+            if count == False:
+                x_sum = x.sum(dim=1, keepdim=True)
+                x = x / x_sum
 
-                #Reconstructed data class
-                recon_class = torch.zeros(x.shape[0], 2, device=device)
-                recon_class[:x.shape[0]] = torch.tensor([0, 1], device=device)
-                
-                #Compute loss for data discriminator
-                step_4_loss = w_data * step_4_criterion(out_real_data_class, original_class)
-                step_4_loss += w_data * step_4_criterion(out_recon_data_class, recon_class)
+            y_onehot = y_onehot.to(device)
+            z_onehot = z_onehot.to(device)
+            y_idx = y_onehot.argmax(1)
+            z_idx = z_onehot.argmax(1)
 
-                #Backpropagation
-                step_4_optimizer.zero_grad()
-                step_4_loss.backward()
-                step_4_optimizer.step()
+            # === Step 1: Discriminator on latent (freeze encoder) ===
+            with torch.no_grad():
+                if normal == False:
+                    pi, mu, _ = vae.encoder.encode(torch.cat([x, y_onehot], dim=1))
+                    mu_bar = (mu * pi.unsqueeze(2)).sum(dim=1)
+                    d_input = torch.cat([mu_bar, z_onehot], dim=1)
 
-                #Detach everything for next pass
-                out_ae = out_ae.detach()
-                z = z.detach()
-                z = self.encode(x)
-                out_ae = self.decode(z)
+                else:
+                    mu, _ = vae.encoder.encode(torch.cat([x, y_onehot], dim=1))
+                    d_input = torch.cat([mu, z_onehot], dim=1)
 
-                #Recompute for following backpropagation
-                recon_data = torch.concat((out_ae, ohe_exp), 1)
-                out_recon_data_class = data_disc_model(recon_data)
+            for _ in range(n_disc_updates):
+                disc_optim.zero_grad()
+                logits = discriminator(d_input)
+                loss_disc = w_disc * F.cross_entropy(
+                    logits, y_idx, label_smoothing=label_smooth
+                )
+                loss_disc.backward()
+                disc_optim.step()
 
-                #5th Backpropagation: Adversarial training of AE from data discriminator (only computed with reconstructed data output)
-                step_5_loss = w_adver * step_5_criterion(out_recon_data_class, original_class)
-                step_5_optimizer.zero_grad()
-                step_5_loss.backward()
-                step_5_optimizer.step()
-                
-                #Save loss values
-                train_dis_loss += step_1_loss.item()
-                train_adv_loss += step_2_loss.item()
-                train_recon_loss += step_3_1_loss.item()
-                train_latent_loss += step_3_2_loss.item()
-                train_output_loss += step_3_3_loss.item()
-                train_data_loss += step_4_loss.item()
+            # === Step 2: Adversarial update on encoder ===
+            adv_optim.zero_grad()
+            if normal == False:
+                pi, mu, _ = vae.encoder.encode(torch.cat([x, y_onehot], dim=1))
+                mu_bar = (mu * pi.unsqueeze(2)).sum(dim=1)
+                logits_fake = discriminator(torch.cat([mu_bar, z_onehot], dim=1))
+            else:
+                mu, _ = vae.encoder.encode(torch.cat([x, y_onehot], dim=1))
+                logits_fake = discriminator(torch.cat([mu, z_onehot], dim=1))
+            loss_adv = w_adv * adversarial_loss(
+                pred_logits=logits_fake, true_labels=y_idx, loss_type=disc_loss_type
+            )
+            loss_adv.backward()
+            adv_optim.step()
 
-            train_dis_loss /= len(train_loader)
-            train_adv_loss /= len(train_loader)
-            train_recon_loss /= len(train_loader)
-            train_latent_loss /= len(train_loader)
-            train_output_loss /= len(train_loader)
-            train_data_loss /= len(train_loader)
-            
-            train_dis_losses.append(train_dis_loss)
-            train_adv_losses.append(train_adv_loss)
-            train_recon_losses.append(train_recon_loss)
-            train_latent_losses.append(train_latent_loss)
-            train_output_losses.append(train_output_loss)
-            train_data_losses.append(train_data_loss)
-            
-            if (epoch + 1) % 1 == 0:
-                print(f"Epoch {epoch + 1}/{num_epochs} | Dis. Train Loss: {train_dis_loss:.4f} | Adv. Train Loss: {train_adv_loss:.4f} | Recon. Train Loss: {train_recon_loss:.4f} | Lat. Train Loss: {train_latent_loss:.4f} | Out. Train Loss: {train_output_loss:.4f} | Data Train Loss: {train_data_loss:.4f}")
+            # === Step 3: VAE reconstruction + contrastive ===
+            vae_optim_pre.zero_grad()
+            q_zx = vae.encoder(torch.cat([x, y_onehot], dim=1))
+            latent = q_zx.rsample()
+            p_xz = vae.decoder(torch.cat([latent, y_onehot], dim=1))
 
-        return train_dis_losses, train_adv_losses, train_recon_losses
+            recon_term = p_xz.log_prob(x).mean()
+            kl_term = vae.beta * (q_zx.log_prob(latent) - vae.log_prob(latent)).mean()
+            elbo_loss = -(recon_term - kl_term)
+            contra_loss = w_contra * contra_criterion(latent, z_idx)
+
+            total_loss = w_elbo * elbo_loss + contra_loss
+            total_loss.backward()
+            vae_optim_pre.step()
+
+            # Update progress bar
+            progress_bar.set_postfix(
+                elbo=f"{elbo_loss.item():.4f}",
+                contra=f"{contra_loss.item():.4f}",
+                disc=f"{loss_disc.item():.4f}",
+                adv=f"{loss_adv.item():.4f}",
+                epoch=f"{epoch}/{epochs}",
+            )
+            progress_bar.update()
+
+    progress_bar.close()
+
+
+def train_abaco(
+    vae,
+    vae_optim_post,
+    data_loader,
+    epochs,
+    device,
+    w_elbo=1.0,
+    w_cycle=1.0,
+    cycle="KL",
+):
+    """
+    This function trains a pre-trained ABaCo cVAE decoder but applies masking to batch labels so
+    information passed solely depends on the latent space which had batch mixing
+    """
+
+    vae.train()
+
+    total_steps = len(data_loader) * epochs
+    progress_bar = tqdm(
+        range(total_steps), desc="Training: VAE decoder with masked batch labels"
+    )
+
+    for epoch in range(epochs):
+        data_iter = iter(data_loader)
+        for loader_data in data_iter:
+            x = loader_data[0].to(device)
+            y = loader_data[1].to(device).float()  # Batch label
+            z = loader_data[2].to(device).float()  # Bio type label
+
+            # VAE ELBO computation with masked batch label
+            vae_optim_post.zero_grad()
+
+            # Forward pass to encoder
+            q_zx = vae.encoder(torch.cat([x, y], dim=1))
+
+            # Sample from encoded point
+            latent_points = q_zx.rsample()
+
+            # Forward pass to the decoder
+            p_xz = vae.decoder(torch.cat([latent_points, torch.zeros_like(y)], dim=1))
+
+            # Log probabilities of prior and posterior
+            log_q_zx = q_zx.log_prob(latent_points)
+            log_p_z = vae.log_prob(latent_points)
+
+            # Compute ELBO
+            recon_term = p_xz.log_prob(x).mean()
+            # kl_term = vae.beta * (log_q_zx - log_p_z).mean()
+            elbo = recon_term
+
+            # Compute loss
+            elbo_loss = -elbo
+
+            # Compute overall loss and backprop
+            recon_loss = w_elbo * elbo_loss
+
+            # Latent cycle step: regularization term for demostrating encoded reconstructed point = encoded original point
+
+            if cycle == "MSE":
+                # Original encoded point
+                pi, mu, _ = vae.encoder.encode(torch.cat([x, y], dim=1))
+                mu_bar = (mu * pi.unsqueeze(2)).sum(dim=1)
+
+                # Reconstructed encoded point
+                x_r = p_xz.sample()
+                pi_r, mu_r, _ = vae.encoder.encode(torch.cat([x_r, y], dim=1))
+                mu_r_bar = (mu_r * pi_r.unsqueeze(2)).sum(dim=1)
+
+                # Backpropagation
+                cycle_loss = F.mse_loss(mu_r_bar, mu_bar)
+
+            elif cycle == "CE":
+                # Original encoded point - mixing probability
+                pi, _, _ = vae.encoder.encode(torch.cat([x, y], dim=1))
+
+                # Reconstructed encoded point - mixing probability
+                x_r = p_xz.sample()
+                pi_r, _, _ = vae.encoder.encode(torch.cat([x_r, y], dim=1))
+
+                # Backpropagation
+                cycle_loss = F.cross_entropy(pi_r, pi)
+
+            elif cycle == "KL":
+                # Original encoded point - pdf
+                q_zx = vae.encoder(torch.cat([x, y], dim=1))
+
+                # Reconstructed encoded point - pdf
+                x_r = p_xz.sample()
+                q_zx_r = vae.encoder(torch.cat([x_r, y], dim=1))
+
+                # Backpropagation
+                cycle_loss = torch.mean(
+                    td.kl_divergence(q_zx_r, q_zx),
+                    dim=0,
+                )
+
+            else:
+                cycle_loss = 0
+
+            vae_loss = recon_loss + w_cycle * cycle_loss
+            vae_loss.backward()
+            vae_optim_post.step()
+
+            # Update progress bar
+            progress_bar.set_postfix(
+                vae_loss=f"{vae_loss.item():12.4f}",
+                epoch=f"{epoch+1}/{epochs}",
+            )
+            progress_bar.update()
+
+    progress_bar.close()
+
+
+# Other functions
+
+
+def contour_plot(samples, n_levels=10, x_offset=5, y_offset=5, alpha=0.8):
+    """
+    Given an array computes the contour plot
+
+    Parameters:
+        samples: [np.array]
+            An array with (,2) dimensions
+    """
+    x = samples[:, 0]
+    y = samples[:, 1]
+
+    x_min, x_max = x.min() - x_offset, x.max() + x_offset
+    y_min, y_max = y.min() - y_offset, y.max() + y_offset
+    x_grid = np.linspace(x_min, x_max, 500)
+    y_grid = np.linspace(y_min, y_max, 500)
+    X, Y = np.meshgrid(x_grid, y_grid)
+
+    kde = gaussian_kde(samples.T)
+    Z = kde(np.vstack([X.ravel(), Y.ravel()]))
+    Z = Z.reshape(X.shape)
+
+    contour = plt.contourf(X, Y, Z, levels=n_levels, alpha=alpha)
+
+    return contour
+
+
+def log_normal_diag(x, mu, log_var, reduction=None, dim=None):
+    # Compute constant term outside the exponentiation
+    const = torch.log(torch.tensor(2 * math.pi, device=x.device))
+
+    # Compute log probability
+    log_p = -0.5 * (const + log_var + torch.exp(-log_var) * (x - mu) ** 2)
+
+    if dim is None:
+        dim = -1
+    log_p = log_p.sum(dim=dim)
+
+    if reduction == "avg":
+        return torch.mean(log_p, dim)
+    elif reduction == "sum":
+        return torch.sum(log_p, dim)
+    else:
+        return log_p
+
+
+# Baseline
+
+
+def abaco_run(
+    dataloader,
+    n_batches,
+    n_bios,
+    device,
+    input_size,
+    seed=42,
+    d_z=16,
+    prior="VMM",
+    count=True,
+    pre_epochs=2000,
+    post_epochs=2000,
+    kl_cycle=True,
+    # VAE Model architecture
+    encoder_net=[1024, 512, 256],
+    decoder_net=[256, 512, 1024],
+    vae_act_func=nn.ReLU(),
+    # Discriminator architecture
+    disc_net=[256, 128, 64],
+    disc_act_func=nn.ReLU(),
+    disc_loss_type="CrossEntropy",
+    # Model weights
+    w_elbo=1.0,
+    beta=20.0,
+    w_disc=1.0,
+    w_adv=1.0,
+    w_contra=10.0,
+    temp=0.1,
+    # Learning rates
+    vae_pre_lr=1e-3,
+    vae_post_lr=1e-4,
+    disc_lr=1e-5,
+    adv_lr=1e-5,
+):
+    """Full ABaCo run with default setting"""
+    # Number of biological groups
+    K = n_bios
+    # Number of batches
+    n_batches = n_batches
+    # Default Normal
+    normal = False
+    # Set random seed
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # Defining the VAE architecture
+    if prior == "VMM":
+        # Defining Encoder
+        encoder_net = [input_size + n_batches] + encoder_net  # first layer: conditional
+        encoder_net.append(K * (2 * d_z + 1))  # last layer
+        modules = []
+        for i in range(len(encoder_net) - 1):
+            modules.append(nn.Linear(encoder_net[i], encoder_net[i + 1]))
+            modules.append(vae_act_func)
+        modules.pop()  # Drop last activation function
+        encoder = MoGEncoder(nn.Sequential(*modules), n_comp=K)
+
+        # Defining Decoder
+        if count:
+            decoder_net = [d_z + n_batches] + decoder_net  # first value: conditional
+            decoder_net.append(3 * input_size)  # last layer
+            modules = []
+            for i in range(len(decoder_net) - 1):
+                modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                modules.append(vae_act_func)
+            modules.pop()  # Drop last activation function
+
+            decoder = ZINBDecoder(nn.Sequential(*modules))
+        else:
+            decoder_net = [d_z + n_batches] + decoder_net  # first value: conditional
+            decoder_net.append(2 * input_size)  # last layer
+            modules = []
+            for i in range(len(decoder_net) - 1):
+                modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                modules.append(vae_act_func)
+            modules.pop()  # Drop last activation function
+            decoder = ZIDirichletDecoder(nn.Sequential(*modules))
+
+        # Defining VAE
+        vae = VampPriorMixtureConditionalVAE(
+            encoder=encoder,
+            decoder=decoder,
+            input_dim=input_size,
+            n_comps=K,
+            batch_dim=n_batches,
+            d_z=d_z,
+            beta=beta,
+            data_loader=dataloader,
+        ).to(device)
+
+        # Defining VAE optims
+        vae_optim_pre = torch.optim.Adam(
+            [
+                {"params": vae.encoder.parameters()},
+                {"params": vae.decoder.parameters()},
+                {"params": [vae.u, vae.prior_pi, vae.prior_var]},
+            ],
+            lr=vae_pre_lr,
+        )
+        vae_optim_post = torch.optim.Adam(
+            [
+                {"params": vae.decoder.parameters()},
+            ],
+            lr=vae_post_lr,
+        )
+
+    elif prior == "MoG":
+        # Defining Encoder
+        encoder_net = [input_size + n_batches] + encoder_net  # first layer: conditional
+        encoder_net.append(K * (2 * d_z + 1))  # last layer
+        modules = []
+        for i in range(len(encoder_net) - 1):
+            modules.append(nn.Linear(encoder_net[i], encoder_net[i + 1]))
+            modules.append(vae_act_func)
+        modules.pop()  # Drop last activation function
+        encoder = MoGEncoder(nn.Sequential(*modules), n_comp=K)
+
+        # Defining Decoder
+        if count:
+            decoder_net = [d_z + n_batches] + decoder_net  # first value: conditional
+            decoder_net.append(3 * input_size)  # last layer
+            modules = []
+            for i in range(len(decoder_net) - 1):
+                modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                modules.append(vae_act_func)
+            modules.pop()  # Drop last activation function
+
+            decoder = ZINBDecoder(nn.Sequential(*modules))
+        else:
+            decoder_net = [d_z + n_batches] + decoder_net  # first value: conditional
+            decoder_net.append(2 * input_size)  # last layer
+            modules = []
+            for i in range(len(decoder_net) - 1):
+                modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                modules.append(vae_act_func)
+            modules.pop()  # Drop last activation function
+            decoder = ZIDirichletDecoder(nn.Sequential(*modules))
+
+        # Defining prior
+        prior = MoGPrior(d_z, K)
+
+        # Defining VAE
+        vae = ConditionalVAE(
+            prior=prior,
+            encoder=encoder,
+            decoder=decoder,
+            beta=beta,
+        ).to(device)
+
+        # Defining VAE optims
+
+        vae_optim_pre = torch.optim.Adam(vae.parameters(), lr=vae_pre_lr)
+
+        vae_optim_post = torch.optim.Adam(
+            [
+                {"params": vae.decoder.parameters()},
+            ],
+            lr=vae_post_lr,
+        )
+
+    elif prior == "Normal":
+        # change normal variable
+        normal = True
+        # Defining Encoder
+        encoder_net = [input_size + n_batches] + encoder_net  # first layer: conditional
+        encoder_net.append(2 * d_z)  # last layer
+        modules = []
+        for i in range(len(encoder_net) - 1):
+            modules.append(nn.Linear(encoder_net[i], encoder_net[i + 1]))
+            modules.append(vae_act_func)
+        modules.pop()  # Drop last activation function
+        encoder = NormalEncoder(nn.Sequential(*modules))
+
+        # Defining Decoder
+        if count:
+            decoder_net = [d_z + n_batches] + decoder_net  # first value: conditional
+            decoder_net.append(3 * input_size)  # last layer
+            modules = []
+            for i in range(len(decoder_net) - 1):
+                modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                modules.append(vae_act_func)
+            modules.pop()  # Drop last activation function
+
+            decoder = ZINBDecoder(nn.Sequential(*modules))
+        else:
+            decoder_net = [d_z + n_batches] + decoder_net  # first value: conditional
+            decoder_net.append(2 * input_size)  # last layer
+            modules = []
+            for i in range(len(decoder_net) - 1):
+                modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                modules.append(vae_act_func)
+            modules.pop()  # Drop last activation function
+            decoder = ZIDirichletDecoder(nn.Sequential(*modules))
+
+        # Defining prior
+        prior = NormalPrior(d_z)
+
+        # Defining VAE
+        vae = ConditionalVAE(
+            prior=prior,
+            encoder=encoder,
+            decoder=decoder,
+            beta=beta,
+        ).to(device)
+
+        # Defining VAE optims
+
+        vae_optim_pre = torch.optim.Adam(vae.parameters(), lr=vae_pre_lr)
+
+        vae_optim_post = torch.optim.Adam(
+            [
+                {"params": vae.decoder.parameters()},
+            ],
+            lr=vae_post_lr,
+        )
+
+    else:
+        raise ValueError(f"Prior distribution select isn't a valid option.")
+
+    # Defining the batch discriminator architecture
+    disc_net = [d_z + K] + disc_net  # first layer: conditional
+    disc_net.append(n_batches)  # last layer
+    modules = []
+    for i in range(len(disc_net) - 1):
+        modules.append(nn.Linear(disc_net[i], disc_net[i + 1]))
+        modules.append(disc_act_func)
+    modules.pop()  # remove last activation function
+    discriminator = BatchDiscriminator(nn.Sequential(*modules)).to(device)
+
+    # Defining the batch discriminator optimizers
+
+    disc_optim = torch.optim.Adam(discriminator.parameters(), lr=disc_lr)
+
+    adv_optim = torch.optim.Adam(vae.encoder.parameters(), lr=adv_lr)
+
+    # FIRST STEP: TRAIN VAE MODEL TO RECONSTRUCT DATA AND BATCH MIXING OF LATENT SPACE
+
+    pre_train_abaco(
+        vae=vae,
+        vae_optim_pre=vae_optim_pre,
+        discriminator=discriminator,
+        disc_optim=disc_optim,
+        adv_optim=adv_optim,
+        data_loader=dataloader,
+        epochs=pre_epochs,
+        device=device,
+        w_elbo=w_elbo,
+        w_contra=w_contra,
+        temp=temp,
+        w_adv=w_adv,
+        w_disc=w_disc,
+        disc_loss_type=disc_loss_type,
+        normal=normal,
+        count=count,
+    )
+
+    # SECOND STEP: TRAIN DECODER TO PERFORM BATCH MIXING AT THE MODEL OUTPUT
+
+    if kl_cycle:
+        train_abaco(
+            vae=vae,
+            vae_optim_post=vae_optim_post,
+            data_loader=dataloader,
+            epochs=post_epochs,
+            device=device,
+            w_elbo=w_elbo,
+            w_cycle=0.1,
+            cycle="KL",
+        )
+
+    else:
+        train_abaco(
+            vae=vae,
+            vae_optim_post=vae_optim_post,
+            data_loader=dataloader,
+            epochs=post_epochs,
+            device=device,
+            w_elbo=w_elbo,
+            w_cycle=0.0,
+            cycle="None",
+        )
+
+    return vae
+
+
+def abaco_recon(
+    model,
+    device,
+    data,
+    dataloader,
+    sample_label,
+    batch_label,
+    bio_label,
+    seed=42,
+):
+    """
+    Function used to reconstruct data using trained ABaCo model.
+    """
+    # Set random seed
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    ohe_batch = one_hot_encoding(data[batch_label])[0]
+
+    # Reconstructing data with trained model
+    recon_data = []
+
+    for x in dataloader:
+        x = x[0].to(device)
+        encoded = model.encoder(torch.cat([x, ohe_batch.to(device)], dim=1))
+        z = encoded.rsample()
+        decoded = model.decoder(
+            torch.cat([z, torch.zeros_like(ohe_batch.to(device))], dim=1)
+        )
+        recon = decoded.sample()
+        recon_data.append(recon)
+
+    np_recon_data = np.vstack([t.detach().cpu().numpy() for t in recon_data])
+
+    otu_corrected_pd = pd.concat(
+        [
+            data[sample_label],
+            data[batch_label],
+            data[bio_label],
+            pd.DataFrame(
+                np_recon_data,
+                index=data.index,
+                columns=data.select_dtypes("number").columns,
+            ),
+        ],
+        axis=1,
+    )
+    return otu_corrected_pd

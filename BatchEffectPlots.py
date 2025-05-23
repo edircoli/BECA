@@ -8,6 +8,7 @@ from scipy.spatial.distance import pdist, squareform
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.validators.scatter.marker import SymbolValidator
+from plotly.subplots import make_subplots
 from clustergrammer2 import net, Network, CGM2
 from BatchEffectDataLoader import DataTransform
 
@@ -18,6 +19,7 @@ def plotPCoA(
     sample_label="sample",
     batch_label="batch",
     experiment_label="tissue",
+    mode="base",
 ):
 
     if method == "aitchison":
@@ -26,6 +28,7 @@ def plotPCoA(
             data,
             factors=[sample_label, batch_label, experiment_label],
             transformation="CLR",
+            count=True,
         )
 
         # log_transformed = np.log(data.select_dtypes(include = "number") + 1e-9)
@@ -36,6 +39,18 @@ def plotPCoA(
         df_otu = df.select_dtypes(include="number")
         # Compute Aitchison distances
         distances = pdist(df_otu, "euclidean")
+        distances = squareform(distances)
+
+    elif method == "bray-curtis":
+
+        # Extract numeric data (e.g., OTU count data).
+        df_otu = data.select_dtypes(include="number")
+        # Convert each sample's counts to relative abundances (row sums are normalized to 1)
+        # (Handling potential division by zero)
+        row_sums = df_otu.sum(axis=1)
+        df_rel = df_otu.div(row_sums.replace(0, np.nan), axis=0).fillna(0)
+        # Compute Bray-Curtis distances
+        distances = pdist(df_rel, metric="braycurtis")
         distances = squareform(distances)
 
     else:
@@ -124,43 +139,68 @@ def plotPCoA(
     # Creating the plotly figure
     fig = go.Figure()
 
-    # Creating a for loop to alocate PCA data points per batch
-    for batch in df_pcoa[batch_label].unique():
-        # Creating a for loop to alocate data points per experiment in the current batch
-        for exp in df_pcoa[experiment_label].unique():
+    if mode == "base":
+        # Creating a for loop to alocate PCA data points per batch
+        for batch in df_pcoa[batch_label].unique():
+            # Creating a for loop to alocate data points per experiment in the current batch
+            for exp in df_pcoa[experiment_label].unique():
+                # Ploting the points corresponding to the current batch and tissue
+                fig.add_trace(
+                    go.Scatter(
+                        x=df_pcoa[
+                            (df_pcoa[batch_label] == batch)
+                            & (df_pcoa[experiment_label] == exp)
+                        ]["PC1"],
+                        y=df_pcoa[
+                            (df_pcoa[batch_label] == batch)
+                            & (df_pcoa[experiment_label] == exp)
+                        ]["PC2"],
+                        marker=dict(
+                            color=df_pcoa[
+                                (df_pcoa[batch_label] == batch)
+                                & (df_pcoa[experiment_label] == exp)
+                            ]["color"],
+                            size=8,
+                        ),
+                        marker_symbol=df_pcoa[
+                            (df_pcoa[batch_label] == batch)
+                            & (df_pcoa[experiment_label] == exp)
+                        ]["marker"],
+                        legendgroup=batch,
+                        legendgrouptitle_text="Batch {}".format(batch),
+                        name=exp,
+                        mode="markers",
+                    )
+                )
+
+        # fig.update_layout(xaxis_range = [-5, 5],
+        #                  yaxis_range = [-5, 5])
+
+        return fig.show()
+
+    elif mode == "single":
+        # Creating a for loop to alocate PCA data points per batch
+        for batch in df_pcoa[batch_label].unique():
             # Ploting the points corresponding to the current batch and tissue
             fig.add_trace(
                 go.Scatter(
-                    x=df_pcoa[
-                        (df_pcoa[batch_label] == batch)
-                        & (df_pcoa[experiment_label] == exp)
-                    ]["PC1"],
-                    y=df_pcoa[
-                        (df_pcoa[batch_label] == batch)
-                        & (df_pcoa[experiment_label] == exp)
-                    ]["PC2"],
+                    x=df_pcoa[(df_pcoa[batch_label] == batch)]["PC1"],
+                    y=df_pcoa[(df_pcoa[batch_label] == batch)]["PC2"],
                     marker=dict(
-                        color=df_pcoa[
-                            (df_pcoa[batch_label] == batch)
-                            & (df_pcoa[experiment_label] == exp)
-                        ]["color"],
+                        color=df_pcoa[(df_pcoa[batch_label] == batch)]["color"],
                         size=8,
                     ),
-                    marker_symbol=df_pcoa[
-                        (df_pcoa[batch_label] == batch)
-                        & (df_pcoa[experiment_label] == exp)
-                    ]["marker"],
                     legendgroup=batch,
                     legendgrouptitle_text="Batch {}".format(batch),
-                    name=exp,
+                    name=batch,
                     mode="markers",
                 )
             )
 
-    # fig.update_layout(xaxis_range = [-5, 5],
-    #                  yaxis_range = [-5, 5])
+        # fig.update_layout(xaxis_range = [-5, 5],
+        #                  yaxis_range = [-5, 5])
 
-    return fig.show()
+        return fig.show()
 
 
 def plotPCA(
@@ -522,3 +562,148 @@ def plotClusterHeatMap(
     n2.load_df(scaled_data, meta_col=data_cat)
     n2.cluster()
     return n2.widget()
+
+
+def plot_LISI_perplexity(
+    df_c,
+    df_i,
+    n_samples: int,
+    x_col: str = "perplexity",
+    y_col_c: str = "cLISI",
+    y_col_i: str = "iLISI",
+    title_c: str = "Biological conservation (cLISI)",
+    title_i: str = "Batch mixing (iLISI)",
+):
+    ideal_k = max(int(np.sqrt(n_samples)), 1)
+
+    # x-axis limits
+    xmin = min(df_c[x_col].min(), df_i[x_col].min()) - 0.5
+    xmax = max(df_c[x_col].max(), df_i[x_col].max()) + 0.5
+
+    # y-intersection
+    y_c = np.interp(ideal_k, df_c[x_col].values, df_c[y_col_c].values)
+    y_i = np.interp(ideal_k, df_i[x_col].values, df_i[y_col_i].values)
+
+    # Create 1×2 subplots
+    fig = make_subplots(
+        rows=1,
+        cols=2,
+        shared_yaxes=False,
+        shared_xaxes=True,
+        subplot_titles=(title_c, title_i),
+    )
+
+    # cLISI trace
+    fig.add_trace(
+        go.Scatter(
+            x=df_c[x_col],
+            y=df_c[y_col_c],
+            mode="lines+markers",
+            name="cLISI",
+            line=dict(color="green"),
+            marker=dict(color="green"),
+        ),
+        row=1,
+        col=1,
+    )
+    # ideal point in cLISI
+    fig.add_shape(
+        dict(
+            type="line",
+            x0=ideal_k,
+            y0=0,
+            x1=ideal_k,
+            y1=y_c,
+            line=dict(color="red", dash="dash"),
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_shape(
+        dict(
+            type="line",
+            x0=xmin,
+            y0=y_c,
+            x1=ideal_k,
+            y1=y_c,
+            line=dict(color="red", dash="dash"),
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_annotation(
+        dict(
+            x=ideal_k,
+            y=y_c,
+            xref="x1",
+            yref="y1",
+            text=f"{y_c:.2f}",
+            showarrow=True,
+            arrowhead=1,
+            ax=30,
+            ay=-30,
+            font=dict(color="red"),
+        )
+    )
+
+    # iLISI trace
+    fig.add_trace(
+        go.Scatter(
+            x=df_i[x_col],
+            y=df_i[y_col_i],
+            mode="lines+markers",
+            name="iLISI",
+            line=dict(color="blue"),
+            marker=dict(color="blue"),
+        ),
+        row=1,
+        col=2,
+    )
+    # Ideal line in iLISI
+    fig.add_shape(
+        dict(
+            type="line",
+            x0=ideal_k,
+            y0=0,
+            x1=ideal_k,
+            y1=y_i,
+            line=dict(color="red", dash="dash"),
+        ),
+        row=1,
+        col=2,
+    )
+    fig.add_shape(
+        dict(
+            type="line",
+            x0=xmin,
+            y0=y_i,
+            x1=ideal_k,
+            y1=y_i,
+            line=dict(color="red", dash="dash"),
+        ),
+        row=1,
+        col=2,
+    )
+    fig.add_annotation(
+        dict(
+            x=ideal_k,
+            y=y_i,
+            xref="x2",
+            yref="y2",
+            text=f"{y_i:.2f}",
+            showarrow=True,
+            arrowhead=1,
+            ax=30,
+            ay=-30,
+            font=dict(color="red"),
+        )
+    )
+
+    # Update axes
+    fig.update_xaxes(title_text="Perplexity (k)", range=[xmin, xmax], row=1, col=1)
+    fig.update_xaxes(title_text="Perplexity (k)", range=[xmin, xmax], row=1, col=2)
+    fig.update_yaxes(title_text="Normalized cLISI", row=1, col=1)
+    fig.update_yaxes(title_text="Normalized iLISI", row=1, col=2)
+
+    fig.update_layout(template="plotly_white", showlegend=False)
+    return fig
