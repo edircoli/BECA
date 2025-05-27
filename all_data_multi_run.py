@@ -251,24 +251,24 @@ for iter in range(n):
 
 # Save performance to file
 pd.DataFrame(performances_batch_ad).to_csv(
-    "performance_metrics/AD_count/VMM_KL_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/AD_count/VMM_KL_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ad).to_csv(
-    "performance_metrics/AD_count/VMM_KL_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/AD_count/VMM_KL_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_ibd).to_csv(
-    "performance_metrics/IBD/VMM_KL_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/IBD/VMM_KL_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ibd).to_csv(
-    "performance_metrics/IBD/VMM_KL_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/IBD/VMM_KL_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_dtu).to_csv(
-    "performance_metrics/DTU-GE/VMM_KL_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_dtu).to_csv(
-    "performance_metrics/DTU-GE/VMM_KL_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_bio.csv", index=False
 )
 
 # Set seed
@@ -406,24 +406,24 @@ for iter in range(n):
 
 # Save performance to file
 pd.DataFrame(performances_batch_ad).to_csv(
-    "performance_metrics/AD_count/MoG_KL_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/AD_count/MoG_KL_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ad).to_csv(
-    "performance_metrics/AD_count/MoG_KL_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/AD_count/MoG_KL_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_ibd).to_csv(
-    "performance_metrics/IBD/MoG_KL_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/IBD/MoG_KL_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ibd).to_csv(
-    "performance_metrics/IBD/MoG_KL_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/IBD/MoG_KL_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_dtu).to_csv(
-    "performance_metrics/DTU-GE/MoG_KL_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_dtu).to_csv(
-    "performance_metrics/DTU-GE/MoG_KL_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_bio.csv", index=False
 )
 
 # Set seed
@@ -561,24 +561,24 @@ for iter in range(n):
 
 # Save performance to file
 pd.DataFrame(performances_batch_ad).to_csv(
-    "performance_metrics/AD_count/Std_KL_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/AD_count/Std_KL_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ad).to_csv(
-    "performance_metrics/AD_count/Std_KL_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/AD_count/Std_KL_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_ibd).to_csv(
-    "performance_metrics/IBD/Std_KL_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/IBD/Std_KL_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ibd).to_csv(
-    "performance_metrics/IBD/Std_KL_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/IBD/Std_KL_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_dtu).to_csv(
-    "performance_metrics/DTU-GE/Std_KL_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_dtu).to_csv(
-    "performance_metrics/DTU-GE/Std_KL_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_bio.csv", index=False
 )
 
 
@@ -714,24 +714,24 @@ for iter in range(n):
 
 # Save performance to file
 pd.DataFrame(performances_batch_ad).to_csv(
-    "performance_metrics/AD_count/VMM_no_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/AD_count/VMM_no_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ad).to_csv(
-    "performance_metrics/AD_count/VMM_no_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/AD_count/VMM_no_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_ibd).to_csv(
-    "performance_metrics/IBD/VMM_no_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/IBD/VMM_no_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ibd).to_csv(
-    "performance_metrics/IBD/VMM_no_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/IBD/VMM_no_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_dtu).to_csv(
-    "performance_metrics/DTU-GE/VMM_no_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_dtu).to_csv(
-    "performance_metrics/DTU-GE/VMM_no_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_bio.csv", index=False
 )
 
 # Set seed
@@ -869,24 +869,24 @@ for iter in range(n):
 
 # Save performance to file
 pd.DataFrame(performances_batch_ad).to_csv(
-    "performance_metrics/AD_count/MoG_no_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/AD_count/MoG_no_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ad).to_csv(
-    "performance_metrics/AD_count/MoG_no_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/AD_count/MoG_no_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_ibd).to_csv(
-    "performance_metrics/IBD/MoG_no_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/IBD/MoG_no_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ibd).to_csv(
-    "performance_metrics/IBD/MoG_no_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/IBD/MoG_no_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_dtu).to_csv(
-    "performance_metrics/DTU-GE/MoG_no_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_dtu).to_csv(
-    "performance_metrics/DTU-GE/MoG_no_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_bio.csv", index=False
 )
 
 # Set seed
@@ -1024,22 +1024,22 @@ for iter in range(n):
 
 # Save performance to file
 pd.DataFrame(performances_batch_ad).to_csv(
-    "performance_metrics/AD_count/Std_no_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/AD_count/Std_no_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ad).to_csv(
-    "performance_metrics/AD_count/Std_no_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/AD_count/Std_no_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_ibd).to_csv(
-    "performance_metrics/IBD/Std_no_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/IBD/Std_no_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_ibd).to_csv(
-    "performance_metrics/IBD/Std_no_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/IBD/Std_no_cycle_bio.csv", index=False
 )
 
 pd.DataFrame(performances_batch_dtu).to_csv(
-    "performance_metrics/DTU-GE/Std_no_cycle_batch.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/Std_no_cycle_batch.csv", index=False
 )
 pd.DataFrame(performances_bio_dtu).to_csv(
-    "performance_metrics/DTU-GE/Std_no_cycle_bio.csv", index=False
+    "performance_metrics/deterministic/DTU-GE/Std_no_cycle_bio.csv", index=False
 )

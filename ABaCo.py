@@ -155,6 +155,27 @@ class NormalEncoder(nn.Module):
 
         return td.Independent(td.Normal(loc=mu, scale=std), 1)
 
+    def det_encode(self, x):
+        """
+        Computes the encoded point without stochastic component.
+
+        Parameters:
+            x: torch.Tensor
+        """
+        mu, _ = self.encode(x)
+
+        return mu
+
+    def monte_carlo_encode(self, x, K=100):
+        mu, var = self.encode(x)
+        std = torch.sqrt(torch.nn.functional.softplus(var + 1e-8))
+
+        dist = td.Independent(td.Normal(loc=mu, scale=std), 1)
+
+        samples = dist.sample(sample_shape=(K,))
+
+        return samples.mean(dim=0)
+
 
 class MoGEncoder(nn.Module):
     def __init__(self, encoder_net, n_comp):
@@ -258,6 +279,90 @@ class MoGEncoder(nn.Module):
 
         return mog_dist
 
+    def det_encode(self, x):
+        """
+        Computes the encoded point without stochastic component.
+
+        Parameters:
+            x: torch.Tensor
+        """
+        comps = torch.chunk(
+            self.encoder_net(x), self.n_comp, dim=-1
+        )  # chunk used for separating the encoder output (batch, n_comp*(2*d_z + 1)) into n_comp separate vectors (batch, n_comp)
+
+        # Parameters list (for extracting in loop)
+        mu_list = []
+        pi_list = []
+
+        for comp in comps:
+            params = comp[
+                :, :-1
+            ]  # parameters mu and var are on the 2*d_z first values of the component
+            pi_comp = comp[
+                :, -1
+            ]  # mixing probabilities is the last value of the component
+
+            mu, _ = torch.chunk(params, 2, dim=-1)  # separating mu from var using chunk
+
+            mu_list.append(mu)
+            pi_list.append(pi_comp)
+
+        # Convert parameters list into tensor
+        means = torch.stack(mu_list, dim=1)
+        pis = F.softmax(torch.stack(pi_list, dim=1))
+
+        z = torch.einsum("bn,bnd->bd", pis, means)
+
+        return z
+
+    def monte_carlo_encode(self, x, K=100):
+        """
+        Computes the encoded point with stochastic component.
+
+        Parameters:
+            x: torch.Tensor
+        """
+        comps = torch.chunk(
+            self.encoder_net(x), self.n_comp, dim=-1
+        )  # chunk used for separating the encoder output (batch, n_comp*(2*d_z + 1)) into n_comp separate vectors (batch, n_comp)
+
+        # Parameters list (for extracting in loop)
+        mu_list = []
+        var_list = []
+        pi_list = []
+
+        for comp in comps:
+            params = comp[
+                :, :-1
+            ]  # parameters mu and var are on the 2*d_z first values of the component
+            pi_comp = comp[
+                :, -1
+            ]  # mixing probabilities is the last value of the component
+
+            mu, var = torch.chunk(
+                params, 2, dim=-1
+            )  # separating mu from var using chunk
+
+            mu_list.append(mu)
+            var_list.append(var)
+            pi_list.append(pi_comp)
+
+        # Convert parameters list into tensor
+        means = torch.stack(mu_list, dim=1)
+        stds = torch.sqrt(
+            torch.nn.functional.softplus(torch.stack(var_list, dim=1)) + 1e-8
+        )
+        pis = torch.stack(pi_list, dim=1)
+
+        # Clamp to avoid error values (too low or too high)
+        stds = torch.clamp(stds, min=1e-5, max=1e5)
+        # Create individual Gaussian distribution per component
+        mog_dist = MixtureOfGaussians(pis, means, stds)
+
+        samples = mog_dist.sample(sample_shape=(K,))
+
+        return samples.mean(dim=0)
+
 
 # ---------- DECODER CLASSES DEFINITIONS ---------- #
 
@@ -341,6 +446,42 @@ class ZINBDecoder(nn.Module):
         # nb = td.Independent(nb, 1)
 
         return td.Independent(ZINB(nb, pi), 1)
+
+    def monte_carlo_decode(self, z, K=100):
+        """
+        Computes the Zero-inflated Negative Binomial mode (or expected value) through Monte Carlo approximation.
+        Parameters:
+            z: [torch.Tensor]
+                Latent space point.
+            K: [int]
+                Number of Monte Carlo iterations.
+        """
+        mu, theta, pi_logits = torch.chunk(self.decoder_net(z), 3, dim=-1)
+        # Ensure mean and dispersion are positive numbers and pi is in range [0,1]
+
+        mu = F.softplus(mu)
+        theta = F.softplus(theta) + 1e-4
+
+        pi = torch.sigmoid(pi_logits)
+
+        # Parameterization into NB parameters
+        p = theta / (theta + mu)
+
+        r = theta
+
+        # Clamp values to avoid huge / small probabilities
+        p = torch.clamp(p, min=1e-5, max=1 - 1e-5)
+
+        # Create Negative Binomial component
+        nb = td.NegativeBinomial(total_count=r, probs=p)
+
+        # Define Zero-inflated model
+        zinb = td.Independent(ZINB(nb, pi), 1)
+
+        # Sample sample sample!
+        samples = zinb.sample(sample_shape=(K,))
+
+        return samples.mean(dim=0).floor().int()
 
 
 class DirichletDecoder(nn.Module):
@@ -502,15 +643,17 @@ class ZIDirichlet(td.Distribution):
         Parameters:
             x: [torch.Tensor]
         """
+        # Sanity check, if all elements in the last dimension are zero
+        is_zero = (x == 0).all(dim=-1)
 
-        dirichlet_log_prob = self.dirichlet.log_prob(x).unsqueeze(
-            -1
-        )  # log probability of Dirichlet where x > 0
+        # Compute Dirichlet log probability for all sampels
+        dirichlet_log_prob = self.dirichlet.log_prob(x)
+        print(dirichlet_log_prob)
 
         log_prob_zero = torch.log(self.zero_prob + 1e-8)
         log_prob_nonzero = torch.log(1 - self.zero_prob + 1e-8) + dirichlet_log_prob
 
-        return torch.where(x == 0, log_prob_zero, log_prob_nonzero)
+        return torch.where(is_zero, log_prob_zero, log_prob_nonzero)
 
     def sample(self, sample_shape=torch.Size()):
         shape = self._extended_shape(sample_shape)
@@ -1150,7 +1293,8 @@ def pre_train_abaco(
         desc="Pre-training: VAE for reconstructing data and batch mixing adversarial training",
     )
 
-    for epoch in range(1, epochs + 1):
+    for epoch in range(epochs):
+
         for x, y_onehot, z_onehot in data_loader:
             # Move all tensors to the correct device
             x = x.to(device)
@@ -1158,8 +1302,8 @@ def pre_train_abaco(
                 x_sum = x.sum(dim=1, keepdim=True)
                 x = x / x_sum
 
-            y_onehot = y_onehot.to(device)
-            z_onehot = z_onehot.to(device)
+            y_onehot = y_onehot.to(device)  # Batch one hot label
+            z_onehot = z_onehot.to(device)  # Bio one hot label
             y_idx = y_onehot.argmax(1)
             z_idx = z_onehot.argmax(1)
 
@@ -1219,7 +1363,7 @@ def pre_train_abaco(
                 contra=f"{contra_loss.item():.4f}",
                 disc=f"{loss_disc.item():.4f}",
                 adv=f"{loss_adv.item():.4f}",
-                epoch=f"{epoch}/{epochs}",
+                epoch=f"{epoch}/{epochs+1}",
             )
             progress_bar.update()
 
@@ -1235,6 +1379,7 @@ def train_abaco(
     w_elbo=1.0,
     w_cycle=1.0,
     cycle="KL",
+    smooth_annealing=False,
 ):
     """
     This function trains a pre-trained ABaCo cVAE decoder but applies masking to batch labels so
@@ -1249,8 +1394,15 @@ def train_abaco(
     )
 
     for epoch in range(epochs):
+        # Introduce slow transition to full batch masking
+        if smooth_annealing:
+            alpha = max(0.0, 1.0 - (2 * epoch / epochs))
+        else:
+            alpha = 0.0
+
         data_iter = iter(data_loader)
         for loader_data in data_iter:
+
             x = loader_data[0].to(device)
             y = loader_data[1].to(device).float()  # Batch label
             z = loader_data[2].to(device).float()  # Bio type label
@@ -1265,7 +1417,7 @@ def train_abaco(
             latent_points = q_zx.rsample()
 
             # Forward pass to the decoder
-            p_xz = vae.decoder(torch.cat([latent_points, torch.zeros_like(y)], dim=1))
+            p_xz = vae.decoder(torch.cat([latent_points, alpha * y], dim=1))
 
             # Log probabilities of prior and posterior
             log_q_zx = q_zx.log_prob(latent_points)
@@ -1403,6 +1555,7 @@ def abaco_run(
     pre_epochs=2000,
     post_epochs=2000,
     kl_cycle=True,
+    smooth_annealing=False,
     # VAE Model architecture
     encoder_net=[1024, 512, 256],
     decoder_net=[256, 512, 1024],
@@ -1663,6 +1816,7 @@ def abaco_run(
             w_elbo=w_elbo,
             w_cycle=0.1,
             cycle="KL",
+            smooth_annealing=smooth_annealing,
         )
 
     else:
@@ -1675,6 +1829,7 @@ def abaco_run(
             w_elbo=w_elbo,
             w_cycle=0.0,
             cycle="None",
+            smooth_annealing=smooth_annealing,
         )
 
     return vae
@@ -1689,6 +1844,8 @@ def abaco_recon(
     batch_label,
     bio_label,
     seed=42,
+    det_encode=False,
+    monte_carlo=100,
 ):
     """
     Function used to reconstruct data using trained ABaCo model.
@@ -1704,17 +1861,21 @@ def abaco_recon(
 
     ohe_batch = one_hot_encoding(data[batch_label])[0]
 
-    # Reconstructing data with trained model
+    # Reconstructing data with trained model - DETERMINISTIC RECONSTRUCTION
     recon_data = []
 
     for x in dataloader:
         x = x[0].to(device)
-        encoded = model.encoder(torch.cat([x, ohe_batch.to(device)], dim=1))
-        z = encoded.rsample()
-        decoded = model.decoder(
-            torch.cat([z, torch.zeros_like(ohe_batch.to(device))], dim=1)
+        if det_encode == True:
+            z = model.encoder.det_encode(torch.cat([x, ohe_batch.to(device)], dim=1))
+        else:
+            z = model.encoder.monte_carlo_encode(
+                x=torch.cat([x, ohe_batch.to(device)], dim=1), K=monte_carlo
+            )
+        recon = model.decoder.monte_carlo_decode(
+            z=torch.cat([z, torch.zeros_like(ohe_batch.to(device))], dim=1),
+            K=monte_carlo,
         )
-        recon = decoded.sample()
         recon_data.append(recon)
 
     np_recon_data = np.vstack([t.detach().cpu().numpy() for t in recon_data])

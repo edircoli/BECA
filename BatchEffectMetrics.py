@@ -490,6 +490,44 @@ def pairwise_distance_std(data, sample_label, batch_label, bio_label):
     return mean_all_dists, mean_within_dists, mean_between_dists
 
 
+def pairwise_distance_multi_run(data, sample_label, batch_label, bio_label):
+    # Step 1: normalized data to compute euclidean-like distance
+    norm_data = DataTransform(
+        data,
+        factors=[sample_label, batch_label, bio_label],
+        transformation="CLR",
+        count=True,
+    )
+    norm_counts = norm_data.select_dtypes(include="number").values
+    sample_ids = norm_data[sample_label].values
+    bios = norm_data[bio_label].values
+
+    # Step 2: compute pairwise distance (euclidean) to every point
+    pair_dists = squareform(pdist(norm_counts, metric="euclidean"))
+    pair_dists_df = (
+        pd.DataFrame(
+            pair_dists, index=norm_data[sample_label], columns=norm_data[sample_label]
+        )
+        .reset_index()
+        .rename(columns={sample_label: "pointA"})
+    )
+
+    # Get longer dataframe
+    long_dists_df = pair_dists_df.melt(
+        id_vars="pointA", var_name="pointB", value_name="distance"
+    )
+
+    # Remove distances to the same point
+    long_dists_df = long_dists_df.query("pointA != pointB")
+
+    # Add biological group information
+    bio_map = dict(zip(sample_ids, bios))
+    long_dists_df["pointA_bio"] = long_dists_df["pointA"].map(bio_map)
+    long_dists_df["pointB_bio"] = long_dists_df["pointB"].map(bio_map)
+
+    return long_dists_df
+
+
 def PERMANOVA(data, sample_label, batch_label, bio_label):
 
     samples = data[sample_label].values

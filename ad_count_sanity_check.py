@@ -26,9 +26,12 @@ from BatchEffectMetrics import (
     pairwise_distance,
     PERMANOVA,
     pairwise_distance_std,
+    pairwise_distance_multi_run,
 )
 from ABaCo import abaco_run, abaco_recon
 
+# Number of iteration
+n_iter = 50
 
 # AD count data
 path = "data/dataset_ad.csv"
@@ -73,11 +76,11 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(seed)
 
 # Set for n iteration - KL cycle VMM models
-n = 50
+n = n_iter
 
-pairwise_distances = []
-permanova_res_bc = []
-permanova_res_ait = []
+pairwise_distances = pd.DataFrame()
+permanova_ait = pd.DataFrame()
+permanova_bc = pd.DataFrame()
 
 for iter in range(n):
 
@@ -88,8 +91,12 @@ for iter in range(n):
         n_bios=ad_count_bio_size,
         input_size=ad_count_input_size,
         device=device,
-        w_contra=100.0,
+        w_contra=25.0,
         kl_cycle=True,
+        smooth_annealing=True,
+        pre_epochs=2500,
+        post_epochs=5000,
+        vae_post_lr=2e-4,
         seed=None,
     )
 
@@ -105,55 +112,57 @@ for iter in range(n):
         seed=None,
     )
 
-    # Normalized reconstructed data
-    norm_ad_recon_data = DataTransform(
-        data=ad_recon_data,
-        factors=[ad_count_sample_label, ad_count_batch_label, ad_count_bio_label],
-        count=True,
-    )
-
     # Pairwise distance
-    mean_all, mean_intra, mean_inter = pairwise_distance_std(
+    run_pairwise_dist = pairwise_distance_multi_run(
         data=ad_recon_data,
         sample_label=ad_count_sample_label,
         batch_label=ad_count_batch_label,
         bio_label=ad_count_bio_label,
     )
-    pairwise_res = {
-        "mean_all": mean_all,
-        "mean_intra": mean_intra,
-        "mean_inter": mean_inter,
-    }
-    # Add to list
-    pairwise_distances.append(pairwise_res)
+    run_pairwise_dist["iter"] = iter
 
-    # PERMANOVA
+    # Add distance to dataframe
+    pairwise_distances = pd.concat(
+        [pairwise_distances, run_pairwise_dist], axis=0
+    ).reset_index(drop=True)
+
+    # Permanova
     bc, ait = PERMANOVA(
         ad_recon_data, ad_count_sample_label, ad_count_batch_label, ad_count_bio_label
     )
-    permanova_bc = {
-        "F-statistic": bc["test statistic"],
-        "p-value": bc["p-value"],
-        "R2": bc["R2"],
-    }
-    permanova_ait = {
-        "F-statistic": ait["test statistic"],
-        "p-value": ait["p-value"],
-        "R2": ait["R2"],
-    }
-    # Add to list
-    permanova_res_bc.append(permanova_bc)
-    permanova_res_ait.append(permanova_ait)
+
+    bc = pd.DataFrame(
+        {
+            "R2": [bc["R2"]],
+            "p-value": [bc["p-value"]],
+            "test statistic": [bc["test statistic"]],
+        }
+    )
+    ait = pd.DataFrame(
+        {
+            "R2": [ait["R2"]],
+            "p-value": [ait["p-value"]],
+            "test statistic": [ait["test statistic"]],
+        }
+    )
+
+    permanova_bc = pd.concat([permanova_bc, bc], axis=0).reset_index(drop=True)
+
+    permanova_ait = pd.concat([permanova_ait, ait], axis=0).reset_index(drop=True)
+
 
 # Save performance to file
 pd.DataFrame(pairwise_distances).to_csv(
-    "performance_metrics/AD_count/VMM_KL_cycle_pairwise_distances_std.csv", index=False
+    "performance_metrics/deterministic/AD_count/VMM_KL_cycle_pairwise_distances.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_bc).to_csv(
-    "performance_metrics/AD_count/VMM_KL_cycle_permanova_braycurtis_2.csv", index=False
+pd.DataFrame(permanova_bc).to_csv(
+    "performance_metrics/deterministic/AD_count/VMM_KL_cycle_permanova_braycurtis.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_ait).to_csv(
-    "performance_metrics/AD_count/VMM_KL_cycle_permanova_aitchison_2.csv", index=False
+pd.DataFrame(permanova_ait).to_csv(
+    "performance_metrics/deterministic/AD_count/VMM_KL_cycle_permanova_aitchison.csv",
+    index=False,
 )
 
 # ------------------------------------------------------------------------------------
@@ -168,11 +177,11 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(seed)
 
 # Set for n iteration - KL cycle MoG models
-n = 50
+n = n_iter
 
-pairwise_distances = []
-permanova_res_bc = []
-permanova_res_ait = []
+pairwise_distances = pd.DataFrame()
+permanova_bc = pd.DataFrame()
+permanova_ait = pd.DataFrame()
 
 for iter in range(n):
 
@@ -184,8 +193,12 @@ for iter in range(n):
         input_size=ad_count_input_size,
         device=device,
         prior="MoG",
-        w_contra=100.0,
+        w_contra=25.0,
         kl_cycle=True,
+        smooth_annealing=True,
+        pre_epochs=2500,
+        post_epochs=5000,
+        vae_post_lr=2e-4,
         seed=None,
     )
 
@@ -201,55 +214,57 @@ for iter in range(n):
         seed=None,
     )
 
-    # Normalized reconstructed data
-    norm_ad_recon_data = DataTransform(
-        data=ad_recon_data,
-        factors=[ad_count_sample_label, ad_count_batch_label, ad_count_bio_label],
-        count=True,
-    )
-
     # Pairwise distance
-    mean_all, mean_intra, mean_inter = pairwise_distance_std(
+    run_pairwise_dist = pairwise_distance_multi_run(
         data=ad_recon_data,
         sample_label=ad_count_sample_label,
         batch_label=ad_count_batch_label,
         bio_label=ad_count_bio_label,
     )
-    pairwise_res = {
-        "mean_all": mean_all,
-        "mean_intra": mean_intra,
-        "mean_inter": mean_inter,
-    }
-    # Add to list
-    pairwise_distances.append(pairwise_res)
+    run_pairwise_dist["iter"] = iter
 
-    # PERMANOVA
+    # Add distance to dataframe
+    pairwise_distances = pd.concat(
+        [pairwise_distances, run_pairwise_dist], axis=0
+    ).reset_index(drop=True)
+
+    # Permanova
     bc, ait = PERMANOVA(
         ad_recon_data, ad_count_sample_label, ad_count_batch_label, ad_count_bio_label
     )
-    permanova_bc = {
-        "F-statistic": bc["test statistic"],
-        "p-value": bc["p-value"],
-        "R2": bc["R2"],
-    }
-    permanova_ait = {
-        "F-statistic": ait["test statistic"],
-        "p-value": ait["p-value"],
-        "R2": ait["R2"],
-    }
-    # Add to list
-    permanova_res_bc.append(permanova_bc)
-    permanova_res_ait.append(permanova_ait)
+
+    bc = pd.DataFrame(
+        {
+            "R2": [bc["R2"]],
+            "p-value": [bc["p-value"]],
+            "test statistic": [bc["test statistic"]],
+        }
+    )
+    ait = pd.DataFrame(
+        {
+            "R2": [ait["R2"]],
+            "p-value": [ait["p-value"]],
+            "test statistic": [ait["test statistic"]],
+        }
+    )
+
+    permanova_bc = pd.concat([permanova_bc, bc], axis=0).reset_index(drop=True)
+
+    permanova_ait = pd.concat([permanova_ait, ait], axis=0).reset_index(drop=True)
+
 
 # Save performance to file
 pd.DataFrame(pairwise_distances).to_csv(
-    "performance_metrics/AD_count/MoG_KL_cycle_pairwise_distances_std.csv", index=False
+    "performance_metrics/deterministic/AD_count/MoG_KL_cycle_pairwise_distances.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_bc).to_csv(
-    "performance_metrics/AD_count/MoG_KL_cycle_permanova_braycurtis_2.csv", index=False
+pd.DataFrame(permanova_bc).to_csv(
+    "performance_metrics/deterministic/AD_count/MoG_KL_cycle_permanova_braycurtis.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_ait).to_csv(
-    "performance_metrics/AD_count/MoG_KL_cycle_permanova_aitchison_2.csv", index=False
+pd.DataFrame(permanova_ait).to_csv(
+    "performance_metrics/deterministic/AD_count/MoG_KL_cycle_permanova_aitchison.csv",
+    index=False,
 )
 
 # ------------------------------------------------------------------------------------
@@ -264,11 +279,11 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(seed)
 
 # Set for n iteration - KL cycle Normal models
-n = 50
+n = n_iter
 
-pairwise_distances = []
-permanova_res_bc = []
-permanova_res_ait = []
+pairwise_distances = pd.DataFrame()
+permanova_ait = pd.DataFrame()
+permanova_bc = pd.DataFrame()
 
 for iter in range(n):
 
@@ -280,8 +295,12 @@ for iter in range(n):
         input_size=ad_count_input_size,
         device=device,
         prior="Normal",
-        w_contra=100.0,
+        w_contra=25.0,
         kl_cycle=True,
+        smooth_annealing=True,
+        pre_epochs=2500,
+        post_epochs=5000,
+        vae_post_lr=2e-4,
         seed=None,
     )
 
@@ -297,55 +316,57 @@ for iter in range(n):
         seed=None,
     )
 
-    # Normalized reconstructed data
-    norm_ad_recon_data = DataTransform(
-        data=ad_recon_data,
-        factors=[ad_count_sample_label, ad_count_batch_label, ad_count_bio_label],
-        count=True,
-    )
-
     # Pairwise distance
-    mean_all, mean_intra, mean_inter = pairwise_distance_std(
+    run_pairwise_dist = pairwise_distance_multi_run(
         data=ad_recon_data,
         sample_label=ad_count_sample_label,
         batch_label=ad_count_batch_label,
         bio_label=ad_count_bio_label,
     )
-    pairwise_res = {
-        "mean_all": mean_all,
-        "mean_intra": mean_intra,
-        "mean_inter": mean_inter,
-    }
-    # Add to list
-    pairwise_distances.append(pairwise_res)
+    run_pairwise_dist["iter"] = iter
 
-    # PERMANOVA
+    # Add distance to dataframe
+    pairwise_distances = pd.concat(
+        [pairwise_distances, run_pairwise_dist], axis=0
+    ).reset_index(drop=True)
+
+    # Permanova
     bc, ait = PERMANOVA(
         ad_recon_data, ad_count_sample_label, ad_count_batch_label, ad_count_bio_label
     )
-    permanova_bc = {
-        "F-statistic": bc["test statistic"],
-        "p-value": bc["p-value"],
-        "R2": bc["R2"],
-    }
-    permanova_ait = {
-        "F-statistic": ait["test statistic"],
-        "p-value": ait["p-value"],
-        "R2": ait["R2"],
-    }
-    # Add to list
-    permanova_res_bc.append(permanova_bc)
-    permanova_res_ait.append(permanova_ait)
+
+    bc = pd.DataFrame(
+        {
+            "R2": [bc["R2"]],
+            "p-value": [bc["p-value"]],
+            "test statistic": [bc["test statistic"]],
+        }
+    )
+    ait = pd.DataFrame(
+        {
+            "R2": [ait["R2"]],
+            "p-value": [ait["p-value"]],
+            "test statistic": [ait["test statistic"]],
+        }
+    )
+
+    permanova_bc = pd.concat([permanova_bc, bc], axis=0).reset_index(drop=True)
+
+    permanova_ait = pd.concat([permanova_ait, ait], axis=0).reset_index(drop=True)
+
 
 # Save performance to file
 pd.DataFrame(pairwise_distances).to_csv(
-    "performance_metrics/AD_count/Std_KL_cycle_pairwise_distances_std.csv", index=False
+    "performance_metrics/deterministic/AD_count/Std_KL_cycle_pairwise_distances.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_bc).to_csv(
-    "performance_metrics/AD_count/Std_KL_cycle_permanova_braycurtis_2.csv", index=False
+pd.DataFrame(permanova_bc).to_csv(
+    "performance_metrics/deterministic/AD_count/Std_KL_cycle_permanova_braycurtis.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_ait).to_csv(
-    "performance_metrics/AD_count/Std_KL_cycle_permanova_aitchison_2.csv", index=False
+pd.DataFrame(permanova_ait).to_csv(
+    "performance_metrics/deterministic/AD_count/Std_KL_cycle_permanova_aitchison.csv",
+    index=False,
 )
 
 # ------------------------------------------------------------------------------------
@@ -360,11 +381,11 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(seed)
 
 # Set for n iteration - No cycle VMM models
-n = 50
+n = n_iter
 
-pairwise_distances = []
-permanova_res_bc = []
-permanova_res_ait = []
+pairwise_distances = pd.DataFrame()
+permanova_bc = pd.DataFrame()
+permanova_ait = pd.DataFrame()
 
 for iter in range(n):
 
@@ -375,8 +396,12 @@ for iter in range(n):
         n_bios=ad_count_bio_size,
         input_size=ad_count_input_size,
         device=device,
-        w_contra=100.0,
+        w_contra=25.0,
         kl_cycle=False,
+        smooth_annealing=True,
+        pre_epochs=2500,
+        post_epochs=5000,
+        vae_post_lr=2e-4,
         seed=None,
     )
 
@@ -392,55 +417,57 @@ for iter in range(n):
         seed=None,
     )
 
-    # Normalized reconstructed data
-    norm_ad_recon_data = DataTransform(
-        data=ad_recon_data,
-        factors=[ad_count_sample_label, ad_count_batch_label, ad_count_bio_label],
-        count=True,
-    )
-
     # Pairwise distance
-    mean_all, mean_intra, mean_inter = pairwise_distance_std(
+    run_pairwise_dist = pairwise_distance_multi_run(
         data=ad_recon_data,
         sample_label=ad_count_sample_label,
         batch_label=ad_count_batch_label,
         bio_label=ad_count_bio_label,
     )
-    pairwise_res = {
-        "mean_all": mean_all,
-        "mean_intra": mean_intra,
-        "mean_inter": mean_inter,
-    }
-    # Add to list
-    pairwise_distances.append(pairwise_res)
+    run_pairwise_dist["iter"] = iter
 
-    # PERMANOVA
+    # Add distance to dataframe
+    pairwise_distances = pd.concat(
+        [pairwise_distances, run_pairwise_dist], axis=0
+    ).reset_index(drop=True)
+
+    # Permanova
     bc, ait = PERMANOVA(
         ad_recon_data, ad_count_sample_label, ad_count_batch_label, ad_count_bio_label
     )
-    permanova_bc = {
-        "F-statistic": bc["test statistic"],
-        "p-value": bc["p-value"],
-        "R2": bc["R2"],
-    }
-    permanova_ait = {
-        "F-statistic": ait["test statistic"],
-        "p-value": ait["p-value"],
-        "R2": ait["R2"],
-    }
-    # Add to list
-    permanova_res_bc.append(permanova_bc)
-    permanova_res_ait.append(permanova_ait)
+
+    bc = pd.DataFrame(
+        {
+            "R2": [bc["R2"]],
+            "p-value": [bc["p-value"]],
+            "test statistic": [bc["test statistic"]],
+        }
+    )
+    ait = pd.DataFrame(
+        {
+            "R2": [ait["R2"]],
+            "p-value": [ait["p-value"]],
+            "test statistic": [ait["test statistic"]],
+        }
+    )
+
+    permanova_bc = pd.concat([permanova_bc, bc], axis=0).reset_index(drop=True)
+
+    permanova_ait = pd.concat([permanova_ait, ait], axis=0).reset_index(drop=True)
+
 
 # Save performance to file
 pd.DataFrame(pairwise_distances).to_csv(
-    "performance_metrics/AD_count/VMM_no_cycle_pairwise_distances_std.csv", index=False
+    "performance_metrics/deterministic/AD_count/VMM_no_cycle_pairwise_distances.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_bc).to_csv(
-    "performance_metrics/AD_count/VMM_no_cycle_permanova_braycurtis_2.csv", index=False
+pd.DataFrame(permanova_bc).to_csv(
+    "performance_metrics/deterministic/AD_count/VMM_no_cycle_permanova_braycurtis.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_ait).to_csv(
-    "performance_metrics/AD_count/VMM_no_cycle_permanova_aitchison_2.csv", index=False
+pd.DataFrame(permanova_ait).to_csv(
+    "performance_metrics/deterministic/AD_count/VMM_no_cycle_permanova_aitchison.csv",
+    index=False,
 )
 
 # ------------------------------------------------------------------------------------
@@ -455,11 +482,11 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(seed)
 
 # Set for n iteration - No cycle MoG models
-n = 50
+n = n_iter
 
-pairwise_distances = []
-permanova_res_bc = []
-permanova_res_ait = []
+pairwise_distances = pd.DataFrame()
+permanova_ait = pd.DataFrame()
+permanova_bc = pd.DataFrame()
 
 for iter in range(n):
 
@@ -471,8 +498,12 @@ for iter in range(n):
         input_size=ad_count_input_size,
         device=device,
         prior="MoG",
-        w_contra=100.0,
+        w_contra=25.0,
         kl_cycle=False,
+        smooth_annealing=True,
+        pre_epochs=2500,
+        post_epochs=5000,
+        vae_post_lr=2e-4,
         seed=None,
     )
 
@@ -488,55 +519,57 @@ for iter in range(n):
         seed=None,
     )
 
-    # Normalized reconstructed data
-    norm_ad_recon_data = DataTransform(
-        data=ad_recon_data,
-        factors=[ad_count_sample_label, ad_count_batch_label, ad_count_bio_label],
-        count=True,
-    )
-
     # Pairwise distance
-    mean_all, mean_intra, mean_inter = pairwise_distance_std(
+    run_pairwise_dist = pairwise_distance_multi_run(
         data=ad_recon_data,
         sample_label=ad_count_sample_label,
         batch_label=ad_count_batch_label,
         bio_label=ad_count_bio_label,
     )
-    pairwise_res = {
-        "mean_all": mean_all,
-        "mean_intra": mean_intra,
-        "mean_inter": mean_inter,
-    }
-    # Add to list
-    pairwise_distances.append(pairwise_res)
+    run_pairwise_dist["iter"] = iter
 
-    # PERMANOVA
+    # Add distance to dataframe
+    pairwise_distances = pd.concat(
+        [pairwise_distances, run_pairwise_dist], axis=0
+    ).reset_index(drop=True)
+
+    # Permanova
     bc, ait = PERMANOVA(
         ad_recon_data, ad_count_sample_label, ad_count_batch_label, ad_count_bio_label
     )
-    permanova_bc = {
-        "F-statistic": bc["test statistic"],
-        "p-value": bc["p-value"],
-        "R2": bc["R2"],
-    }
-    permanova_ait = {
-        "F-statistic": ait["test statistic"],
-        "p-value": ait["p-value"],
-        "R2": ait["R2"],
-    }
-    # Add to list
-    permanova_res_bc.append(permanova_bc)
-    permanova_res_ait.append(permanova_ait)
+
+    bc = pd.DataFrame(
+        {
+            "R2": [bc["R2"]],
+            "p-value": [bc["p-value"]],
+            "test statistic": [bc["test statistic"]],
+        }
+    )
+    ait = pd.DataFrame(
+        {
+            "R2": [ait["R2"]],
+            "p-value": [ait["p-value"]],
+            "test statistic": [ait["test statistic"]],
+        }
+    )
+
+    permanova_bc = pd.concat([permanova_bc, bc], axis=0).reset_index(drop=True)
+
+    permanova_ait = pd.concat([permanova_ait, ait], axis=0).reset_index(drop=True)
+
 
 # Save performance to file
 pd.DataFrame(pairwise_distances).to_csv(
-    "performance_metrics/AD_count/MoG_no_cycle_pairwise_distances_std.csv", index=False
+    "performance_metrics/deterministic/AD_count/MoG_no_cycle_pairwise_distances.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_bc).to_csv(
-    "performance_metrics/AD_count/MoG_no_cycle_permanova_braycurtis_2.csv", index=False
+pd.DataFrame(permanova_bc).to_csv(
+    "performance_metrics/deterministic/AD_count/MoG_no_cycle_permanova_braycurtis.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_ait).to_csv(
-    "performance_metrics/AD_count/MoG_no_cycle_permanova_aitchison_2.csv", index=False
+pd.DataFrame(permanova_ait).to_csv(
+    "performance_metrics/deterministic/AD_count/MoG_no_cycle_permanova_aitchison.csv",
+    index=False,
 )
 
 # ------------------------------------------------------------------------------------
@@ -551,11 +584,11 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(seed)
 
 # Set for n iteration - KL cycle Normal models
-n = 50
+n = n_iter
 
-pairwise_distances = []
-permanova_res_bc = []
-permanova_res_ait = []
+pairwise_distances = pd.DataFrame()
+permanova_bc = pd.DataFrame()
+permanova_ait = pd.DataFrame()
 
 for iter in range(n):
 
@@ -567,8 +600,12 @@ for iter in range(n):
         input_size=ad_count_input_size,
         device=device,
         prior="Normal",
-        w_contra=100.0,
+        w_contra=25.0,
         kl_cycle=False,
+        smooth_annealing=True,
+        pre_epochs=2500,
+        post_epochs=5000,
+        vae_post_lr=2e-4,
         seed=None,
     )
 
@@ -584,53 +621,55 @@ for iter in range(n):
         seed=None,
     )
 
-    # Normalized reconstructed data
-    norm_ad_recon_data = DataTransform(
-        data=ad_recon_data,
-        factors=[ad_count_sample_label, ad_count_batch_label, ad_count_bio_label],
-        count=True,
-    )
-
     # Pairwise distance
-    mean_all, mean_intra, mean_inter = pairwise_distance_std(
+    run_pairwise_dist = pairwise_distance_multi_run(
         data=ad_recon_data,
         sample_label=ad_count_sample_label,
         batch_label=ad_count_batch_label,
         bio_label=ad_count_bio_label,
     )
-    pairwise_res = {
-        "mean_all": mean_all,
-        "mean_intra": mean_intra,
-        "mean_inter": mean_inter,
-    }
-    # Add to list
-    pairwise_distances.append(pairwise_res)
+    run_pairwise_dist["iter"] = iter
 
-    # PERMANOVA
+    # Add distance to dataframe
+    pairwise_distances = pd.concat(
+        [pairwise_distances, run_pairwise_dist], axis=0
+    ).reset_index(drop=True)
+
+    # Permanova
     bc, ait = PERMANOVA(
         ad_recon_data, ad_count_sample_label, ad_count_batch_label, ad_count_bio_label
     )
-    permanova_bc = {
-        "F-statistic": bc["test statistic"],
-        "p-value": bc["p-value"],
-        "R2": bc["R2"],
-    }
-    permanova_ait = {
-        "F-statistic": ait["test statistic"],
-        "p-value": ait["p-value"],
-        "R2": ait["R2"],
-    }
-    # Add to list
-    permanova_res_bc.append(permanova_bc)
-    permanova_res_ait.append(permanova_ait)
+
+    bc = pd.DataFrame(
+        {
+            "R2": [bc["R2"]],
+            "p-value": [bc["p-value"]],
+            "test statistic": [bc["test statistic"]],
+        }
+    )
+    ait = pd.DataFrame(
+        {
+            "R2": [ait["R2"]],
+            "p-value": [ait["p-value"]],
+            "test statistic": [ait["test statistic"]],
+        }
+    )
+
+    permanova_bc = pd.concat([permanova_bc, bc], axis=0).reset_index(drop=True)
+
+    permanova_ait = pd.concat([permanova_ait, ait], axis=0).reset_index(drop=True)
+
 
 # Save performance to file
 pd.DataFrame(pairwise_distances).to_csv(
-    "performance_metrics/AD_count/Std_no_cycle_pairwise_distances_std.csv", index=False
+    "performance_metrics/deterministic/AD_count/Std_no_cycle_pairwise_distances.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_bc).to_csv(
-    "performance_metrics/AD_count/Std_no_cycle_permanova_braycurtis_2.csv", index=False
+pd.DataFrame(permanova_bc).to_csv(
+    "performance_metrics/deterministic/AD_count/Std_no_cycle_permanova_braycurtis.csv",
+    index=False,
 )
-pd.DataFrame(permanova_res_ait).to_csv(
-    "performance_metrics/AD_count/Std_no_cycle_permanova_aitchison_2.csv", index=False
+pd.DataFrame(permanova_ait).to_csv(
+    "performance_metrics/deterministic/AD_count/Std_no_cycle_permanova_aitchison.csv",
+    index=False,
 )
