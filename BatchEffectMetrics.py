@@ -532,7 +532,7 @@ def PERMANOVA(data, sample_label, batch_label, bio_label):
 
     samples = data[sample_label].values
     bios = data[bio_label].values
-    counts = data.select_dtypes(include="number").values
+    counts = data.select_dtypes(include="number").values + 1e-6
 
     # Compute Bray-Curtis distance matrix
     bray = pdist(counts, metric="braycurtis")

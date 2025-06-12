@@ -168,7 +168,7 @@ class NormalEncoder(nn.Module):
 
     def monte_carlo_encode(self, x, K=100):
         mu, var = self.encode(x)
-        std = torch.sqrt(torch.nn.functional.softplus(var + 1e-8))
+        std = torch.sqrt(torch.nn.functional.softplus(var) + 1e-8)
 
         dist = td.Independent(td.Normal(loc=mu, scale=std), 1)
 
@@ -1028,6 +1028,139 @@ class ConditionalVAE(nn.Module):
         return pca.fit_transform(samples.detach().cpu())
 
 
+class ConditionalEnsembleVAE(nn.Module):
+    """
+    Define a conditional Variational Autoencoder (VAE) model.
+    """
+
+    def __init__(self, prior, decoders: nn.ModuleList, encoder, beta=1.0):
+        """
+        Parameters:
+        prior: [torch.nn.Module]
+           The prior distribution over the latent space.
+        decoder: [torch.nn.ModuleList]
+              The decoder distribution over the data space.
+        encoder: [torch.nn.Module]
+                The encoder distribution over the latent space.
+        """
+
+        super(ConditionalVAE, self).__init__()
+        self.prior = prior
+        self.decoders = decoders
+        self.encoder = encoder
+        self.beta = beta
+
+    def elbo(self, x):
+        """
+        Compute the ELBO for the given batch of data.
+
+        Parameters:
+        x: [torch.Tensor]
+           A tensor of dimension `(batch_size, feature_dim1, feature_dim2, ...)`
+           n_samples: [int]
+           Number of samples to use for the Monte Carlo estimate of the ELBO.
+        """
+        q = self.encoder(x)
+        z = q.rsample()
+        elbo = 0
+
+        for decoder in self.decoders:
+            elbo += torch.mean(
+                decoder(z).log_prob(x) - self.beta * td.kl_divergence(q, self.prior()),
+                dim=0,
+            )
+
+        return elbo / len(self.decoders)
+
+    def kl_div_loss(self, x):
+        q = self.encoder(x)
+        z = q.rsample()
+        kl_loss = torch.mean(
+            self.beta * td.kl_divergence(q, self.prior()),
+            dim=0,
+        )
+        return kl_loss
+
+    def sample(self, n_samples=1):
+        """
+        Sample from the model.
+
+        Parameters:
+        n_samples: [int]
+           Number of samples to generate.
+        """
+        z = self.prior().sample(torch.Size([n_samples]))
+        sample = []
+        for decoder in self.decoders:
+            sample.append(decoder(z).sample())
+        return torch.stack(sample, dim=0).float().mean(dim=0).floor().int()
+
+    def forward(self, x):
+        """
+        Compute the negative ELBO for the given batch of data.
+
+        Parameters:
+        x: [torch.Tensor]
+           A tensor of dimension `(batch_size, feature_dim1, feature_dim2)`
+        """
+        # Obtain posterior and sample
+        q_zx = self.encoder(x)
+        z = q_zx.rsample()
+
+        # Forward pass to the decoder)
+
+        # Loss function
+        log_q_zx = q_zx.log_prob(z)
+        log_p_z = self.log_prob(z)
+
+        recon_term = 0
+
+        for decoder in self.decoders:
+            p_xz = self.decoder(z)
+
+            recon_term += p_xz.log_prob(x).mean()
+
+        kl_term = self.beta * (log_q_zx - log_p_z).mean()
+
+        return -(recon_term / len(self.decoders)) + kl_term
+
+    def get_posterior(self, x):
+        """
+        Given a set of points, compute the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        q = self.encoder(x)
+        z = q.rsample()
+        return z
+
+    def log_prob(self, z):
+
+        return self.prior().log_prob(z)
+
+    def pca_posterior(self, x):
+        """
+        Given a set of points, compute the PCA of the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        z = self.get_posterior(x)
+        pca = PCA(n_components=2)
+        return pca.fit_transform(z.detach().cpu())
+
+    def pca_prior(self, n_samples):
+        """
+        Given a number of samples, get the PCA from the sampling of the prior distribution.
+        """
+        samples = self.prior().sample(torch.Size([n_samples]))
+        pca = PCA(n_components=2)
+        return pca.fit_transform(samples.detach().cpu())
+
+
 class VampPriorMixtureConditionalVAE(nn.Module):
     """
     Define a VampPrior Variational Autoencoder model.
@@ -1169,6 +1302,151 @@ class VampPriorMixtureConditionalVAE(nn.Module):
         kl_term = self.beta * (log_q_zx - log_p_z).mean()
 
         return -recon_term + kl_term
+
+
+class VampPriorMixtureConditionalEnsembleVAE(nn.Module):
+    """
+    Define a VampPrior Variational Autoencoder model.
+    """
+
+    def __init__(
+        self,
+        encoder,
+        decoders: nn.ModuleList,
+        input_dim,
+        batch_dim,
+        n_comps,
+        d_z,
+        beta=1.0,
+        data_loader=None,
+    ):
+        super().__init__()
+        self.encoder = encoder
+        self.decoders = decoders
+        self.input_dim = input_dim
+        self.batch_dim = batch_dim
+        self.K = n_comps
+        self.d_z = d_z
+        self.beta = beta
+
+        # Pseudo-inputs
+        if data_loader is not None:
+            self.u = self.sample_from_dataloader(data_loader)
+        else:
+            self.u = nn.Parameter(
+                torch.cat(
+                    [torch.rand(n_comps, input_dim), torch.zeros(n_comps, batch_dim)],
+                    dim=1,
+                )
+            )
+
+        # MoG prior parameters besides location
+        self.prior_var = nn.Parameter(torch.randn(n_comps, self.d_z))
+        self.prior_pi = nn.Parameter(torch.zeros(n_comps))
+
+    def sample_from_dataloader(self, data_loader):
+        all_data = []
+        bio_label = []
+        for batch in data_loader:
+            x = batch[0]
+            z = batch[2]  # biological variability
+            all_data.append(x)
+            bio_label.append(z)
+            if len(all_data) * x.shape[0] >= self.K:
+                break
+
+        all_data = torch.cat(all_data, dim=0)
+        bio_label = torch.cat(bio_label, dim=0)
+        bio_dict = torch.unique(bio_label, dim=0)
+
+        selected_u = []
+
+        for label in bio_dict:
+            for i in range(all_data.shape[0]):
+                if torch.equal(bio_label[i], label):
+                    selected_u.append(all_data[i])
+                    break
+
+        selected_u = torch.stack(selected_u)
+        selected_u = torch.cat([selected_u, torch.zeros(self.K, self.batch_dim)], dim=1)
+        return nn.Parameter(selected_u.clone().detach().requires_grad_(True))
+
+    def get_prior(self):
+        # encode pseudo inputs
+        mog_u = self.encoder(self.u)
+
+        # sample from encoded distribution to compute prior components centroids
+        mu_u = mog_u.rsample()
+
+        # compute prior
+        w = self.prior_pi.view(-1)
+        stds = torch.sqrt(torch.nn.functional.softplus(self.prior_var) + 1e-8)
+        prior = MixtureOfGaussians(w, mu_u, stds)
+
+        return prior
+
+    def sample(self, n_samples):
+
+        prior = self.get_prior()
+
+        return prior.rsample(sample_shape=torch.Size([n_samples]))
+
+    def pca_prior(self, n_samples):
+        """
+        Given a number of samples, get the PCA from the sampling of the prior distribution.
+        """
+        samples = self.sample(n_samples)
+        pca = PCA(n_components=2)
+        return pca.fit_transform(samples.detach().cpu())
+
+    def get_posterior(self, x):
+        """
+        Given a set of points, compute the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        q = self.encoder(x)
+        z = q.rsample()
+        return z
+
+    def pca_posterior(self, x):
+        """
+        Given a set of points, compute the PCA of the posterior distribution.
+
+        Parameters:
+        x: [torch.Tensor]
+            Samples to pass to the encoder
+        """
+        z = self.get_posterior(x)
+        pca = PCA(n_components=2)
+        return pca.fit_transform(z.detach().cpu())
+
+    def log_prob(self, z):
+
+        prior = self.get_prior()
+
+        return prior.log_prob(z)
+
+    def forward(self, x):
+        # Obtain posterior and sample
+        q_zx = self.encoder(x)
+        z = q_zx.rsample()
+
+        # Loss function
+        log_q_zx = q_zx.log_prob(z)
+        log_p_z = self.log_prob(z)
+
+        # Forward pass to the decoder
+        recon_term = 0
+        for decoder in self.decoders:
+            p_xz = self.decoder(z)
+            recon_term += p_xz.log_prob(x).mean()
+
+        kl_term = self.beta * (log_q_zx - log_p_z).mean()
+
+        return -(recon_term / len(self.decoders)) + kl_term
 
 
 # ---------- DISCRIMINATOR AND CONTRASTIVE LEARNING ---------- #
@@ -1876,6 +2154,620 @@ def abaco_recon(
             z=torch.cat([z, torch.zeros_like(ohe_batch.to(device))], dim=1),
             K=monte_carlo,
         )
+        recon_data.append(recon)
+
+    np_recon_data = np.vstack([t.detach().cpu().numpy() for t in recon_data])
+
+    otu_corrected_pd = pd.concat(
+        [
+            data[sample_label],
+            data[batch_label],
+            data[bio_label],
+            pd.DataFrame(
+                np_recon_data,
+                index=data.index,
+                columns=data.select_dtypes("number").columns,
+            ),
+        ],
+        axis=1,
+    )
+    return otu_corrected_pd
+
+
+# ------- ENSEMBLE MODEL: ONE ENCODER (ONE LATENT SPACE) -> MULTIPLE DECODERS
+
+
+def pre_train_abaco_ensemble(
+    vae,
+    vae_optim_pre,
+    discriminator,
+    disc_optim,
+    adv_optim,
+    data_loader,
+    epochs,
+    device,
+    w_contra=1.0,
+    temp=0.1,
+    w_elbo=1.0,
+    w_disc=1.0,
+    w_adv=1.0,
+    disc_loss_type="CrossEntropy",
+    n_disc_updates=1,
+    label_smooth=0.1,
+    normal=False,
+    count=True,
+):
+    """
+    Pre-training of conditional VAE with contrastive loss and adversarial mixing in latent space.
+    """
+    vae.train()
+    discriminator.train()
+    contra_criterion = SupervisedContrastiveLoss(temp)
+
+    total_steps = len(data_loader) * epochs
+    progress_bar = tqdm(
+        range(total_steps),
+        desc="Pre-training: VAE for reconstructing data and batch mixing adversarial training",
+    )
+
+    for epoch in range(epochs):
+
+        for x, y_onehot, z_onehot in data_loader:
+            # Move all tensors to the correct device
+            x = x.to(device)
+            if count == False:
+                x_sum = x.sum(dim=1, keepdim=True)
+                x = x / x_sum
+
+            y_onehot = y_onehot.to(device)  # Batch one hot label
+            z_onehot = z_onehot.to(device)  # Bio one hot label
+            y_idx = y_onehot.argmax(1)
+            z_idx = z_onehot.argmax(1)
+
+            # === Step 1: Discriminator on latent (freeze encoder) ===
+            with torch.no_grad():
+                if normal == False:
+                    pi, mu, _ = vae.encoder.encode(torch.cat([x, y_onehot], dim=1))
+                    mu_bar = (mu * pi.unsqueeze(2)).sum(dim=1)
+                    d_input = torch.cat([mu_bar, z_onehot], dim=1)
+
+                else:
+                    mu, _ = vae.encoder.encode(torch.cat([x, y_onehot], dim=1))
+                    d_input = torch.cat([mu, z_onehot], dim=1)
+
+            for _ in range(n_disc_updates):
+                disc_optim.zero_grad()
+                logits = discriminator(d_input)
+                loss_disc = w_disc * F.cross_entropy(
+                    logits, y_idx, label_smoothing=label_smooth
+                )
+                loss_disc.backward()
+                disc_optim.step()
+
+            # === Step 2: Adversarial update on encoder ===
+            adv_optim.zero_grad()
+            if normal == False:
+                pi, mu, _ = vae.encoder.encode(torch.cat([x, y_onehot], dim=1))
+                mu_bar = (mu * pi.unsqueeze(2)).sum(dim=1)
+                logits_fake = discriminator(torch.cat([mu_bar, z_onehot], dim=1))
+            else:
+                mu, _ = vae.encoder.encode(torch.cat([x, y_onehot], dim=1))
+                logits_fake = discriminator(torch.cat([mu, z_onehot], dim=1))
+            loss_adv = w_adv * adversarial_loss(
+                pred_logits=logits_fake, true_labels=y_idx, loss_type=disc_loss_type
+            )
+            loss_adv.backward()
+            adv_optim.step()
+
+            # === Step 3: VAE reconstruction + contrastive ===
+            vae_optim_pre.zero_grad()
+            q_zx = vae.encoder(torch.cat([x, y_onehot], dim=1))
+            latent = q_zx.rsample()
+            recon_term = 0
+            for decoder in vae.decoders:
+                p_xz = decoder(torch.cat([latent, y_onehot], dim=1))
+                recon_term += p_xz.log_prob(x).mean()
+            kl_term = vae.beta * (q_zx.log_prob(latent) - vae.log_prob(latent)).mean()
+            elbo_loss = -(recon_term / len(vae.decoders) - kl_term)
+            contra_loss = w_contra * contra_criterion(latent, z_idx)
+
+            total_loss = w_elbo * elbo_loss + contra_loss
+            total_loss.backward()
+            vae_optim_pre.step()
+
+            # Update progress bar
+            progress_bar.set_postfix(
+                elbo=f"{elbo_loss.item():.4f}",
+                contra=f"{contra_loss.item():.4f}",
+                disc=f"{loss_disc.item():.4f}",
+                adv=f"{loss_adv.item():.4f}",
+                epoch=f"{epoch}/{epochs+1}",
+            )
+            progress_bar.update()
+
+    progress_bar.close()
+
+
+def train_abaco_ensemble(
+    vae,
+    vae_optim_post,
+    data_loader,
+    epochs,
+    device,
+    w_elbo=1.0,
+    w_cycle=1.0,
+    cycle="KL",
+    smooth_annealing=False,
+):
+    """
+    This function trains a pre-trained ABaCo cVAE decoder but applies masking to batch labels so
+    information passed solely depends on the latent space which had batch mixing
+    """
+
+    vae.train()
+
+    total_steps = len(data_loader) * epochs
+    progress_bar = tqdm(
+        range(total_steps), desc="Training: VAE decoder with masked batch labels"
+    )
+
+    for epoch in range(epochs):
+        # Introduce slow transition to full batch masking
+        if smooth_annealing:
+            alpha = max(0.0, 1.0 - (2 * epoch / epochs))
+        else:
+            alpha = 0.0
+
+        data_iter = iter(data_loader)
+        for loader_data in data_iter:
+
+            x = loader_data[0].to(device)
+            y = loader_data[1].to(device).float()  # Batch label
+            z = loader_data[2].to(device).float()  # Bio type label
+
+            # VAE ELBO computation with masked batch label
+            vae_optim_post.zero_grad()
+
+            # Forward pass to encoder
+            q_zx = vae.encoder(torch.cat([x, y], dim=1))
+
+            # Sample from encoded point
+            latent_points = q_zx.rsample()
+
+            # Forward pass to the decoder
+            recon_term = 0
+            p_xzs = []
+            for decoder in vae.decoders:
+                p_xz = decoder(torch.cat([latent_points, alpha * y], dim=1))
+                recon_term += p_xz.log_prob(x).mean()
+                p_xzs.append(p_xz)
+
+            # Log probabilities of prior and posterior
+            log_q_zx = q_zx.log_prob(latent_points)
+            log_p_z = vae.log_prob(latent_points)
+
+            # Compute ELBO
+
+            # kl_term = vae.beta * (log_q_zx - log_p_z).mean()
+            elbo = recon_term / len(vae.decoders)
+
+            # Compute loss
+            elbo_loss = -elbo
+
+            # Compute overall loss and backprop
+            recon_loss = w_elbo * elbo_loss
+
+            # Latent cycle step: regularization term for demostrating encoded reconstructed point = encoded original point
+
+            if cycle == "MSE":
+                # Original encoded point
+                pi, mu, _ = vae.encoder.encode(torch.cat([x, y], dim=1))
+                mu_bar = (mu * pi.unsqueeze(2)).sum(dim=1)
+
+                # Reconstructed encoded point
+                x_r = p_xz.sample()
+                pi_r, mu_r, _ = vae.encoder.encode(torch.cat([x_r, y], dim=1))
+                mu_r_bar = (mu_r * pi_r.unsqueeze(2)).sum(dim=1)
+
+                # Backpropagation
+                cycle_loss = F.mse_loss(mu_r_bar, mu_bar)
+
+            elif cycle == "CE":
+                # Original encoded point - mixing probability
+                pi, _, _ = vae.encoder.encode(torch.cat([x, y], dim=1))
+
+                # Reconstructed encoded point - mixing probability
+                x_r = p_xz.sample()
+                pi_r, _, _ = vae.encoder.encode(torch.cat([x_r, y], dim=1))
+
+                # Backpropagation
+                cycle_loss = F.cross_entropy(pi_r, pi)
+
+            elif cycle == "KL":
+                # Original encoded point - pdf
+                q_zx = vae.encoder(torch.cat([x, y], dim=1))
+
+                # Reconstructed encoded point - pdf
+                x_rs = []
+                for p_xz in p_xzs:
+                    x_r = p_xz.sample()
+                    x_rs.append(x_r)
+                x_r = torch.stack(x_rs, dim=0).float().mean(dim=0).floor().int()
+                q_zx_r = vae.encoder(torch.cat([x_r, y], dim=1))
+
+                # Backpropagation
+                cycle_loss = torch.mean(
+                    td.kl_divergence(q_zx_r, q_zx),
+                    dim=0,
+                )
+
+            else:
+                cycle_loss = 0
+
+            vae_loss = recon_loss + w_cycle * cycle_loss
+            vae_loss.backward()
+            vae_optim_post.step()
+
+            # Update progress bar
+            progress_bar.set_postfix(
+                vae_loss=f"{vae_loss.item():12.4f}",
+                epoch=f"{epoch+1}/{epochs}",
+            )
+            progress_bar.update()
+
+    progress_bar.close()
+
+
+def abaco_run_ensemble(
+    dataloader,
+    n_batches,
+    n_bios,
+    device,
+    input_size,
+    seed=42,
+    d_z=16,
+    prior="VMM",
+    count=True,
+    pre_epochs=2000,
+    post_epochs=2000,
+    kl_cycle=True,
+    smooth_annealing=False,
+    # VAE Model architecture
+    encoder_net=[1024, 512, 256],
+    n_dec=5,
+    decoder_net=[256, 512, 1024],
+    vae_act_func=nn.ReLU(),
+    # Discriminator architecture
+    disc_net=[256, 128, 64],
+    disc_act_func=nn.ReLU(),
+    disc_loss_type="CrossEntropy",
+    # Model weights
+    w_elbo=1.0,
+    beta=20.0,
+    w_disc=1.0,
+    w_adv=1.0,
+    w_contra=10.0,
+    temp=0.1,
+    # Learning rates
+    vae_pre_lr=1e-3,
+    vae_post_lr=1e-4,
+    disc_lr=1e-5,
+    adv_lr=1e-5,
+):
+    """Full ABaCo run with default setting"""
+    # Number of biological groups
+    K = n_bios
+    # Number of batches
+    n_batches = n_batches
+    # Default Normal
+    normal = False
+    # Set random seed
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # Defining the VAE architecture
+    if prior == "VMM":
+        # Defining Encoder
+        encoder_net = [input_size + n_batches] + encoder_net  # first layer: conditional
+        encoder_net.append(K * (2 * d_z + 1))  # last layer
+        modules = []
+        for i in range(len(encoder_net) - 1):
+            modules.append(nn.Linear(encoder_net[i], encoder_net[i + 1]))
+            modules.append(vae_act_func)
+        modules.pop()  # Drop last activation function
+        encoder = MoGEncoder(nn.Sequential(*modules), n_comp=K)
+
+        # Defining Decoder
+        decoders = nn.ModuleList()
+        if count:
+            for _ in range(n_dec):
+                decoder_net = [
+                    d_z + n_batches
+                ] + decoder_net  # first value: conditional
+                decoder_net.append(3 * input_size)  # last layer
+                modules = []
+                for i in range(len(decoder_net) - 1):
+                    modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                    modules.append(vae_act_func)
+                modules.pop()  # Drop last activation function
+
+                decoder = ZINBDecoder(nn.Sequential(*modules))
+                decoders.append(decoder)
+        else:
+            for _ in range(n_dec):
+                decoder_net = [
+                    d_z + n_batches
+                ] + decoder_net  # first value: conditional
+                decoder_net.append(2 * input_size)  # last layer
+                modules = []
+                for i in range(len(decoder_net) - 1):
+                    modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                    modules.append(vae_act_func)
+                modules.pop()  # Drop last activation function
+                decoder = ZIDirichletDecoder(nn.Sequential(*modules))
+                decoders.append(decoder)
+
+        # Defining VAE
+        vae = VampPriorMixtureConditionalEnsembleVAE(
+            encoder=encoder,
+            decoders=decoders,
+            input_dim=input_size,
+            n_comps=K,
+            batch_dim=n_batches,
+            d_z=d_z,
+            beta=beta,
+            data_loader=dataloader,
+        ).to(device)
+
+        # Defining VAE optims
+        vae_optim_pre = torch.optim.Adam(
+            [
+                {"params": vae.encoder.parameters()},
+                {"params": vae.decoders.parameters()},
+                {"params": [vae.u, vae.prior_pi, vae.prior_var]},
+            ],
+            lr=vae_pre_lr,
+        )
+        vae_optim_post = torch.optim.Adam(
+            [
+                {"params": vae.decoders.parameters()},
+            ],
+            lr=vae_post_lr,
+        )
+
+    elif prior == "MoG":
+        # Defining Encoder
+        encoder_net = [input_size + n_batches] + encoder_net  # first layer: conditional
+        encoder_net.append(K * (2 * d_z + 1))  # last layer
+        modules = []
+        for i in range(len(encoder_net) - 1):
+            modules.append(nn.Linear(encoder_net[i], encoder_net[i + 1]))
+            modules.append(vae_act_func)
+        modules.pop()  # Drop last activation function
+        encoder = MoGEncoder(nn.Sequential(*modules), n_comp=K)
+
+        # Defining Decoder
+        if count:
+            decoder_net = [d_z + n_batches] + decoder_net  # first value: conditional
+            decoder_net.append(3 * input_size)  # last layer
+            modules = []
+            for i in range(len(decoder_net) - 1):
+                modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                modules.append(vae_act_func)
+            modules.pop()  # Drop last activation function
+
+            decoder = ZINBDecoder(nn.Sequential(*modules))
+        else:
+            decoder_net = [d_z + n_batches] + decoder_net  # first value: conditional
+            decoder_net.append(2 * input_size)  # last layer
+            modules = []
+            for i in range(len(decoder_net) - 1):
+                modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                modules.append(vae_act_func)
+            modules.pop()  # Drop last activation function
+            decoder = ZIDirichletDecoder(nn.Sequential(*modules))
+
+        # Defining prior
+        prior = MoGPrior(d_z, K)
+
+        # Defining VAE
+        vae = ConditionalVAE(
+            prior=prior,
+            encoder=encoder,
+            decoder=decoder,
+            beta=beta,
+        ).to(device)
+
+        # Defining VAE optims
+
+        vae_optim_pre = torch.optim.Adam(vae.parameters(), lr=vae_pre_lr)
+
+        vae_optim_post = torch.optim.Adam(
+            [
+                {"params": vae.decoder.parameters()},
+            ],
+            lr=vae_post_lr,
+        )
+
+    elif prior == "Normal":
+        # change normal variable
+        normal = True
+        # Defining Encoder
+        encoder_net = [input_size + n_batches] + encoder_net  # first layer: conditional
+        encoder_net.append(2 * d_z)  # last layer
+        modules = []
+        for i in range(len(encoder_net) - 1):
+            modules.append(nn.Linear(encoder_net[i], encoder_net[i + 1]))
+            modules.append(vae_act_func)
+        modules.pop()  # Drop last activation function
+        encoder = NormalEncoder(nn.Sequential(*modules))
+
+        # Defining Decoder
+        if count:
+            decoder_net = [d_z + n_batches] + decoder_net  # first value: conditional
+            decoder_net.append(3 * input_size)  # last layer
+            modules = []
+            for i in range(len(decoder_net) - 1):
+                modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                modules.append(vae_act_func)
+            modules.pop()  # Drop last activation function
+
+            decoder = ZINBDecoder(nn.Sequential(*modules))
+        else:
+            decoder_net = [d_z + n_batches] + decoder_net  # first value: conditional
+            decoder_net.append(2 * input_size)  # last layer
+            modules = []
+            for i in range(len(decoder_net) - 1):
+                modules.append(nn.Linear(decoder_net[i], decoder_net[i + 1]))
+                modules.append(vae_act_func)
+            modules.pop()  # Drop last activation function
+            decoder = ZIDirichletDecoder(nn.Sequential(*modules))
+
+        # Defining prior
+        prior = NormalPrior(d_z)
+
+        # Defining VAE
+        vae = ConditionalVAE(
+            prior=prior,
+            encoder=encoder,
+            decoder=decoder,
+            beta=beta,
+        ).to(device)
+
+        # Defining VAE optims
+
+        vae_optim_pre = torch.optim.Adam(vae.parameters(), lr=vae_pre_lr)
+
+        vae_optim_post = torch.optim.Adam(
+            [
+                {"params": vae.decoder.parameters()},
+            ],
+            lr=vae_post_lr,
+        )
+
+    else:
+        raise ValueError(f"Prior distribution select isn't a valid option.")
+
+    # Defining the batch discriminator architecture
+    disc_net = [d_z + K] + disc_net  # first layer: conditional
+    disc_net.append(n_batches)  # last layer
+    modules = []
+    for i in range(len(disc_net) - 1):
+        modules.append(nn.Linear(disc_net[i], disc_net[i + 1]))
+        modules.append(disc_act_func)
+    modules.pop()  # remove last activation function
+    discriminator = BatchDiscriminator(nn.Sequential(*modules)).to(device)
+
+    # Defining the batch discriminator optimizers
+
+    disc_optim = torch.optim.Adam(discriminator.parameters(), lr=disc_lr)
+
+    adv_optim = torch.optim.Adam(vae.encoder.parameters(), lr=adv_lr)
+
+    # FIRST STEP: TRAIN VAE MODEL TO RECONSTRUCT DATA AND BATCH MIXING OF LATENT SPACE
+
+    pre_train_abaco_ensemble(
+        vae=vae,
+        vae_optim_pre=vae_optim_pre,
+        discriminator=discriminator,
+        disc_optim=disc_optim,
+        adv_optim=adv_optim,
+        data_loader=dataloader,
+        epochs=pre_epochs,
+        device=device,
+        w_elbo=w_elbo,
+        w_contra=w_contra,
+        temp=temp,
+        w_adv=w_adv,
+        w_disc=w_disc,
+        disc_loss_type=disc_loss_type,
+        normal=normal,
+        count=count,
+    )
+
+    # SECOND STEP: TRAIN DECODER TO PERFORM BATCH MIXING AT THE MODEL OUTPUT
+
+    if kl_cycle:
+        train_abaco_ensemble(
+            vae=vae,
+            vae_optim_post=vae_optim_post,
+            data_loader=dataloader,
+            epochs=post_epochs,
+            device=device,
+            w_elbo=w_elbo,
+            w_cycle=0.1,
+            cycle="KL",
+            smooth_annealing=smooth_annealing,
+        )
+
+    else:
+        train_abaco_ensemble(
+            vae=vae,
+            vae_optim_post=vae_optim_post,
+            data_loader=dataloader,
+            epochs=post_epochs,
+            device=device,
+            w_elbo=w_elbo,
+            w_cycle=0.0,
+            cycle="None",
+            smooth_annealing=smooth_annealing,
+        )
+
+    return vae
+
+
+def abaco_recon_ensemble(
+    model,
+    device,
+    data,
+    dataloader,
+    sample_label,
+    batch_label,
+    bio_label,
+    seed=42,
+    det_encode=False,
+    monte_carlo=100,
+):
+    """
+    Function used to reconstruct data using trained ABaCo model.
+    """
+    # Set random seed
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    ohe_batch = one_hot_encoding(data[batch_label])[0]
+
+    # Reconstructing data with trained model - DETERMINISTIC RECONSTRUCTION
+    recon_data = []
+
+    for x in dataloader:
+        x = x[0].to(device)
+        if det_encode == True:
+            z = model.encoder.det_encode(torch.cat([x, ohe_batch.to(device)], dim=1))
+        else:
+            z = model.encoder.monte_carlo_encode(
+                x=torch.cat([x, ohe_batch.to(device)], dim=1), K=monte_carlo
+            )
+        recons = []
+        for decoder in model.decoders:
+            recon = decoder.monte_carlo_decode(
+                z=torch.cat([z, torch.zeros_like(ohe_batch.to(device))], dim=1),
+                K=monte_carlo,
+            )
+            recons.append(recon)
+        recon = (
+            torch.stack(recons, dim=0).float().mean(dim=0).floor().int()
+        )  # added float() for being able to compute mean()
         recon_data.append(recon)
 
     np_recon_data = np.vstack([t.detach().cpu().numpy() for t in recon_data])
