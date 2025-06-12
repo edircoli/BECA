@@ -9,3 +9,5 @@ __pycache__
 data/MNIST/
 AI-design/model_weights/
 AI-design/plots/
+performance_metrics/
+data/
