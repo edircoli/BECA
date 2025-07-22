@@ -11,8 +11,12 @@ import random
 import seaborn as sns
 
 # User libraries
-from BatchEffectDataLoader import DataPreprocess, DataTransform, one_hot_encoding
-from BatchEffectCorrection import (
+from src.ABaCo.BatchEffectDataLoader import (
+    DataPreprocess,
+    DataTransform,
+    one_hot_encoding,
+)
+from src.ABaCo.BatchEffectCorrection import (
     correctCombat,
     correctLimma_rBE,
     correctBMC,
@@ -20,15 +24,15 @@ from BatchEffectCorrection import (
     correctCombatSeq,
     correctConQuR,
 )
-from BatchEffectPlots import plotPCA, plotPCoA, plot_LISI_perplexity
-from BatchEffectMetrics import (
+from src.ABaCo.BatchEffectPlots import plotPCA, plotPCoA, plot_LISI_perplexity
+from src.ABaCo.BatchEffectMetrics import (
     all_metrics,
     pairwise_distance,
     PERMANOVA,
     pairwise_distance_std,
     pairwise_distance_multi_run,
 )
-from ABaCo import abaco_run, abaco_recon
+from src.ABaCo.ABaCo import abaco_run, abaco_recon
 
 # Number of iteration
 n_iter = 50

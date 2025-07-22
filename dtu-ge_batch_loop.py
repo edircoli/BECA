@@ -16,16 +16,16 @@ import random
 import seaborn as sns
 
 # User libraries
-from BatchEffectDataLoader import (
+from src.ABaCo.BatchEffectDataLoader import (
     DataPreprocess,
     DataTransform,
     ABaCoDataLoader,
     one_hot_encoding,
     class_to_int,
 )
-from BatchEffectCorrection import correctCombat, correctLimma_rBE
-from BatchEffectPlots import plotPCA, plotPCoA
-from BatchEffectMetrics import kBET, iLISI, cLISI, ARI, ASW
+from src.ABaCo.BatchEffectCorrection import correctCombat, correctLimma_rBE
+from src.ABaCo.BatchEffectPlots import plotPCA, plotPCoA
+from src.ABaCo.BatchEffectMetrics import kBET, iLISI, cLISI, ARI, ASW
 from MetaABaCo import (
     NormalPrior,
     NormalEncoder,

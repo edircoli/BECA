@@ -11,8 +11,12 @@ import random
 import seaborn as sns
 
 # User libraries
-from BatchEffectDataLoader import DataPreprocess, DataTransform, one_hot_encoding
-from BatchEffectCorrection import (
+from src.ABaCo.BatchEffectDataLoader import (
+    DataPreprocess,
+    DataTransform,
+    one_hot_encoding,
+)
+from src.ABaCo.BatchEffectCorrection import (
     correctCombat,
     correctLimma_rBE,
     correctBMC,
@@ -20,9 +24,14 @@ from BatchEffectCorrection import (
     correctCombatSeq,
     correctConQuR,
 )
-from BatchEffectPlots import plotPCA, plotPCoA, plot_LISI_perplexity
-from BatchEffectMetrics import all_metrics, cLISI_full_rank, iLISI_full_rank, PERMANOVA
-from ABaCo import abaco_run, abaco_recon
+from src.ABaCo.BatchEffectPlots import plotPCA, plotPCoA, plot_LISI_perplexity
+from src.ABaCo.BatchEffectMetrics import (
+    all_metrics,
+    cLISI_full_rank,
+    iLISI_full_rank,
+    PERMANOVA,
+)
+from src.ABaCo.ABaCo import abaco_run, abaco_recon
 
 
 # AD count data

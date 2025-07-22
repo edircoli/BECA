@@ -11,10 +11,17 @@ import random
 import seaborn as sns
 from scipy.stats import mannwhitneyu
 from statsmodels.stats.multitest import multipletests
+import time
+import psutil
+import GPUtil
 
 # User libraries
-from BatchEffectDataLoader import DataPreprocess, DataTransform, one_hot_encoding
-from BatchEffectCorrection import (
+from src.ABaCo.BatchEffectDataLoader import (
+    DataPreprocess,
+    DataTransform,
+    one_hot_encoding,
+)
+from src.ABaCo.BatchEffectCorrection import (
     correctCombat,
     correctLimma_rBE,
     correctBMC,
@@ -22,9 +29,14 @@ from BatchEffectCorrection import (
     correctCombatSeq,
     correctConQuR,
 )
-from BatchEffectPlots import plotPCA, plotPCoA, plot_LISI_perplexity
-from BatchEffectMetrics import all_metrics, cLISI_full_rank, iLISI_full_rank, PERMANOVA
-from ABaCo import abaco_run, abaco_recon
+from src.ABaCo.BatchEffectPlots import plotPCA, plotPCoA, plot_LISI_perplexity
+from src.ABaCo.BatchEffectMetrics import (
+    all_metrics,
+    cLISI_full_rank,
+    iLISI_full_rank,
+    PERMANOVA,
+)
+from src.ABaCo.ABaCo import abaco_run, abaco_recon
 
 
 # AD count data
@@ -57,7 +69,7 @@ ad_count_batch_size = 5
 ad_count_bio_size = 2
 
 # IBD data
-path = "data/MGnify/IBD/IBD_dataset.csv"
+path = "data/MGnify/IBD/IBD_dataset_genus.csv"
 ibd_batch_label = "project ID"
 ibd_sample_label = "run ID"
 ibd_bio_label = "associated phenotype"
@@ -67,7 +79,7 @@ ibd_data = DataPreprocess(
 )
 
 # train DataLoader: [samples, ohe_batch]
-ibd_input_size = 435
+ibd_input_size = 193
 ibd_train_dataloader = DataLoader(
     TensorDataset(
         torch.tensor(
@@ -86,7 +98,7 @@ ibd_batch_size = 2
 ibd_bio_size = 3
 
 # DTU-GE data
-path = "data/MGnify/DTU-GE/count/DTU-GE_phylum_count_data.csv"
+path = "data/MGnify/DTU-GE/count/DTU-GE_phylum_count_data_filtered.csv"
 dtu_batch_label = "pipeline"
 dtu_sample_label = "accession"
 dtu_bio_label = "location"
@@ -95,13 +107,8 @@ dtu_data = DataPreprocess(
     path, factors=[dtu_sample_label, dtu_batch_label, dtu_bio_label]
 )
 
-# filter data that location appears less than 15 times
-country_counts = dtu_data["location"].value_counts()
-keep = country_counts[(country_counts >= 15) & (country_counts < 30)].index
-dtu_data = dtu_data[dtu_data["location"].isin(keep)]
-
 # train DataLoader: [samples, ohe_batch]
-dtu_input_size = 189
+dtu_input_size = 162
 dtu_train_dataloader = DataLoader(
     TensorDataset(
         torch.tensor(
@@ -117,61 +124,110 @@ dtu_train_dataloader = DataLoader(
     batch_size=1000,
 )
 dtu_batch_size = 2
-dtu_bio_size = 3
+dtu_bio_size = 4
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Set seed
-seed = 42
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
-
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(seed)
-
-# Set for n iteration - KL cycle VMM models
+# The real loop - over all ABaCo models
 n = 50
-
-performances_batch_ad = []
-performances_ilisi_ad = pd.DataFrame()
-performances_clisi_ad = pd.DataFrame()
-permanova_ait_ad = pd.DataFrame()
-permanova_bc_ad = pd.DataFrame()
-
-performances_batch_ibd = []
-performances_ilisi_ibd = pd.DataFrame()
-performances_clisi_ibd = pd.DataFrame()
-permanova_ait_ibd = pd.DataFrame()
-permanova_bc_ibd = pd.DataFrame()
-
-performances_batch_dtu = []
-performances_ilisi_dtu = pd.DataFrame()
-performances_clisi_dtu = pd.DataFrame()
-permanova_ait_dtu = pd.DataFrame()
-permanova_bc_dtu = pd.DataFrame()
-
-performances_mannwhit_ad = pd.DataFrame()
-performances_mannwhit_ibd = pd.DataFrame()
-performances_mannwhit_dtu = pd.DataFrame()
 
 for iter in range(n):
 
+    # Set seed
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    performances_batch_ad = []
+    performances_ilisi_ad = pd.DataFrame()
+    performances_clisi_ad = pd.DataFrame()
+    permanova_ait_ad = pd.DataFrame()
+    permanova_bc_ad = pd.DataFrame()
+
+    performances_batch_ibd = []
+    performances_ilisi_ibd = pd.DataFrame()
+    performances_clisi_ibd = pd.DataFrame()
+    permanova_ait_ibd = pd.DataFrame()
+    permanova_bc_ibd = pd.DataFrame()
+
+    performances_batch_dtu = []
+    performances_ilisi_dtu = pd.DataFrame()
+    performances_clisi_dtu = pd.DataFrame()
+    permanova_ait_dtu = pd.DataFrame()
+    permanova_bc_dtu = pd.DataFrame()
+
+    performances_mannwhit_ad = pd.DataFrame()
+    performances_mannwhit_ibd = pd.DataFrame()
+    performances_mannwhit_dtu = pd.DataFrame()
+
     # VMM models
-    ad_count_vmm_kl_cycle = abaco_run(
-        dataloader=ad_count_train_dataloader,
-        n_batches=ad_count_batch_size,
-        n_bios=ad_count_bio_size,
-        input_size=ad_count_input_size,
-        device=device,
-        w_contra=25.0,
-        kl_cycle=True,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+
+    # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # ad_count_vmm_kl_cycle = abaco_run(
+    #     dataloader=ad_count_train_dataloader,
+    #     n_batches=ad_count_batch_size,
+    #     n_bios=ad_count_bio_size,
+    #     input_size=ad_count_input_size,
+    #     device=device,
+    #     w_contra=100.0,
+    #     kl_cycle=True,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=2500,
+    #     post_epochs=5000,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-7,
+    #     disc_lr=1e-7,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== AD count - VMM KL cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # for performance metrics
+    proc = psutil.Process()
+    # --- pre‐run snapshots ---
+    t0_wall = time.time()
+    t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    mem0 = proc.memory_info().rss  # resident set size
+    torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
 
     ibd_vmm_kl_cycle = abaco_run(
         dataloader=ibd_train_dataloader,
@@ -179,41 +235,128 @@ for iter in range(n):
         n_bios=ibd_bio_size,
         input_size=ibd_input_size,
         device=device,
-        w_contra=10.0,
+        w_contra=1000.0,
         kl_cycle=True,
+        w_cycle=1e-3,
         seed=None,
         smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
+        pre_epochs=5000,
+        post_epochs=2500,
+        vae_pre_lr=1e-4,
+        vae_post_lr=1e-4,
+        encoder_net=[2048, 1024, 512, 256],
+        decoder_net=[256, 512, 1024, 2048],
+        adv_lr=1e-6,
+        disc_lr=1e-6,
+        new_pre_train=True,
     )
 
-    dtu_vmm_kl_cycle = abaco_run(
-        dataloader=dtu_train_dataloader,
-        n_batches=dtu_batch_size,
-        n_bios=dtu_bio_size,
-        input_size=dtu_input_size,
-        device=device,
-        w_contra=10.0,
-        kl_cycle=True,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # --- post‐run snapshots ---
+    t1_wall = time.time()
+    t1_cpu = sum(proc.cpu_times()[:2])
+    mem1 = proc.memory_info().rss
+    peak_gpu = torch.cuda.max_memory_allocated()
+
+    # --- GPU‐side current status (optional) ---
+    gpus = GPUtil.getGPUs()
+
+    # --- print a neat summary ---
+    print("===== IBD - VMM KL cycle Performance =====")
+    print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    for g in gpus:
+        print(
+            f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+        )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # dtu_vmm_kl_cycle = abaco_run(
+    #     dataloader=dtu_train_dataloader,
+    #     n_batches=dtu_batch_size,
+    #     n_bios=dtu_bio_size,
+    #     input_size=dtu_input_size,
+    #     device=device,
+    #     w_contra=1000.0,
+    #     kl_cycle=True,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=5000,
+    #     post_epochs=2500,
+    #     vae_pre_lr=1e-4,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-6,
+    #     disc_lr=1e-6,
+    #     w_cycle=1e-3,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== DTU-GE - VMM KL cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
     # Reconstruct data
-    ad_recon_data = abaco_recon(
-        model=ad_count_vmm_kl_cycle,
-        device=device,
-        data=ad_count_data,
-        dataloader=ad_count_train_dataloader,
-        sample_label=ad_count_sample_label,
-        batch_label=ad_count_batch_label,
-        bio_label=ad_count_bio_label,
-        seed=None,
-    )
+    # ad_recon_data = abaco_recon(
+    #     model=ad_count_vmm_kl_cycle,
+    #     device=device,
+    #     data=ad_count_data,
+    #     dataloader=ad_count_train_dataloader,
+    #     sample_label=ad_count_sample_label,
+    #     batch_label=ad_count_batch_label,
+    #     bio_label=ad_count_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
     ibd_recon_data = abaco_recon(
         model=ibd_vmm_kl_cycle,
@@ -224,27 +367,41 @@ for iter in range(n):
         batch_label=ibd_batch_label,
         bio_label=ibd_bio_label,
         seed=None,
+        monte_carlo=1,
     )
 
-    dtu_recon_data = abaco_recon(
-        model=dtu_vmm_kl_cycle,
-        device=device,
-        data=dtu_data,
-        dataloader=dtu_train_dataloader,
-        sample_label=dtu_sample_label,
-        batch_label=dtu_batch_label,
-        bio_label=dtu_bio_label,
-        seed=None,
-    )
-    ad_recon_data.to_csv(
-        f"performance_metrics/multi_runs/AD_count/vmm_kl_recon_{iter}", index=False
-    )
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # dtu_recon_data = abaco_recon(
+    #     model=dtu_vmm_kl_cycle,
+    #     device=device,
+    #     data=dtu_data,
+    #     dataloader=dtu_train_dataloader,
+    #     sample_label=dtu_sample_label,
+    #     batch_label=dtu_batch_label,
+    #     bio_label=dtu_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    # ad_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/AD_count/vmm_kl_recon_{iter}", index=False
+    # )
     ibd_recon_data.to_csv(
-        f"performance_metrics/multi_runs/IBD/vmm_kl_recon_{iter}", index=False
+        f"performance_metrics/multi_runs/IBD/vmm_kl_recon_new_{iter}",
+        index=False,
     )
-    dtu_recon_data.to_csv(
-        f"performance_metrics/multi_runs/DTU-GE/vmm_kl_recon_{iter}", index=False
-    )
+    # dtu_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/DTU-GE/vmm_kl_recon_kl_annealing_{iter}",
+    #     index=False,
+    # )
 
     # # LISI tables
     # clisi_ad = cLISI_full_rank(ad_recon_data, ad_count_bio_label)
@@ -573,192 +730,331 @@ for iter in range(n):
     #     [performances_mannwhit_dtu, df_stats], axis=0
     # ).reset_index(drop=True)
 
-# Save performance to file
-# pd.DataFrame(performances_batch_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_mannwhit.csv", index=False
-# )
+    # Save performance to file
+    # pd.DataFrame(performances_batch_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_KL_cycle_mannwhit.csv", index=False
+    # )
 
-# pd.DataFrame(performances_batch_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_KL_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_KL_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_KL_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_KL_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_KL_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_KL_cycle_mannwhit.csv", index=False
-# )
+    # pd.DataFrame(performances_batch_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_KL_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_KL_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_KL_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_KL_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_KL_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_KL_cycle_mannwhit.csv", index=False
+    # )
 
-# pd.DataFrame(performances_batch_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_mannwhit.csv", index=False
-# )
+    # pd.DataFrame(performances_batch_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_KL_cycle_mannwhit.csv", index=False
+    # )
 
-# Set seed
-seed = 42
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
+    # Set seed
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
-# Set for n iteration - KL cycle MoG models
-n = 50
+    performances_batch_ad = []
+    performances_ilisi_ad = pd.DataFrame()
+    performances_clisi_ad = pd.DataFrame()
+    permanova_ait_ad = pd.DataFrame()
+    permanova_bc_ad = pd.DataFrame()
 
-performances_batch_ad = []
-performances_ilisi_ad = pd.DataFrame()
-performances_clisi_ad = pd.DataFrame()
-permanova_ait_ad = pd.DataFrame()
-permanova_bc_ad = pd.DataFrame()
+    performances_batch_ibd = []
+    performances_ilisi_ibd = pd.DataFrame()
+    performances_clisi_ibd = pd.DataFrame()
+    permanova_ait_ibd = pd.DataFrame()
+    permanova_bc_ibd = pd.DataFrame()
 
-performances_batch_ibd = []
-performances_ilisi_ibd = pd.DataFrame()
-performances_clisi_ibd = pd.DataFrame()
-permanova_ait_ibd = pd.DataFrame()
-permanova_bc_ibd = pd.DataFrame()
+    performances_batch_dtu = []
+    performances_ilisi_dtu = pd.DataFrame()
+    performances_clisi_dtu = pd.DataFrame()
+    permanova_ait_dtu = pd.DataFrame()
+    permanova_bc_dtu = pd.DataFrame()
 
-performances_batch_dtu = []
-performances_ilisi_dtu = pd.DataFrame()
-performances_clisi_dtu = pd.DataFrame()
-permanova_ait_dtu = pd.DataFrame()
-permanova_bc_dtu = pd.DataFrame()
+    performances_mannwhit_ad = pd.DataFrame()
+    performances_mannwhit_ibd = pd.DataFrame()
+    performances_mannwhit_dtu = pd.DataFrame()
 
-performances_mannwhit_ad = pd.DataFrame()
-performances_mannwhit_ibd = pd.DataFrame()
-performances_mannwhit_dtu = pd.DataFrame()
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
 
-for iter in range(n):
+    # # MoG models
+    # ad_count_mog_kl_cycle = abaco_run(
+    #     dataloader=ad_count_train_dataloader,
+    #     n_batches=ad_count_batch_size,
+    #     n_bios=ad_count_bio_size,
+    #     input_size=ad_count_input_size,
+    #     device=device,
+    #     prior="MoG",
+    #     w_contra=100.0,
+    #     kl_cycle=True,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=2500,
+    #     post_epochs=5000,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-7,
+    #     disc_lr=1e-7,
+    # )
 
-    # VMM models
-    ad_count_mog_kl_cycle = abaco_run(
-        dataloader=ad_count_train_dataloader,
-        n_batches=ad_count_batch_size,
-        n_bios=ad_count_bio_size,
-        input_size=ad_count_input_size,
-        device=device,
-        prior="MoG",
-        w_contra=25.0,
-        kl_cycle=True,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
 
-    ibd_mog_kl_cycle = abaco_run(
-        dataloader=ibd_train_dataloader,
-        n_batches=ibd_batch_size,
-        n_bios=ibd_bio_size,
-        input_size=ibd_input_size,
-        device=device,
-        prior="MoG",
-        w_contra=10.0,
-        kl_cycle=True,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
 
-    dtu_mog_kl_cycle = abaco_run(
-        dataloader=dtu_train_dataloader,
-        n_batches=dtu_batch_size,
-        n_bios=dtu_bio_size,
-        input_size=dtu_input_size,
-        device=device,
-        prior="MoG",
-        w_contra=10.0,
-        kl_cycle=True,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- print a neat summary ---
+    # print("===== AD count - MoG KL cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # ibd_mog_kl_cycle = abaco_run(
+    #     dataloader=ibd_train_dataloader,
+    #     n_batches=ibd_batch_size,
+    #     n_bios=ibd_bio_size,
+    #     input_size=ibd_input_size,
+    #     device=device,
+    #     prior="MoG",
+    #     w_contra=1000.0,
+    #     kl_cycle=True,
+    #     w_cycle=1e-3,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=5000,
+    #     post_epochs=2500,
+    #     vae_post_lr=1e-4,
+    #     encoder_net=[2048, 1024, 512, 256],
+    #     decoder_net=[256, 512, 1024, 2048],
+    #     adv_lr=1e-6,
+    #     disc_lr=1e-6,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== IBD - MoG KL cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # dtu_mog_kl_cycle = abaco_run(
+    #     dataloader=dtu_train_dataloader,
+    #     n_batches=dtu_batch_size,
+    #     n_bios=dtu_bio_size,
+    #     input_size=dtu_input_size,
+    #     device=device,
+    #     prior="MoG",
+    #     w_contra=1000.0,
+    #     kl_cycle=True,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=2500,
+    #     post_epochs=5000,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-5,
+    #     disc_lr=1e-5,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== DTU-GE - MoG KL cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
     # Reconstruct data
-    ad_recon_data = abaco_recon(
-        model=ad_count_mog_kl_cycle,
-        device=device,
-        data=ad_count_data,
-        dataloader=ad_count_train_dataloader,
-        sample_label=ad_count_sample_label,
-        batch_label=ad_count_batch_label,
-        bio_label=ad_count_bio_label,
-        seed=None,
-    )
+    # ad_recon_data = abaco_recon(
+    #     model=ad_count_mog_kl_cycle,
+    #     device=device,
+    #     data=ad_count_data,
+    #     dataloader=ad_count_train_dataloader,
+    #     sample_label=ad_count_sample_label,
+    #     batch_label=ad_count_batch_label,
+    #     bio_label=ad_count_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
 
-    ibd_recon_data = abaco_recon(
-        model=ibd_mog_kl_cycle,
-        device=device,
-        data=ibd_data,
-        dataloader=ibd_train_dataloader,
-        sample_label=ibd_sample_label,
-        batch_label=ibd_batch_label,
-        bio_label=ibd_bio_label,
-        seed=None,
-    )
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-    dtu_recon_data = abaco_recon(
-        model=dtu_mog_kl_cycle,
-        device=device,
-        data=dtu_data,
-        dataloader=dtu_train_dataloader,
-        sample_label=dtu_sample_label,
-        batch_label=dtu_batch_label,
-        bio_label=dtu_bio_label,
-        seed=None,
-    )
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
-    ad_recon_data.to_csv(
-        f"performance_metrics/multi_runs/AD_count/mog_kl_recon_{iter}", index=False
-    )
-    ibd_recon_data.to_csv(
-        f"performance_metrics/multi_runs/IBD/mog_kl_recon_{iter}", index=False
-    )
-    dtu_recon_data.to_csv(
-        f"performance_metrics/multi_runs/DTU-GE/mog_kl_recon_{iter}", index=False
-    )
+    # ibd_recon_data = abaco_recon(
+    #     model=ibd_mog_kl_cycle,
+    #     device=device,
+    #     data=ibd_data,
+    #     dataloader=ibd_train_dataloader,
+    #     sample_label=ibd_sample_label,
+    #     batch_label=ibd_batch_label,
+    #     bio_label=ibd_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # dtu_recon_data = abaco_recon(
+    #     model=dtu_mog_kl_cycle,
+    #     device=device,
+    #     data=dtu_data,
+    #     dataloader=dtu_train_dataloader,
+    #     sample_label=dtu_sample_label,
+    #     batch_label=dtu_batch_label,
+    #     bio_label=dtu_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    # ad_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/AD_count/mog_kl_recon_{iter}", index=False
+    # )
+    # ibd_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/IBD/mog_kl_recon_contra_1000_2_{iter}",
+    #     index=False,
+    # )
+    # dtu_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/DTU-GE/mog_kl_recon_contra_1000_{iter}",
+    #     index=False,
+    # )
 
     # # LISI tables
     # clisi_ad = cLISI_full_rank(ad_recon_data, ad_count_bio_label)
@@ -1087,192 +1383,331 @@ for iter in range(n):
     #     [performances_mannwhit_dtu, df_stats], axis=0
     # ).reset_index(drop=True)
 
-# Save performance to file
-# pd.DataFrame(performances_batch_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_mannwhit.csv", index=False
-# )
+    # Save performance to file
+    # pd.DataFrame(performances_batch_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_KL_cycle_mannwhit.csv", index=False
+    # )
 
-# pd.DataFrame(performances_batch_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_KL_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_KL_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_KL_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_KL_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_KL_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_KL_cycle_mannwhit.csv", index=False
-# )
+    # pd.DataFrame(performances_batch_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_KL_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_KL_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_KL_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_KL_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_KL_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_KL_cycle_mannwhit.csv", index=False
+    # )
 
-# pd.DataFrame(performances_batch_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_mannwhit.csv", index=False
-# )
+    # pd.DataFrame(performances_batch_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_KL_cycle_mannwhit.csv", index=False
+    # )
 
-# Set seed
-seed = 42
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
+    # Set seed
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
-# Set for n iteration - KL cycle Normal models
-n = 50
+    performances_batch_ad = []
+    performances_ilisi_ad = pd.DataFrame()
+    performances_clisi_ad = pd.DataFrame()
+    permanova_ait_ad = pd.DataFrame()
+    permanova_bc_ad = pd.DataFrame()
 
-performances_batch_ad = []
-performances_ilisi_ad = pd.DataFrame()
-performances_clisi_ad = pd.DataFrame()
-permanova_ait_ad = pd.DataFrame()
-permanova_bc_ad = pd.DataFrame()
+    performances_batch_ibd = []
+    performances_ilisi_ibd = pd.DataFrame()
+    performances_clisi_ibd = pd.DataFrame()
+    permanova_ait_ibd = pd.DataFrame()
+    permanova_bc_ibd = pd.DataFrame()
 
-performances_batch_ibd = []
-performances_ilisi_ibd = pd.DataFrame()
-performances_clisi_ibd = pd.DataFrame()
-permanova_ait_ibd = pd.DataFrame()
-permanova_bc_ibd = pd.DataFrame()
+    performances_batch_dtu = []
+    performances_ilisi_dtu = pd.DataFrame()
+    performances_clisi_dtu = pd.DataFrame()
+    permanova_ait_dtu = pd.DataFrame()
+    permanova_bc_dtu = pd.DataFrame()
 
-performances_batch_dtu = []
-performances_ilisi_dtu = pd.DataFrame()
-performances_clisi_dtu = pd.DataFrame()
-permanova_ait_dtu = pd.DataFrame()
-permanova_bc_dtu = pd.DataFrame()
+    performances_mannwhit_ad = pd.DataFrame()
+    performances_mannwhit_ibd = pd.DataFrame()
+    performances_mannwhit_dtu = pd.DataFrame()
 
-performances_mannwhit_ad = pd.DataFrame()
-performances_mannwhit_ibd = pd.DataFrame()
-performances_mannwhit_dtu = pd.DataFrame()
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
 
-for iter in range(n):
+    # # Normal models
+    # ad_count_std_kl_cycle = abaco_run(
+    #     dataloader=ad_count_train_dataloader,
+    #     n_batches=ad_count_batch_size,
+    #     n_bios=ad_count_bio_size,
+    #     input_size=ad_count_input_size,
+    #     device=device,
+    #     prior="Normal",
+    #     w_contra=100.0,
+    #     kl_cycle=True,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=2500,
+    #     post_epochs=5000,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-7,
+    #     disc_lr=1e-7,
+    # )
 
-    # VMM models
-    ad_count_std_kl_cycle = abaco_run(
-        dataloader=ad_count_train_dataloader,
-        n_batches=ad_count_batch_size,
-        n_bios=ad_count_bio_size,
-        input_size=ad_count_input_size,
-        device=device,
-        prior="Normal",
-        w_contra=25.0,
-        kl_cycle=True,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
 
-    ibd_std_kl_cycle = abaco_run(
-        dataloader=ibd_train_dataloader,
-        n_batches=ibd_batch_size,
-        n_bios=ibd_bio_size,
-        input_size=ibd_input_size,
-        device=device,
-        prior="Normal",
-        w_contra=10.0,
-        kl_cycle=True,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
 
-    dtu_std_kl_cycle = abaco_run(
-        dataloader=dtu_train_dataloader,
-        n_batches=dtu_batch_size,
-        n_bios=dtu_bio_size,
-        input_size=dtu_input_size,
-        device=device,
-        prior="Normal",
-        w_contra=10.0,
-        kl_cycle=True,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- print a neat summary ---
+    # print("===== AD count - Std KL cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # ibd_std_kl_cycle = abaco_run(
+    #     dataloader=ibd_train_dataloader,
+    #     n_batches=ibd_batch_size,
+    #     n_bios=ibd_bio_size,
+    #     input_size=ibd_input_size,
+    #     device=device,
+    #     prior="Normal",
+    #     w_contra=1000.0,
+    #     kl_cycle=True,
+    #     w_cycle=1e-3,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=5000,
+    #     post_epochs=2500,
+    #     vae_post_lr=1e-4,
+    #     encoder_net=[2048, 1024, 512, 256],
+    #     decoder_net=[256, 512, 1024, 2048],
+    #     adv_lr=1e-6,
+    #     disc_lr=1e-6,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== IBD - Std KL cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # dtu_std_kl_cycle = abaco_run(
+    #     dataloader=dtu_train_dataloader,
+    #     n_batches=dtu_batch_size,
+    #     n_bios=dtu_bio_size,
+    #     input_size=dtu_input_size,
+    #     device=device,
+    #     prior="Normal",
+    #     w_contra=1000.0,
+    #     kl_cycle=True,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=2500,
+    #     post_epochs=5000,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-5,
+    #     disc_lr=1e-5,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== DTU-GE - Std KL cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
     # Reconstruct data
-    ad_recon_data = abaco_recon(
-        model=ad_count_std_kl_cycle,
-        device=device,
-        data=ad_count_data,
-        dataloader=ad_count_train_dataloader,
-        sample_label=ad_count_sample_label,
-        batch_label=ad_count_batch_label,
-        bio_label=ad_count_bio_label,
-        seed=None,
-    )
+    # ad_recon_data = abaco_recon(
+    #     model=ad_count_std_kl_cycle,
+    #     device=device,
+    #     data=ad_count_data,
+    #     dataloader=ad_count_train_dataloader,
+    #     sample_label=ad_count_sample_label,
+    #     batch_label=ad_count_batch_label,
+    #     bio_label=ad_count_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
 
-    ibd_recon_data = abaco_recon(
-        model=ibd_std_kl_cycle,
-        device=device,
-        data=ibd_data,
-        dataloader=ibd_train_dataloader,
-        sample_label=ibd_sample_label,
-        batch_label=ibd_batch_label,
-        bio_label=ibd_bio_label,
-        seed=None,
-    )
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-    dtu_recon_data = abaco_recon(
-        model=dtu_std_kl_cycle,
-        device=device,
-        data=dtu_data,
-        dataloader=dtu_train_dataloader,
-        sample_label=dtu_sample_label,
-        batch_label=dtu_batch_label,
-        bio_label=dtu_bio_label,
-        seed=None,
-    )
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
-    ad_recon_data.to_csv(
-        f"performance_metrics/multi_runs/AD_count/std_kl_recon_{iter}", index=False
-    )
-    ibd_recon_data.to_csv(
-        f"performance_metrics/multi_runs/IBD/std_kl_recon_{iter}", index=False
-    )
-    dtu_recon_data.to_csv(
-        f"performance_metrics/multi_runs/DTU-GE/std_kl_recon_{iter}", index=False
-    )
+    # ibd_recon_data = abaco_recon(
+    #     model=ibd_std_kl_cycle,
+    #     device=device,
+    #     data=ibd_data,
+    #     dataloader=ibd_train_dataloader,
+    #     sample_label=ibd_sample_label,
+    #     batch_label=ibd_batch_label,
+    #     bio_label=ibd_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # dtu_recon_data = abaco_recon(
+    #     model=dtu_std_kl_cycle,
+    #     device=device,
+    #     data=dtu_data,
+    #     dataloader=dtu_train_dataloader,
+    #     sample_label=dtu_sample_label,
+    #     batch_label=dtu_batch_label,
+    #     bio_label=dtu_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    # ad_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/AD_count/std_kl_recon_{iter}", index=False
+    # )
+    # ibd_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/IBD/std_kl_recon_contra_1000_2_{iter}",
+    #     index=False,
+    # )
+    # dtu_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/DTU-GE/std_kl_recon_contra_1000_{iter}",
+    #     index=False,
+    # )
 
     # # LISI tables
     # clisi_ad = cLISI_full_rank(ad_recon_data, ad_count_bio_label)
@@ -1601,117 +2036,159 @@ for iter in range(n):
     #     [performances_mannwhit_dtu, df_stats], axis=0
     # ).reset_index(drop=True)
 
-# Save performance to file
-# Save performance to file
-# pd.DataFrame(performances_batch_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/Std_KL_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/Std_KL_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/Std_KL_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/Std_KL_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/Std_KL_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/Std_KL_cycle_mannwhit.csv", index=False
-# )
+    # Save performance to file
+    # Save performance to file
+    # pd.DataFrame(performances_batch_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/Std_KL_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/Std_KL_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/Std_KL_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/Std_KL_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/Std_KL_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/Std_KL_cycle_mannwhit.csv", index=False
+    # )
 
-# pd.DataFrame(performances_batch_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/Std_KL_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/Std_KL_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/Std_KL_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/Std_KL_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/Std_KL_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/Std_KL_cycle_mannwhit.csv", index=False
-# )
+    # pd.DataFrame(performances_batch_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/Std_KL_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/Std_KL_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/Std_KL_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/Std_KL_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/Std_KL_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/Std_KL_cycle_mannwhit.csv", index=False
+    # )
 
-# pd.DataFrame(performances_batch_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_mannwhit.csv", index=False
-# )
+    # pd.DataFrame(performances_batch_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/Std_KL_cycle_mannwhit.csv", index=False
+    # )
 
+    # Set seed
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-# Set seed
-seed = 42
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(seed)
+    performances_batch_ad = []
+    performances_ilisi_ad = pd.DataFrame()
+    performances_clisi_ad = pd.DataFrame()
+    permanova_ait_ad = pd.DataFrame()
+    permanova_bc_ad = pd.DataFrame()
 
-# Set for n iteration - No cycle VMM models
-n = 50
+    performances_batch_ibd = []
+    performances_ilisi_ibd = pd.DataFrame()
+    performances_clisi_ibd = pd.DataFrame()
+    permanova_ait_ibd = pd.DataFrame()
+    permanova_bc_ibd = pd.DataFrame()
 
-performances_batch_ad = []
-performances_ilisi_ad = pd.DataFrame()
-performances_clisi_ad = pd.DataFrame()
-permanova_ait_ad = pd.DataFrame()
-permanova_bc_ad = pd.DataFrame()
+    performances_batch_dtu = []
+    performances_ilisi_dtu = pd.DataFrame()
+    performances_clisi_dtu = pd.DataFrame()
+    permanova_ait_dtu = pd.DataFrame()
+    permanova_bc_dtu = pd.DataFrame()
 
-performances_batch_ibd = []
-performances_ilisi_ibd = pd.DataFrame()
-performances_clisi_ibd = pd.DataFrame()
-permanova_ait_ibd = pd.DataFrame()
-permanova_bc_ibd = pd.DataFrame()
+    performances_mannwhit_ad = pd.DataFrame()
+    performances_mannwhit_ibd = pd.DataFrame()
+    performances_mannwhit_dtu = pd.DataFrame()
 
-performances_batch_dtu = []
-performances_ilisi_dtu = pd.DataFrame()
-performances_clisi_dtu = pd.DataFrame()
-permanova_ait_dtu = pd.DataFrame()
-permanova_bc_dtu = pd.DataFrame()
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
 
-performances_mannwhit_ad = pd.DataFrame()
-performances_mannwhit_ibd = pd.DataFrame()
-performances_mannwhit_dtu = pd.DataFrame()
+    # # VMM models
+    # ad_count_vmm_no_cycle = abaco_run(
+    #     dataloader=ad_count_train_dataloader,
+    #     n_batches=ad_count_batch_size,
+    #     n_bios=ad_count_bio_size,
+    #     input_size=ad_count_input_size,
+    #     device=device,
+    #     w_contra=100.0,
+    #     kl_cycle=False,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=2500,
+    #     post_epochs=5000,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-7,
+    #     disc_lr=1e-7,
+    # )
 
-for iter in range(n):
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
 
-    # VMM models
-    ad_count_vmm_no_cycle = abaco_run(
-        dataloader=ad_count_train_dataloader,
-        n_batches=ad_count_batch_size,
-        n_bios=ad_count_bio_size,
-        input_size=ad_count_input_size,
-        device=device,
-        w_contra=25.0,
-        kl_cycle=False,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== AD count - VMM no cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # for performance metrics
+    proc = psutil.Process()
+    # --- pre‐run snapshots ---
+    t0_wall = time.time()
+    t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    mem0 = proc.memory_info().rss  # resident set size
+    torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
 
     ibd_vmm_no_cycle = abaco_run(
         dataloader=ibd_train_dataloader,
@@ -1719,41 +2196,126 @@ for iter in range(n):
         n_bios=ibd_bio_size,
         input_size=ibd_input_size,
         device=device,
-        w_contra=10.0,
+        w_contra=1000.0,
         kl_cycle=False,
         seed=None,
         smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
+        pre_epochs=5000,
+        post_epochs=2500,
+        vae_pre_lr=1e-4,
+        vae_post_lr=1e-4,
+        encoder_net=[2048, 1024, 512, 256],
+        decoder_net=[256, 512, 1024, 2048],
+        adv_lr=1e-6,
+        disc_lr=1e-6,
+        new_pre_train=True,
     )
 
-    dtu_vmm_no_cycle = abaco_run(
-        dataloader=dtu_train_dataloader,
-        n_batches=dtu_batch_size,
-        n_bios=dtu_bio_size,
-        input_size=dtu_input_size,
-        device=device,
-        w_contra=10.0,
-        kl_cycle=False,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # --- post‐run snapshots ---
+    t1_wall = time.time()
+    t1_cpu = sum(proc.cpu_times()[:2])
+    mem1 = proc.memory_info().rss
+    peak_gpu = torch.cuda.max_memory_allocated()
+
+    # --- GPU‐side current status (optional) ---
+    gpus = GPUtil.getGPUs()
+
+    # --- print a neat summary ---
+    print("===== IBD - VMM no cycle Performance =====")
+    print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    for g in gpus:
+        print(
+            f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+        )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # dtu_vmm_no_cycle = abaco_run(
+    #     dataloader=dtu_train_dataloader,
+    #     n_batches=dtu_batch_size,
+    #     n_bios=dtu_bio_size,
+    #     input_size=dtu_input_size,
+    #     device=device,
+    #     w_contra=1000.0,
+    #     kl_cycle=False,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=5000,
+    #     post_epochs=2500,
+    #     vae_pre_lr=1e-4,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-6,
+    #     disc_lr=1e-6,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== DTU-GE - VMM no cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    # if iter == 0:
+    #     seed = 42
+    #     random.seed(seed)
+    #     np.random.seed(seed)
+    #     torch.manual_seed(seed)
+
+    #     if torch.cuda.is_available():
+    #         torch.cuda.manual_seed_all(seed)
 
     # Reconstruct data
-    ad_recon_data = abaco_recon(
-        model=ad_count_vmm_no_cycle,
-        device=device,
-        data=ad_count_data,
-        dataloader=ad_count_train_dataloader,
-        sample_label=ad_count_sample_label,
-        batch_label=ad_count_batch_label,
-        bio_label=ad_count_bio_label,
-        seed=None,
-    )
+    # ad_recon_data = abaco_recon(
+    #     model=ad_count_vmm_no_cycle,
+    #     device=device,
+    #     data=ad_count_data,
+    #     dataloader=ad_count_train_dataloader,
+    #     sample_label=ad_count_sample_label,
+    #     batch_label=ad_count_batch_label,
+    #     bio_label=ad_count_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
     ibd_recon_data = abaco_recon(
         model=ibd_vmm_no_cycle,
@@ -1764,28 +2326,41 @@ for iter in range(n):
         batch_label=ibd_batch_label,
         bio_label=ibd_bio_label,
         seed=None,
+        monte_carlo=1,
     )
 
-    dtu_recon_data = abaco_recon(
-        model=dtu_vmm_no_cycle,
-        device=device,
-        data=dtu_data,
-        dataloader=dtu_train_dataloader,
-        sample_label=dtu_sample_label,
-        batch_label=dtu_batch_label,
-        bio_label=dtu_bio_label,
-        seed=None,
-    )
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-    ad_recon_data.to_csv(
-        f"performance_metrics/multi_runs/AD_count/vmm_no_recon_{iter}", index=False
-    )
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # dtu_recon_data = abaco_recon(
+    #     model=dtu_vmm_no_cycle,
+    #     device=device,
+    #     data=dtu_data,
+    #     dataloader=dtu_train_dataloader,
+    #     sample_label=dtu_sample_label,
+    #     batch_label=dtu_batch_label,
+    #     bio_label=dtu_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    # ad_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/AD_count/vmm_no_recon_{iter}", index=False
+    # )
     ibd_recon_data.to_csv(
-        f"performance_metrics/multi_runs/IBD/vmm_no_recon_{iter}", index=False
+        f"performance_metrics/multi_runs/IBD/vmm_no_recon_new_{iter}",
+        index=False,
     )
-    dtu_recon_data.to_csv(
-        f"performance_metrics/multi_runs/DTU-GE/vmm_no_recon_{iter}", index=False
-    )
+    # dtu_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/DTU-GE/vmm_no_recon_kl_annealing_{iter}",
+    #     index=False,
+    # )
 
     # # LISI tables
     # clisi_ad = cLISI_full_rank(ad_recon_data, ad_count_bio_label)
@@ -2114,192 +2689,330 @@ for iter in range(n):
     #     [performances_mannwhit_dtu, df_stats], axis=0
     # ).reset_index(drop=True)
 
-# Save performance to file
-# pd.DataFrame(performances_batch_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_no_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_no_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_no_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_no_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_no_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/VMM_no_cycle_mannwhit.csv", index=False
-# )
+    # Save performance to file
+    # pd.DataFrame(performances_batch_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_no_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_no_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_no_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_no_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_no_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/VMM_no_cycle_mannwhit.csv", index=False
+    # )
 
-# pd.DataFrame(performances_batch_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_no_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_no_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_no_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_no_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_no_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/VMM_no_cycle_mannwhit.csv", index=False
-# )
+    # pd.DataFrame(performances_batch_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_no_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_no_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_no_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_no_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_no_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/VMM_no_cycle_mannwhit.csv", index=False
+    # )
 
-# pd.DataFrame(performances_batch_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_mannwhit.csv", index=False
-# )
+    # pd.DataFrame(performances_batch_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/VMM_no_cycle_mannwhit.csv", index=False
+    # )
 
-# Set seed
-seed = 42
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
+    # Set seed
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
-# Set for n iteration - No cycle MoG models
-n = 50
+    performances_batch_ad = []
+    performances_ilisi_ad = pd.DataFrame()
+    performances_clisi_ad = pd.DataFrame()
+    permanova_ait_ad = pd.DataFrame()
+    permanova_bc_ad = pd.DataFrame()
 
-performances_batch_ad = []
-performances_ilisi_ad = pd.DataFrame()
-performances_clisi_ad = pd.DataFrame()
-permanova_ait_ad = pd.DataFrame()
-permanova_bc_ad = pd.DataFrame()
+    performances_batch_ibd = []
+    performances_ilisi_ibd = pd.DataFrame()
+    performances_clisi_ibd = pd.DataFrame()
+    permanova_ait_ibd = pd.DataFrame()
+    permanova_bc_ibd = pd.DataFrame()
 
-performances_batch_ibd = []
-performances_ilisi_ibd = pd.DataFrame()
-performances_clisi_ibd = pd.DataFrame()
-permanova_ait_ibd = pd.DataFrame()
-permanova_bc_ibd = pd.DataFrame()
+    performances_batch_dtu = []
+    performances_ilisi_dtu = pd.DataFrame()
+    performances_clisi_dtu = pd.DataFrame()
+    permanova_ait_dtu = pd.DataFrame()
+    permanova_bc_dtu = pd.DataFrame()
 
-performances_batch_dtu = []
-performances_ilisi_dtu = pd.DataFrame()
-performances_clisi_dtu = pd.DataFrame()
-permanova_ait_dtu = pd.DataFrame()
-permanova_bc_dtu = pd.DataFrame()
+    performances_mannwhit_ad = pd.DataFrame()
+    performances_mannwhit_ibd = pd.DataFrame()
+    performances_mannwhit_dtu = pd.DataFrame()
 
-performances_mannwhit_ad = pd.DataFrame()
-performances_mannwhit_ibd = pd.DataFrame()
-performances_mannwhit_dtu = pd.DataFrame()
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
 
-for iter in range(n):
+    # # MoG models
+    # ad_count_mog_no_cycle = abaco_run(
+    #     dataloader=ad_count_train_dataloader,
+    #     n_batches=ad_count_batch_size,
+    #     n_bios=ad_count_bio_size,
+    #     input_size=ad_count_input_size,
+    #     device=device,
+    #     prior="MoG",
+    #     w_contra=100.0,
+    #     kl_cycle=False,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=2500,
+    #     post_epochs=5000,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-7,
+    #     disc_lr=1e-7,
+    # )
 
-    # MoG models
-    ad_count_mog_no_cycle = abaco_run(
-        dataloader=ad_count_train_dataloader,
-        n_batches=ad_count_batch_size,
-        n_bios=ad_count_bio_size,
-        input_size=ad_count_input_size,
-        device=device,
-        prior="MoG",
-        w_contra=25.0,
-        kl_cycle=False,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
 
-    ibd_mog_no_cycle = abaco_run(
-        dataloader=ibd_train_dataloader,
-        n_batches=ibd_batch_size,
-        n_bios=ibd_bio_size,
-        input_size=ibd_input_size,
-        device=device,
-        prior="MoG",
-        w_contra=10.0,
-        kl_cycle=False,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
 
-    dtu_mog_no_cycle = abaco_run(
-        dataloader=dtu_train_dataloader,
-        n_batches=dtu_batch_size,
-        n_bios=dtu_bio_size,
-        input_size=dtu_input_size,
-        device=device,
-        prior="MoG",
-        w_contra=10.0,
-        kl_cycle=False,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- print a neat summary ---
+    # print("===== AD count - MoG no cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # ibd_mog_no_cycle = abaco_run(
+    #     dataloader=ibd_train_dataloader,
+    #     n_batches=ibd_batch_size,
+    #     n_bios=ibd_bio_size,
+    #     input_size=ibd_input_size,
+    #     device=device,
+    #     prior="MoG",
+    #     w_contra=1000.0,
+    #     kl_cycle=False,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=5000,
+    #     post_epochs=2500,
+    #     vae_post_lr=1e-4,
+    #     encoder_net=[2048, 1024, 512, 256],
+    #     decoder_net=[256, 512, 1024, 2048],
+    #     adv_lr=1e-6,
+    #     disc_lr=1e-6,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== IBD - MoG no cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # dtu_mog_no_cycle = abaco_run(
+    #     dataloader=dtu_train_dataloader,
+    #     n_batches=dtu_batch_size,
+    #     n_bios=dtu_bio_size,
+    #     input_size=dtu_input_size,
+    #     device=device,
+    #     prior="MoG",
+    #     w_contra=1000.0,
+    #     kl_cycle=False,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=2500,
+    #     post_epochs=5000,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-5,
+    #     disc_lr=1e-5,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== DTU-GE - MoG no cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
     # Reconstruct data
-    ad_recon_data = abaco_recon(
-        model=ad_count_mog_no_cycle,
-        device=device,
-        data=ad_count_data,
-        dataloader=ad_count_train_dataloader,
-        sample_label=ad_count_sample_label,
-        batch_label=ad_count_batch_label,
-        bio_label=ad_count_bio_label,
-        seed=None,
-    )
+    # ad_recon_data = abaco_recon(
+    #     model=ad_count_mog_no_cycle,
+    #     device=device,
+    #     data=ad_count_data,
+    #     dataloader=ad_count_train_dataloader,
+    #     sample_label=ad_count_sample_label,
+    #     batch_label=ad_count_batch_label,
+    #     bio_label=ad_count_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
 
-    ibd_recon_data = abaco_recon(
-        model=ibd_mog_no_cycle,
-        device=device,
-        data=ibd_data,
-        dataloader=ibd_train_dataloader,
-        sample_label=ibd_sample_label,
-        batch_label=ibd_batch_label,
-        bio_label=ibd_bio_label,
-        seed=None,
-    )
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-    dtu_recon_data = abaco_recon(
-        model=dtu_mog_no_cycle,
-        device=device,
-        data=dtu_data,
-        dataloader=dtu_train_dataloader,
-        sample_label=dtu_sample_label,
-        batch_label=dtu_batch_label,
-        bio_label=dtu_bio_label,
-        seed=None,
-    )
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
-    ad_recon_data.to_csv(
-        f"performance_metrics/multi_runs/AD_count/mog_no_recon_{iter}", index=False
-    )
-    ibd_recon_data.to_csv(
-        f"performance_metrics/multi_runs/IBD/mog_no_recon_{iter}", index=False
-    )
-    dtu_recon_data.to_csv(
-        f"performance_metrics/multi_runs/DTU-GE/mog_no_recon_{iter}", index=False
-    )
+    # ibd_recon_data = abaco_recon(
+    #     model=ibd_mog_no_cycle,
+    #     device=device,
+    #     data=ibd_data,
+    #     dataloader=ibd_train_dataloader,
+    #     sample_label=ibd_sample_label,
+    #     batch_label=ibd_batch_label,
+    #     bio_label=ibd_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # dtu_recon_data = abaco_recon(
+    #     model=dtu_mog_no_cycle,
+    #     device=device,
+    #     data=dtu_data,
+    #     dataloader=dtu_train_dataloader,
+    #     sample_label=dtu_sample_label,
+    #     batch_label=dtu_batch_label,
+    #     bio_label=dtu_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    # ad_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/AD_count/mog_no_recon_{iter}", index=False
+    # )
+    # ibd_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/IBD/mog_no_recon_contra_1000_2_{iter}",
+    #     index=False,
+    # )
+    # dtu_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/DTU-GE/mog_no_recon_contra_1000_{iter}",
+    #     index=False,
+    # )
 
     # # LISI tables
     # clisi_ad = cLISI_full_rank(ad_recon_data, ad_count_bio_label)
@@ -2628,192 +3341,330 @@ for iter in range(n):
     #     [performances_mannwhit_dtu, df_stats], axis=0
     # ).reset_index(drop=True)
 
-# Save performance to file
-# pd.DataFrame(performances_batch_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_no_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_no_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_no_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_no_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_no_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_ad).to_csv(
-#     "performance_metrics/deterministic/AD_count/MoG_no_cycle_mannwhit.csv", index=False
-# )
+    # Save performance to file
+    # pd.DataFrame(performances_batch_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_no_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_no_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_no_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_no_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_no_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_ad).to_csv(
+    #     "performance_metrics/deterministic/AD_count/MoG_no_cycle_mannwhit.csv", index=False
+    # )
 
-# pd.DataFrame(performances_batch_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_no_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_no_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_no_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_no_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_no_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_ibd).to_csv(
-#     "performance_metrics/deterministic/IBD/MoG_no_cycle_mannwhit.csv", index=False
-# )
+    # pd.DataFrame(performances_batch_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_no_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_no_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_no_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_no_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_no_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_ibd).to_csv(
+    #     "performance_metrics/deterministic/IBD/MoG_no_cycle_mannwhit.csv", index=False
+    # )
 
-# pd.DataFrame(performances_batch_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_batch.csv", index=False
-# )
-# pd.DataFrame(performances_clisi_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_clisi.csv", index=False
-# )
-# pd.DataFrame(performances_ilisi_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_ilisi.csv", index=False
-# )
-# pd.DataFrame(permanova_ait_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_perma_ait.csv", index=False
-# )
-# pd.DataFrame(permanova_bc_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_perma_bc.csv", index=False
-# )
-# pd.DataFrame(performances_mannwhit_dtu).to_csv(
-#     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_mannwhit.csv", index=False
-# )
+    # pd.DataFrame(performances_batch_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_batch.csv", index=False
+    # )
+    # pd.DataFrame(performances_clisi_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_clisi.csv", index=False
+    # )
+    # pd.DataFrame(performances_ilisi_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_ilisi.csv", index=False
+    # )
+    # pd.DataFrame(permanova_ait_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_perma_ait.csv", index=False
+    # )
+    # pd.DataFrame(permanova_bc_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_perma_bc.csv", index=False
+    # )
+    # pd.DataFrame(performances_mannwhit_dtu).to_csv(
+    #     "performance_metrics/deterministic/DTU-GE/MoG_no_cycle_mannwhit.csv", index=False
+    # )
 
-# Set seed
-seed = 42
-random.seed(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
+    # Set seed for first iteration
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
-# Set for n iteration - No cycle Normal models
-n = 50
+    performances_batch_ad = []
+    performances_ilisi_ad = pd.DataFrame()
+    performances_clisi_ad = pd.DataFrame()
+    permanova_ait_ad = pd.DataFrame()
+    permanova_bc_ad = pd.DataFrame()
 
-performances_batch_ad = []
-performances_ilisi_ad = pd.DataFrame()
-performances_clisi_ad = pd.DataFrame()
-permanova_ait_ad = pd.DataFrame()
-permanova_bc_ad = pd.DataFrame()
+    performances_batch_ibd = []
+    performances_ilisi_ibd = pd.DataFrame()
+    performances_clisi_ibd = pd.DataFrame()
+    permanova_ait_ibd = pd.DataFrame()
+    permanova_bc_ibd = pd.DataFrame()
 
-performances_batch_ibd = []
-performances_ilisi_ibd = pd.DataFrame()
-performances_clisi_ibd = pd.DataFrame()
-permanova_ait_ibd = pd.DataFrame()
-permanova_bc_ibd = pd.DataFrame()
+    performances_batch_dtu = []
+    performances_ilisi_dtu = pd.DataFrame()
+    performances_clisi_dtu = pd.DataFrame()
+    permanova_ait_dtu = pd.DataFrame()
+    permanova_bc_dtu = pd.DataFrame()
 
-performances_batch_dtu = []
-performances_ilisi_dtu = pd.DataFrame()
-performances_clisi_dtu = pd.DataFrame()
-permanova_ait_dtu = pd.DataFrame()
-permanova_bc_dtu = pd.DataFrame()
+    performances_mannwhit_ad = pd.DataFrame()
+    performances_mannwhit_ibd = pd.DataFrame()
+    performances_mannwhit_dtu = pd.DataFrame()
 
-performances_mannwhit_ad = pd.DataFrame()
-performances_mannwhit_ibd = pd.DataFrame()
-performances_mannwhit_dtu = pd.DataFrame()
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
 
-for iter in range(n):
+    # # VMM models
+    # ad_count_std_no_cycle = abaco_run(
+    #     dataloader=ad_count_train_dataloader,
+    #     n_batches=ad_count_batch_size,
+    #     n_bios=ad_count_bio_size,
+    #     input_size=ad_count_input_size,
+    #     device=device,
+    #     prior="Normal",
+    #     w_contra=100.0,
+    #     kl_cycle=False,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=2500,
+    #     post_epochs=5000,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-7,
+    #     disc_lr=1e-7,
+    # )
 
-    # VMM models
-    ad_count_std_no_cycle = abaco_run(
-        dataloader=ad_count_train_dataloader,
-        n_batches=ad_count_batch_size,
-        n_bios=ad_count_bio_size,
-        input_size=ad_count_input_size,
-        device=device,
-        prior="Normal",
-        w_contra=25.0,
-        kl_cycle=False,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
 
-    ibd_std_no_cycle = abaco_run(
-        dataloader=ibd_train_dataloader,
-        n_batches=ibd_batch_size,
-        n_bios=ibd_bio_size,
-        input_size=ibd_input_size,
-        device=device,
-        prior="Normal",
-        w_contra=10.0,
-        kl_cycle=False,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
 
-    dtu_std_no_cycle = abaco_run(
-        dataloader=dtu_train_dataloader,
-        n_batches=dtu_batch_size,
-        n_bios=dtu_bio_size,
-        input_size=dtu_input_size,
-        device=device,
-        prior="Normal",
-        w_contra=10.0,
-        kl_cycle=False,
-        seed=None,
-        smooth_annealing=True,
-        pre_epochs=2500,
-        post_epochs=5000,
-        vae_post_lr=2e-4,
-    )
+    # # --- print a neat summary ---
+    # print("===== AD count - Std no cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # ibd_std_no_cycle = abaco_run(
+    #     dataloader=ibd_train_dataloader,
+    #     n_batches=ibd_batch_size,
+    #     n_bios=ibd_bio_size,
+    #     input_size=ibd_input_size,
+    #     device=device,
+    #     prior="Normal",
+    #     w_contra=1000.0,
+    #     kl_cycle=False,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=5000,
+    #     post_epochs=2500,
+    #     vae_post_lr=1e-4,
+    #     encoder_net=[2048, 1024, 512, 256],
+    #     decoder_net=[256, 512, 1024, 2048],
+    #     adv_lr=1e-6,
+    #     disc_lr=1e-6,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== IBD - Std no cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # # for performance metrics
+    # proc = psutil.Process()
+    # # --- pre‐run snapshots ---
+    # t0_wall = time.time()
+    # t0_cpu = sum(proc.cpu_times()[:2])  # user + sys CPU s
+    # mem0 = proc.memory_info().rss  # resident set size
+    # torch.cuda.reset_peak_memory_stats()  # clear PyTorch peak
+
+    # dtu_std_no_cycle = abaco_run(
+    #     dataloader=dtu_train_dataloader,
+    #     n_batches=dtu_batch_size,
+    #     n_bios=dtu_bio_size,
+    #     input_size=dtu_input_size,
+    #     device=device,
+    #     prior="Normal",
+    #     w_contra=1000.0,
+    #     kl_cycle=False,
+    #     seed=None,
+    #     smooth_annealing=True,
+    #     pre_epochs=2500,
+    #     post_epochs=5000,
+    #     vae_post_lr=2e-4,
+    #     adv_lr=1e-5,
+    #     disc_lr=1e-5,
+    # )
+
+    # # --- post‐run snapshots ---
+    # t1_wall = time.time()
+    # t1_cpu = sum(proc.cpu_times()[:2])
+    # mem1 = proc.memory_info().rss
+    # peak_gpu = torch.cuda.max_memory_allocated()
+
+    # # --- GPU‐side current status (optional) ---
+    # gpus = GPUtil.getGPUs()
+
+    # # --- print a neat summary ---
+    # print("===== DTU-GE - Std no cycle Performance =====")
+    # print(f"Wall‐clock time  : {t1_wall - t0_wall:.1f} s")
+    # print(f"CPU time         : {t1_cpu  - t0_cpu :.1f} s")
+    # print(f"RAM change       : {(mem1 - mem0)/1024**3:+.2f} GiB")
+    # print(f"Peak GPU memory : {peak_gpu/1024**3:.2f} GiB")
+    # for g in gpus:
+    #     print(
+    #         f" GPU {g.id}: util={g.load*100:.1f}%, mem={g.memoryUsed/1024**3:.1f}/{g.memoryTotal/1024**3:.1f} GiB"
+    #     )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
     # Reconstruct data
-    ad_recon_data = abaco_recon(
-        model=ad_count_std_no_cycle,
-        device=device,
-        data=ad_count_data,
-        dataloader=ad_count_train_dataloader,
-        sample_label=ad_count_sample_label,
-        batch_label=ad_count_batch_label,
-        bio_label=ad_count_bio_label,
-        seed=None,
-    )
+    # ad_recon_data = abaco_recon(
+    #     model=ad_count_std_no_cycle,
+    #     device=device,
+    #     data=ad_count_data,
+    #     dataloader=ad_count_train_dataloader,
+    #     sample_label=ad_count_sample_label,
+    #     batch_label=ad_count_batch_label,
+    #     bio_label=ad_count_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
 
-    ibd_recon_data = abaco_recon(
-        model=ibd_std_no_cycle,
-        device=device,
-        data=ibd_data,
-        dataloader=ibd_train_dataloader,
-        sample_label=ibd_sample_label,
-        batch_label=ibd_batch_label,
-        bio_label=ibd_bio_label,
-        seed=None,
-    )
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
 
-    dtu_recon_data = abaco_recon(
-        model=dtu_std_no_cycle,
-        device=device,
-        data=dtu_data,
-        dataloader=dtu_train_dataloader,
-        sample_label=dtu_sample_label,
-        batch_label=dtu_batch_label,
-        bio_label=dtu_bio_label,
-        seed=None,
-    )
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
 
-    ad_recon_data.to_csv(
-        f"performance_metrics/multi_runs/AD_count/std_no_recon_{iter}", index=False
-    )
-    ibd_recon_data.to_csv(
-        f"performance_metrics/multi_runs/IBD/std_no_recon_{iter}", index=False
-    )
-    dtu_recon_data.to_csv(
-        f"performance_metrics/multi_runs/DTU-GE/std_no_recon_{iter}", index=False
-    )
+    # ibd_recon_data = abaco_recon(
+    #     model=ibd_std_no_cycle,
+    #     device=device,
+    #     data=ibd_data,
+    #     dataloader=ibd_train_dataloader,
+    #     sample_label=ibd_sample_label,
+    #     batch_label=ibd_batch_label,
+    #     bio_label=ibd_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    if iter == 0:
+        seed = 42
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+    # dtu_recon_data = abaco_recon(
+    #     model=dtu_std_no_cycle,
+    #     device=device,
+    #     data=dtu_data,
+    #     dataloader=dtu_train_dataloader,
+    #     sample_label=dtu_sample_label,
+    #     batch_label=dtu_batch_label,
+    #     bio_label=dtu_bio_label,
+    #     seed=None,
+    #     monte_carlo=1,
+    # )
+
+    # ad_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/AD_count/std_no_recon_{iter}", index=False
+    # )
+    # ibd_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/IBD/std_no_recon_contra_1000_2_{iter}",
+    #     index=False,
+    # )
+    # dtu_recon_data.to_csv(
+    #     f"performance_metrics/multi_runs/DTU-GE/std_no_recon_contra_1000_{iter}",
+    #     index=False,
+    # )
 
     # # LISI tables
     # clisi_ad = cLISI_full_rank(ad_recon_data, ad_count_bio_label)

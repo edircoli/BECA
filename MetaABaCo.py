@@ -9,7 +9,7 @@ import numpy as np
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 import math
-from BatchEffectDataLoader import class_to_int
+from src.ABaCo.BatchEffectDataLoader import class_to_int
 
 # ---------- PRIOR CLASSES DEFINITIONS ---------- #
 
