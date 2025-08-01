@@ -714,19 +714,40 @@ class MixtureOfGaussians(td.Distribution):
         means = self.means.expand(sample_shape + self.means.shape)
         stds = self.stds.expand(sample_shape + self.stds.shape)
 
+        # Hard one-hot via Gumbel-softmax
+        cat = td.RelaxedOneHotCategorical(
+            temperature=self.temperature,
+            logits=logits,
+        )
+        w_soft = cat.rsample()  # Gradients flows through this sample
+        w_hard = F.one_hot(
+            torch.argmax(w_soft, dim=-1), num_classes=logits.size(-1)
+        ).type_as(
+            w_soft
+        )  # Hard one-hot encoding in the forward pass
+
+        w = (
+            w_hard - w_soft
+        ).detach() + w_soft  # Straight-through estimator for gradients
+        w = w.unsqueeze(-1)  # Reshape to match means and stds dimensions
+
+        # Sample component-wise normals
         eps = torch.randn_like(means)
         comp_samples = means + eps * stds
 
-        # Step 2 - Generate Gumbel noise for each component
-        u = torch.rand_like(logits)
-        gumbel_noise = -torch.log(-torch.log(u + 1e-5) + 1e-5)
+        # # Step 2 - Generate Gumbel noise for each component
+        # u = torch.rand_like(logits)
+        # gumbel_noise = -torch.log(-torch.log(u + 1e-5) + 1e-5)
 
-        # Step 3 - Compute y_i (gumbel-softmax trick)
-        weights = F.softmax((logits + gumbel_noise) / self.temperature, dim=-1)
-        weights = weights.unsqueeze(-1)
+        # # Step 3 - Compute y_i (gumbel-softmax trick)
+        # weights = F.softmax((logits + gumbel_noise) / self.temperature, dim=-1)
+        # weights = weights.unsqueeze(-1)
 
-        # Step 4 - Sum every component for final sampling
-        sample = torch.sum(weights * comp_samples, dim=-2)
+        # # Step 4 - Sum every component for final sampling
+        sample = torch.sum(
+            w * comp_samples, dim=-2
+        )  # Pick exactly one component per sample
+
         return sample
 
     def sample(self, sample_shape=torch.Size()):
@@ -1525,17 +1546,33 @@ class SupervisedContrastiveLoss(nn.Module):
         # Normalizing to unit length
         embeddings = F.normalize(latent_points, dim=1)
         # Cosine similarity matrix
-        sim_matrix = (
-            torch.matmul(embeddings, embeddings.T) / self.temp
-            - torch.eye(B, device=latent_points.device) * 1e-9
-        )
+        # sim_matrix = (
+        #     torch.matmul(embeddings, embeddings.T) / self.temp
+        #     - torch.eye(B, device=latent_points.device) * 1e-9
+        # )
+
+        sim_matrix = torch.matmul(embeddings, embeddings.T) / self.temp
+        # Mask diagonal to avoid self-comparison
+        diag = torch.eye(B, device=sim_matrix.device, dtype=torch.bool)
+        sim_matrix.masked_fill_(diag, -1e9)
+
         # Masking [i, j] = 1 if i and j share label
-        labels = labels.contiguous().view(-1, 1)
-        mask = torch.eq(labels, labels.T).float().to(embeddings.device)
-        # Compute log-sum-exp over all except self
-        exp_sim = torch.exp(sim_matrix)
-        log_prob = sim_matrix - torch.log(exp_sim.sum(dim=1, keepdim=True))
-        mean_log_prob = (mask * log_prob).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+        labels = labels.view(-1, 1)  # labels.contiguous().view(-1, 1)
+        pos_mask = torch.eq(labels, labels.T)
+        pos_mask.masked_fill_(diag, 0)  # Avoid self-comparison
+
+        # log-softmax over all pairs
+        log_prob = F.log_softmax(sim_matrix, dim=1)
+
+        # aggregate log probabilities of positive pairs
+        n_pos = pos_mask.sum(dim=1).clamp(min=1)  # Avoid division by zero
+        mean_log_prob = (pos_mask * log_prob).sum(dim=1) / n_pos
+
+        # mask = torch.eq(labels, labels.T).float().to(embeddings.device)
+        # # Compute log-sum-exp over all except self
+        # exp_sim = torch.exp(sim_matrix)
+        # log_prob = sim_matrix - torch.log(exp_sim.sum(dim=1, keepdim=True))
+        # mean_log_prob = (mask * log_prob).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
         # Compute loss
         loss = -mean_log_prob.mean()
         return loss
